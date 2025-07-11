@@ -257,49 +257,161 @@ def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_e
     from utils import extract_detailed_comparison_data
     table_data = extract_detailed_comparison_data(comparison_analysis, ai_review_data, hr_edits_data)
     
+    # Custom CSS for better table styling
+    st.markdown("""
+    <style>
+    .comparison-table {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+    .table-header {
+        background-color: #4a90e2;
+        color: white;
+        padding: 12px;
+        font-weight: bold;
+        text-align: center;
+        border-bottom: 2px solid #357abd;
+    }
+    .table-cell {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+    }
+    .table-row:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .table-row:nth-child(odd) {
+        background-color: #ffffff;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Create three columns for the tables
     col1, col2 = st.columns(2)
     
     # Table 1: AI Correctly Identified flags
     with col1:
-        st.markdown("**🟢 AI Correctly Identified Flags**")
+        st.markdown("### 🟢 AI Correctly Identified Flags")
         correctly_identified = table_data['correctly_identified']
         
         if correctly_identified:
-            table_df1 = pd.DataFrame(correctly_identified)
-            table_df1.columns = ['AI Correctly Identified flags', 'Description of the flag']
-            st.dataframe(table_df1, use_container_width=True, hide_index=True)
+            # Prepare data with proper text wrapping
+            table_data_clean = []
+            for item in correctly_identified:
+                flag_text = item['flag'][:100] + "..." if len(item['flag']) > 100 else item['flag']
+                desc_text = item['description'][:200] + "..." if len(item['description']) > 200 else item['description']
+                table_data_clean.append({
+                    'AI Correctly Identified flags': flag_text,
+                    'Description of the flag': desc_text
+                })
+            
+            table_df1 = pd.DataFrame(table_data_clean)
+            st.dataframe(
+                table_df1, 
+                use_container_width=True, 
+                hide_index=True,
+                height=300,
+                column_config={
+                    "AI Correctly Identified flags": st.column_config.TextColumn(
+                        "AI Correctly Identified flags",
+                        width="medium",
+                    ),
+                    "Description of the flag": st.column_config.TextColumn(
+                        "Description of the flag",
+                        width="large",
+                    )
+                }
+            )
         else:
-            # Show empty table structure
-            empty_df1 = pd.DataFrame({'AI Correctly Identified flags': ['No issues identified'], 'Description of the flag': ['N/A']})
-            st.dataframe(empty_df1, use_container_width=True, hide_index=True)
+            # Show empty table structure with better styling
+            empty_df1 = pd.DataFrame({
+                'AI Correctly Identified flags': ['No issues correctly identified'], 
+                'Description of the flag': ['No matching issues found between AI and HR reviews']
+            })
+            st.dataframe(empty_df1, use_container_width=True, hide_index=True, height=100)
     
     # Table 2: Missed Flags by the AI
     with col2:
-        st.markdown("**🔴 Missed Flags by the AI**")
+        st.markdown("### 🔴 Missed Flags by the AI")
         missed_flags = table_data['missed_flags']
         
         if missed_flags:
-            table_df2 = pd.DataFrame(missed_flags)
-            table_df2.columns = ['Missed Flags by the AI', 'Description of the flag']
-            st.dataframe(table_df2, use_container_width=True, hide_index=True)
+            # Prepare data with proper text wrapping
+            table_data_clean = []
+            for item in missed_flags:
+                flag_text = item['flag'][:100] + "..." if len(item['flag']) > 100 else item['flag']
+                desc_text = item['description'][:200] + "..." if len(item['description']) > 200 else item['description']
+                table_data_clean.append({
+                    'Missed Flags by the AI': flag_text,
+                    'Description of the flag': desc_text
+                })
+            
+            table_df2 = pd.DataFrame(table_data_clean)
+            st.dataframe(
+                table_df2, 
+                use_container_width=True, 
+                hide_index=True,
+                height=300,
+                column_config={
+                    "Missed Flags by the AI": st.column_config.TextColumn(
+                        "Missed Flags by the AI",
+                        width="medium",
+                    ),
+                    "Description of the flag": st.column_config.TextColumn(
+                        "Description of the flag",
+                        width="large",
+                    )
+                }
+            )
         else:
             # Show empty table structure
-            empty_df2 = pd.DataFrame({'Missed Flags by the AI': ['No issues missed'], 'Description of the flag': ['N/A']})
-            st.dataframe(empty_df2, use_container_width=True, hide_index=True)
+            empty_df2 = pd.DataFrame({
+                'Missed Flags by the AI': ['No issues missed'], 
+                'Description of the flag': ['AI successfully identified all relevant issues']
+            })
+            st.dataframe(empty_df2, use_container_width=True, hide_index=True, height=100)
     
     # Table 3: Flagged by AI but not addressed by HR (full width)
-    st.markdown("**🟡 Flagged by AI but not addressed by HR**")
+    st.markdown("### 🟡 Flagged by AI but not addressed by HR")
     false_positives = table_data['false_positives']
     
     if false_positives:
-        table_df3 = pd.DataFrame(false_positives)
-        table_df3.columns = ['Flagged by AI but not addressed by HR', 'Description of the flag']
-        st.dataframe(table_df3, use_container_width=True, hide_index=True)
+        # Prepare data with proper text wrapping
+        table_data_clean = []
+        for item in false_positives:
+            flag_text = item['flag'][:120] + "..." if len(item['flag']) > 120 else item['flag']
+            desc_text = item['description'][:300] + "..." if len(item['description']) > 300 else item['description']
+            table_data_clean.append({
+                'Flagged by AI but not addressed by HR': flag_text,
+                'Description of the flag': desc_text
+            })
+        
+        table_df3 = pd.DataFrame(table_data_clean)
+        st.dataframe(
+            table_df3, 
+            use_container_width=True, 
+            hide_index=True,
+            height=300,
+            column_config={
+                "Flagged by AI but not addressed by HR": st.column_config.TextColumn(
+                    "Flagged by AI but not addressed by HR",
+                    width="medium",
+                ),
+                "Description of the flag": st.column_config.TextColumn(
+                    "Description of the flag",
+                    width="large",
+                )
+            }
+        )
     else:
         # Show empty table structure
-        empty_df3 = pd.DataFrame({'Flagged by AI but not addressed by HR': ['No additional flags'], 'Description of the flag': ['N/A']})
-        st.dataframe(empty_df3, use_container_width=True, hide_index=True)
+        empty_df3 = pd.DataFrame({
+            'Flagged by AI but not addressed by HR': ['No additional flags'], 
+            'Description of the flag': ['All AI-flagged issues were appropriately addressed by HR']
+        })
+        st.dataframe(empty_df3, use_container_width=True, hide_index=True, height=100)
     
     st.markdown("---")
 
