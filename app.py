@@ -381,6 +381,183 @@ def display_json_viewers(ai_review_data, hr_edits_data):
         else:
             st.info("No HR edits data available")
 
+def display_single_nda_review(model, temperature):
+    """Display single NDA review section"""
+    st.header("⚖️ Single NDA Review")
+    st.info("Upload a single NDA document to get AI compliance analysis based on Strada's policies.")
+    
+    # File upload
+    st.subheader("📄 Upload NDA Document")
+    uploaded_file = st.file_uploader(
+        "Choose an NDA file",
+        type=['pdf', 'docx', 'txt', 'md'],
+        help="Upload the NDA document you want to analyze",
+        key="single_nda_upload"
+    )
+    
+    if uploaded_file:
+        if validate_file(uploaded_file):
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
+            st.info(f"File size: {len(uploaded_file.getvalue())} bytes")
+            
+            # Preview option
+            if st.checkbox("Preview file content", key="preview_single"):
+                try:
+                    content = uploaded_file.getvalue().decode('utf-8')
+                    st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                except:
+                    st.warning("Cannot preview this file type")
+        else:
+            st.error("❌ Invalid file format or size")
+            return
+    
+    # Analysis configuration
+    st.subheader("🔧 Analysis Configuration")
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.info(f"**Model:** {model} | **Temperature:** {temperature}")
+        st.caption("Model settings are controlled from the sidebar")
+    
+    with col2:
+        run_single_analysis = st.button(
+            "🚀 Analyze NDA",
+            disabled=not uploaded_file,
+            use_container_width=True,
+            key="run_single_analysis"
+        )
+    
+    # Run analysis
+    if run_single_analysis and uploaded_file:
+        with st.spinner("Analyzing NDA... This may take a minute."):
+            try:
+                # Import the NDA Review chain
+                from NDA_Review_chain import StradaComplianceChain
+                
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as temp_file:
+                    temp_file.write(uploaded_file.getvalue())
+                    temp_file_path = temp_file.name
+                
+                # Initialize and run analysis
+                review_chain = StradaComplianceChain(model=model, temperature=temperature)
+                compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
+                
+                # Clean up temporary file
+                os.unlink(temp_file_path)
+                
+                # Store results in session state
+                st.session_state.single_nda_results = compliance_report
+                st.session_state.single_nda_raw = raw_response
+                
+                st.success("✅ Analysis completed successfully!")
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Analysis failed: {str(e)}")
+                st.error("Please check your API key and try again.")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
+    
+    # Display results if available
+    if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
+        st.markdown("---")
+        
+        # Results summary
+        st.subheader("📊 Analysis Summary")
+        compliance_report = st.session_state.single_nda_results
+        
+        if compliance_report:
+            red_flags = compliance_report.get('red_flags', [])
+            yellow_flags = compliance_report.get('yellow_flags', [])
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("🔴 Red Flags (Mandatory)", len(red_flags))
+            with col2:
+                st.metric("🟡 Yellow Flags (Preferential)", len(yellow_flags))
+            with col3:
+                st.metric("📋 Total Issues", len(red_flags) + len(yellow_flags))
+        
+        st.markdown("---")
+        
+        # Detailed results
+        st.subheader("🔍 Detailed Analysis Results")
+        
+        # Red flags
+        if red_flags:
+            st.subheader("🔴 Red Flags (Mandatory Changes Required)")
+            for idx, flag in enumerate(red_flags):
+                with st.expander(f"Red Flag {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No red flag issues found!")
+        
+        # Yellow flags
+        if yellow_flags:
+            st.subheader("🟡 Yellow Flags (Preferential Changes)")
+            for idx, flag in enumerate(yellow_flags):
+                with st.expander(f"Yellow Flag {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No yellow flag issues found!")
+        
+        st.markdown("---")
+        
+        # Export options
+        st.subheader("📥 Export Results")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.download_button(
+                label="📊 Download JSON Report",
+                data=json.dumps(compliance_report, indent=2),
+                file_name=f"nda_compliance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json"
+            )
+        
+        with col2:
+            # Create summary text
+            summary_text = f"""NDA Compliance Analysis Report
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+SUMMARY:
+- Red Flags (Mandatory): {len(red_flags)}
+- Yellow Flags (Preferential): {len(yellow_flags)}
+- Total Issues: {len(red_flags) + len(yellow_flags)}
+
+RED FLAGS:
+"""
+            for idx, flag in enumerate(red_flags):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+            
+            summary_text += "\nYELLOW FLAGS:\n"
+            for idx, flag in enumerate(yellow_flags):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+            
+            st.download_button(
+                label="📄 Download Text Summary",
+                data=summary_text,
+                file_name=f"nda_analysis_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain"
+            )
+        
+        # Clear results
+        if st.button("🗑️ Clear Results", key="clear_single_results"):
+            if hasattr(st.session_state, 'single_nda_results'):
+                delattr(st.session_state, 'single_nda_results')
+            if hasattr(st.session_state, 'single_nda_raw'):
+                delattr(st.session_state, 'single_nda_raw')
+            st.rerun()
+
 def main():
     """Main application function"""
     initialize_session_state()
@@ -390,7 +567,7 @@ def main():
     model, temperature, analysis_mode = display_sidebar()
     
     # Create main tabs
-    tab1, tab2 = st.tabs(["🔬 NDA Analysis", "📋 Policies Playbook"])
+    tab1, tab2, tab3 = st.tabs(["🔬 NDA Analysis", "📋 Policies Playbook", "⚖️ Single NDA Review"])
     
     with tab1:
         # File upload section
@@ -470,6 +647,10 @@ def main():
     with tab2:
         # Policies Playbook tab
         display_policies_playbook()
+    
+    with tab3:
+        # Single NDA Review tab
+        display_single_nda_review(model, temperature)
 
 if __name__ == "__main__":
     main()
