@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import subprocess
 from datetime import datetime
 import traceback
 from typing import Dict, List, Tuple, Optional
@@ -637,10 +638,40 @@ def display_single_nda_review(model, temperature):
                 # Import the NDA Review chain
                 from NDA_Review_chain import StradaComplianceChain
                 
+                file_extension = uploaded_file.name.split('.')[-1].lower()
+                
                 # Create temporary file
-                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as temp_file:
+                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=f".{file_extension}") as temp_file:
                     temp_file.write(uploaded_file.getvalue())
                     temp_file_path = temp_file.name
+                
+                # Convert DOCX to markdown using Pandoc if needed
+                if file_extension == 'docx':
+                    markdown_temp_path = temp_file_path.replace('.docx', '.md')
+                    try:
+                        # Use Pandoc to convert DOCX to markdown
+                        result = subprocess.run([
+                            'pandoc', 
+                            temp_file_path, 
+                            '-o', 
+                            markdown_temp_path,
+                            '--wrap=none'  # Prevent line wrapping
+                        ], capture_output=True, text=True, check=True)
+                        
+                        # Clean up original DOCX file and use markdown file
+                        os.unlink(temp_file_path)
+                        temp_file_path = markdown_temp_path
+                        
+                        st.info("✅ DOCX file converted to markdown for analysis")
+                        
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"❌ Failed to convert DOCX file: {e}")
+                        os.unlink(temp_file_path)
+                        return
+                    except FileNotFoundError:
+                        st.error("❌ Pandoc not found. Please install Pandoc to process DOCX files.")
+                        os.unlink(temp_file_path)
+                        return
                 
                 # Initialize and run analysis
                 review_chain = StradaComplianceChain(model=model, temperature=temperature)
