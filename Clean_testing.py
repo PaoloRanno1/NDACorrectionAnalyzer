@@ -197,14 +197,21 @@ class TestingChain:
             })
             
             # Parse JSON response
+            print(f"Raw comparison response: {comparison_response[:200]}...")  # Debug output
             try:
-                comparison_json = json.loads(comparison_response.strip())
+                # Clean up the response
+                clean_response = comparison_response.strip()
+                if clean_response.startswith('```json'):
+                    clean_response = clean_response.replace('```json', '').replace('```', '').strip()
+                
+                comparison_json = json.loads(clean_response)
                 print("✅ Comparison analysis completed and parsed successfully")
             except json.JSONDecodeError as e:
                 print(f"⚠️ Warning: Could not parse comparison response as JSON: {e}")
+                print(f"Response was: '{comparison_response}'")
                 print("Falling back to text format")
                 comparison_json = {
-                    "text_fallback": comparison_response,
+                    "text_fallback": comparison_response if comparison_response else "No comparison response received",
                     "correctly_identified": [],
                     "missed_by_ai": [],
                     "not_addressed_by_hr": [],

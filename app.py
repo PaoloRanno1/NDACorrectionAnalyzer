@@ -324,9 +324,14 @@ def display_raw_data_export(comparison_analysis, ai_review_data, hr_edits_data):
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        if isinstance(comparison_analysis, dict):
+            comparison_data = json.dumps(comparison_analysis, indent=2)
+        else:
+            comparison_data = str(comparison_analysis)
+        
         st.download_button(
             label="📄 Download Comparison Analysis",
-            data=comparison_analysis,
+            data=comparison_data,
             file_name=f"comparison_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
             mime="text/plain"
         )
