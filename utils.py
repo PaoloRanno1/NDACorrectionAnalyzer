@@ -281,6 +281,109 @@ def create_accuracy_pie_chart(metrics: Dict) -> go.Figure:
     
     return fig
 
+def extract_detailed_comparison_data(comparison_analysis: str, ai_review_data: Dict, hr_edits_data: List) -> Dict:
+    """
+    Extract detailed comparison data for table display
+    
+    Args:
+        comparison_analysis: Comparison analysis text
+        ai_review_data: AI review data
+        hr_edits_data: HR edits data
+        
+    Returns:
+        Dictionary containing detailed comparison tables data
+    """
+    try:
+        # Parse comparison analysis if it's a string
+        if isinstance(comparison_analysis, str):
+            parsed_analysis = format_analysis_results(comparison_analysis)
+        else:
+            parsed_analysis = comparison_analysis
+        
+        # Extract AI correctly identified flags
+        correctly_identified = []
+        if 'correctly_identified' in parsed_analysis:
+            for match in parsed_analysis['correctly_identified']:
+                correctly_identified.append({
+                    'flag': match.get('title', match.get('issue', 'Unknown issue')),
+                    'description': match.get('analysis', match.get('problem', 'No description available'))
+                })
+        
+        # Extract missed flags by AI
+        missed_flags = []
+        if 'missed_by_ai' in parsed_analysis:
+            for missed in parsed_analysis['missed_by_ai']:
+                missed_flags.append({
+                    'flag': missed.get('title', missed.get('issue', 'Unknown issue')),
+                    'description': missed.get('analysis', missed.get('problem', 'No description available'))
+                })
+        
+        # Extract AI false positives (flagged by AI but not addressed by HR)
+        false_positives = []
+        if 'not_addressed_by_hr' in parsed_analysis:
+            for fp in parsed_analysis['not_addressed_by_hr']:
+                false_positives.append({
+                    'flag': fp.get('title', fp.get('issue', 'Unknown issue')),
+                    'description': fp.get('analysis', fp.get('problem', 'No description available'))
+                })
+        
+        # If parsing fails, try to extract from raw data
+        if not correctly_identified and not missed_flags and not false_positives:
+            # Fallback: extract from AI and HR data directly
+            ai_issues = []
+            if ai_review_data and isinstance(ai_review_data, dict):
+                red_flags = ai_review_data.get('red_flags', [])
+                yellow_flags = ai_review_data.get('yellow_flags', [])
+                for flag in red_flags + yellow_flags:
+                    ai_issues.append({
+                        'flag': flag.get('issue', 'Unknown issue'),
+                        'description': flag.get('problem', 'No description available')
+                    })
+            
+            hr_issues = []
+            if hr_edits_data and isinstance(hr_edits_data, list):
+                for edit in hr_edits_data:
+                    hr_issues.append({
+                        'flag': edit.get('issue', 'Unknown issue'),
+                        'description': edit.get('problem', 'No description available')
+                    })
+            
+            # Simple matching based on issue text similarity
+            correctly_identified = []
+            missed_flags = []
+            false_positives = []
+            
+            ai_issue_texts = [item['flag'].lower() for item in ai_issues]
+            hr_issue_texts = [item['flag'].lower() for item in hr_issues]
+            
+            # Find matches
+            for ai_item in ai_issues:
+                ai_text = ai_item['flag'].lower()
+                if any(ai_text in hr_text or hr_text in ai_text for hr_text in hr_issue_texts):
+                    correctly_identified.append(ai_item)
+                else:
+                    false_positives.append(ai_item)
+            
+            # Find missed issues
+            for hr_item in hr_issues:
+                hr_text = hr_item['flag'].lower()
+                if not any(hr_text in ai_text or ai_text in hr_text for ai_text in ai_issue_texts):
+                    missed_flags.append(hr_item)
+        
+        return {
+            'correctly_identified': correctly_identified,
+            'missed_flags': missed_flags,
+            'false_positives': false_positives
+        }
+        
+    except Exception as e:
+        print(f"Error extracting detailed comparison data: {e}")
+        return {
+            'correctly_identified': [],
+            'missed_flags': [],
+            'false_positives': []
+        }
+
 def export_analysis_summary(comparison_analysis: str, ai_review_data: Dict, hr_edits_data: List) -> str:
     """
     Create a summary report for export

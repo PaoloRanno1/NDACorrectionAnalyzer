@@ -246,6 +246,63 @@ def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data
         fig = create_comparison_chart(metrics)
         st.plotly_chart(fig, use_container_width=True)
 
+def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_edits_data):
+    """Display detailed comparison tables as requested"""
+    st.subheader("📊 Detailed Comparison Tables")
+    
+    # Import pandas for this function
+    import pandas as pd
+    
+    # Extract detailed data for tables
+    from utils import extract_detailed_comparison_data
+    table_data = extract_detailed_comparison_data(comparison_analysis, ai_review_data, hr_edits_data)
+    
+    # Create three columns for the tables
+    col1, col2 = st.columns(2)
+    
+    # Table 1: AI Correctly Identified flags
+    with col1:
+        st.markdown("**🟢 AI Correctly Identified Flags**")
+        correctly_identified = table_data['correctly_identified']
+        
+        if correctly_identified:
+            table_df1 = pd.DataFrame(correctly_identified)
+            table_df1.columns = ['AI Correctly Identified flags', 'Description of the flag']
+            st.dataframe(table_df1, use_container_width=True, hide_index=True)
+        else:
+            # Show empty table structure
+            empty_df1 = pd.DataFrame({'AI Correctly Identified flags': ['No issues identified'], 'Description of the flag': ['N/A']})
+            st.dataframe(empty_df1, use_container_width=True, hide_index=True)
+    
+    # Table 2: Missed Flags by the AI
+    with col2:
+        st.markdown("**🔴 Missed Flags by the AI**")
+        missed_flags = table_data['missed_flags']
+        
+        if missed_flags:
+            table_df2 = pd.DataFrame(missed_flags)
+            table_df2.columns = ['Missed Flags by the AI', 'Description of the flag']
+            st.dataframe(table_df2, use_container_width=True, hide_index=True)
+        else:
+            # Show empty table structure
+            empty_df2 = pd.DataFrame({'Missed Flags by the AI': ['No issues missed'], 'Description of the flag': ['N/A']})
+            st.dataframe(empty_df2, use_container_width=True, hide_index=True)
+    
+    # Table 3: Flagged by AI but not addressed by HR (full width)
+    st.markdown("**🟡 Flagged by AI but not addressed by HR**")
+    false_positives = table_data['false_positives']
+    
+    if false_positives:
+        table_df3 = pd.DataFrame(false_positives)
+        table_df3.columns = ['Flagged by AI but not addressed by HR', 'Description of the flag']
+        st.dataframe(table_df3, use_container_width=True, hide_index=True)
+    else:
+        # Show empty table structure
+        empty_df3 = pd.DataFrame({'Flagged by AI but not addressed by HR': ['No additional flags'], 'Description of the flag': ['N/A']})
+        st.dataframe(empty_df3, use_container_width=True, hide_index=True)
+    
+    st.markdown("---")
+
 def display_detailed_comparison(comparison_analysis):
     """Display detailed comparison results"""
     st.header("🔍 Detailed Comparison")
@@ -616,6 +673,13 @@ def main():
             )
             
             st.markdown("---")
+            
+            # Detailed Comparison Tables
+            display_detailed_comparison_tables(
+                st.session_state.analysis_results,
+                st.session_state.ai_review_data,
+                st.session_state.hr_edits_data
+            )
             
             # Detailed Comparison
             display_detailed_comparison(st.session_state.analysis_results)
