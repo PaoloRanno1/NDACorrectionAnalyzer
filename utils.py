@@ -122,6 +122,15 @@ def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_
                 content = not_addressed_section.group(1)
                 metrics['not_addressed_by_hr'] = len(re.findall(r'- \*\*Issue\*\*:', content))
     
+    # Calculate AI accuracy using the requested formula: (HR changes made - Correctly identified) / HR changes made
+    if metrics['hr_total_changes'] > 0:
+        accuracy_error_rate = (metrics['hr_total_changes'] - metrics['correctly_identified']) / metrics['hr_total_changes']
+        metrics['ai_accuracy_error_rate'] = accuracy_error_rate * 100  # Convert to percentage
+        metrics['ai_accuracy_percentage'] = (1 - accuracy_error_rate) * 100  # Success rate for display
+    else:
+        metrics['ai_accuracy_error_rate'] = 0
+        metrics['ai_accuracy_percentage'] = 100 if metrics['correctly_identified'] == 0 else 0
+    
     return metrics
 
 def create_comparison_chart(metrics: Dict) -> go.Figure:
@@ -409,7 +418,7 @@ Overall Metrics:
 - Issues Missed by AI: {metrics['missed_by_ai']}
 - Issues Flagged but Not Addressed: {metrics['not_addressed_by_hr']}
 
-Accuracy Rate: {(metrics['correctly_identified'] / max(metrics['ai_total_issues'], 1)) * 100:.1f}%
+AI Accuracy Rate: {(metrics['correctly_identified'] / max(metrics['hr_total_changes'], 1)) * 100:.1f}%
 Coverage Rate: {((metrics['correctly_identified'] + metrics['missed_by_ai']) / max(metrics['hr_total_changes'], 1)) * 100:.1f}%
 
 Analysis Details:
