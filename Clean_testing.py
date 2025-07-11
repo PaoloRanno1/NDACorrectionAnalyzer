@@ -83,33 +83,33 @@ c)Issues Flagged by the AI but Not Addressed by HR – HR left the AI's point un
 Return your analysis as a JSON object with the following structure:
 
 ```json
-{
+{{
   "correctly_identified": [
-    {
+    {{
       "issue": "Brief description with section reference",
       "analysis": "1-2 sentences comparing AI suggestion vs HR implementation"
-    }
+    }}
   ],
   "missed_by_ai": [
-    {
+    {{
       "issue": "Brief description of what HR changed with section reference", 
       "analysis": "Explanation of what AI missed and what HR did"
-    }
+    }}
   ],
   "not_addressed_by_hr": [
-    {
+    {{
       "issue": "Brief description of AI-flagged issue with section reference",
       "analysis": "AI's concern and why HR may not have addressed it"
-    }
+    }}
   ],
-  "summary": {
+  "summary": {{
     "total_ai_issues": 0,
     "total_hr_changes": 0,
     "correctly_identified_count": 0,
     "missed_by_ai_count": 0,
     "not_addressed_by_hr_count": 0
-  }
-}
+  }}
+}}
 ```
 
 **Important**: Return ONLY the JSON object, no additional text or markdown formatting.
