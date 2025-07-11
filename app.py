@@ -234,16 +234,16 @@ def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data
         )
     
     with col4:
-        # Use the new accuracy formula: (HR changes made - Correctly identified) / HR changes made
+        # Use the accuracy formula: (HR changes made - Missed by AI) / HR changes made
         if metrics['hr_total_changes'] > 0:
-            accuracy_success_rate = (metrics['correctly_identified'] / metrics['hr_total_changes']) * 100
+            accuracy_rate = ((metrics['hr_total_changes'] - metrics['missed_by_ai']) / metrics['hr_total_changes']) * 100
         else:
-            accuracy_success_rate = 100 if metrics['correctly_identified'] == 0 else 0
+            accuracy_rate = 100 if metrics['missed_by_ai'] == 0 else 0
         
         st.metric(
             "AI Accuracy",
-            f"{accuracy_success_rate:.1f}%",
-            help="Percentage of HR changes that were correctly identified by AI: (Correctly Identified / HR Changes Made) × 100"
+            f"{accuracy_rate:.1f}%",
+            help="AI accuracy based on missed issues: (HR Changes Made - Missed by AI) / HR Changes Made × 100"
         )
     
     # Create comparison chart
