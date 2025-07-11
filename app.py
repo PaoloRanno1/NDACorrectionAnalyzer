@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple, Optional
 
 # Import the analysis modules
 from Clean_testing import TestingChain
+from policies_playbook import display_policies_playbook
 from utils import (
     validate_file, 
     extract_metrics_from_analysis, 
@@ -388,79 +389,87 @@ def main():
     # Sidebar configuration
     model, temperature, analysis_mode = display_sidebar()
     
-    # File upload section
-    clean_file, corrected_file = display_file_upload_section()
+    # Create main tabs
+    tab1, tab2 = st.tabs(["🔬 NDA Analysis", "📋 Policies Playbook"])
     
-    # Analysis section
-    st.header("🔬 Analysis Configuration")
-    
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        st.info(f"**Model:** {model} | **Temperature:** {temperature} | **Mode:** {analysis_mode}")
-    
-    with col2:
-        run_analysis_button = st.button(
-            "🚀 Run Analysis",
-            disabled=not (clean_file and corrected_file),
-            use_container_width=True
-        )
-    
-    # Run analysis when button is clicked
-    if run_analysis_button and clean_file and corrected_file:
-        with st.spinner("Running analysis... This may take a few minutes."):
-            comparison_analysis, ai_review_data, hr_edits_data = run_analysis(
-                clean_file, corrected_file, model, temperature, analysis_mode
+    with tab1:
+        # File upload section
+        clean_file, corrected_file = display_file_upload_section()
+        
+        # Analysis section
+        st.header("🔬 Analysis Configuration")
+        
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            st.info(f"**Model:** {model} | **Temperature:** {temperature} | **Mode:** {analysis_mode}")
+        
+        with col2:
+            run_analysis_button = st.button(
+                "🚀 Run Analysis",
+                disabled=not (clean_file and corrected_file),
+                use_container_width=True
+            )
+        
+        # Run analysis when button is clicked
+        if run_analysis_button and clean_file and corrected_file:
+            with st.spinner("Running analysis... This may take a few minutes."):
+                comparison_analysis, ai_review_data, hr_edits_data = run_analysis(
+                    clean_file, corrected_file, model, temperature, analysis_mode
+                )
+                
+                if comparison_analysis:
+                    # Store results in session state
+                    st.session_state.analysis_results = comparison_analysis
+                    st.session_state.ai_review_data = ai_review_data
+                    st.session_state.hr_edits_data = hr_edits_data
+                    
+                    st.success("🎉 Analysis completed successfully!")
+                    st.rerun()
+        
+        # Display results if available
+        if st.session_state.analysis_results:
+            st.markdown("---")
+            
+            # Executive Summary
+            display_executive_summary(
+                st.session_state.analysis_results,
+                st.session_state.ai_review_data,
+                st.session_state.hr_edits_data
             )
             
-            if comparison_analysis:
-                # Store results in session state
-                st.session_state.analysis_results = comparison_analysis
-                st.session_state.ai_review_data = ai_review_data
-                st.session_state.hr_edits_data = hr_edits_data
-                
-                st.success("🎉 Analysis completed successfully!")
+            st.markdown("---")
+            
+            # Detailed Comparison
+            display_detailed_comparison(st.session_state.analysis_results)
+            
+            st.markdown("---")
+            
+            # JSON Viewers
+            display_json_viewers(
+                st.session_state.ai_review_data,
+                st.session_state.hr_edits_data
+            )
+            
+            st.markdown("---")
+            
+            # Raw Data Export
+            display_raw_data_export(
+                st.session_state.analysis_results,
+                st.session_state.ai_review_data,
+                st.session_state.hr_edits_data
+            )
+            
+            # Clear results option
+            if st.button("🗑️ Clear Results", key="clear_results"):
+                st.session_state.analysis_results = None
+                st.session_state.ai_review_data = None
+                st.session_state.hr_edits_data = None
                 st.rerun()
     
-    # Display results if available
-    if st.session_state.analysis_results:
-        st.markdown("---")
-        
-        # Executive Summary
-        display_executive_summary(
-            st.session_state.analysis_results,
-            st.session_state.ai_review_data,
-            st.session_state.hr_edits_data
-        )
-        
-        st.markdown("---")
-        
-        # Detailed Comparison
-        display_detailed_comparison(st.session_state.analysis_results)
-        
-        st.markdown("---")
-        
-        # JSON Viewers
-        display_json_viewers(
-            st.session_state.ai_review_data,
-            st.session_state.hr_edits_data
-        )
-        
-        st.markdown("---")
-        
-        # Raw Data Export
-        display_raw_data_export(
-            st.session_state.analysis_results,
-            st.session_state.ai_review_data,
-            st.session_state.hr_edits_data
-        )
-        
-        # Clear results option
-        if st.button("🗑️ Clear Results", key="clear_results"):
-            st.session_state.analysis_results = None
-            st.session_state.ai_review_data = None
-            st.session_state.hr_edits_data = None
-            st.rerun()
+    with tab2:
+        # Policies Playbook tab
+        display_policies_playbook()
 
 if __name__ == "__main__":
     main()
