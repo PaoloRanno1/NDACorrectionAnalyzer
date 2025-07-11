@@ -31,6 +31,8 @@ st.set_page_config(
 
 def initialize_session_state():
     """Initialize session state variables"""
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
     if 'analysis_results' not in st.session_state:
         st.session_state.analysis_results = None
     if 'ai_review_data' not in st.session_state:
@@ -48,9 +50,34 @@ def initialize_session_state():
             'analysis_mode': 'Full Analysis'
         }
 
+def display_login_screen():
+    """Display login screen for password protection"""
+    st.title("🔐 NDA Analysis Tool Login")
+    st.markdown("Please enter the password to access the application.")
+    
+    with st.form("login_form"):
+        password = st.text_input("Password", type="password", placeholder="Enter password")
+        login_button = st.form_submit_button("Login")
+        
+        if login_button:
+            if password == "StradaLegal2025":
+                st.session_state.authenticated = True
+                st.success("Login successful! Redirecting...")
+                st.rerun()
+            else:
+                st.error("Incorrect password. Please try again.")
+
 def display_header():
     """Display the application header"""
-    st.title("⚖️ NDA Analysis Comparison Tool")
+    # Add logout button in the top right
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.title("⚖️ NDA Analysis Comparison Tool")
+    with col2:
+        if st.button("Logout", type="secondary"):
+            st.session_state.authenticated = False
+            st.rerun()
+    
     st.markdown("""
     This tool compares AI-generated NDA reviews against HR corrections to evaluate AI 
     performance in legal document analysis. Upload your clean NDA and HR-corrected 
@@ -795,6 +822,12 @@ RED FLAGS:
 def main():
     """Main application function"""
     initialize_session_state()
+    
+    # Check authentication
+    if not st.session_state.authenticated:
+        display_login_screen()
+        return
+    
     display_header()
     
     # Sidebar configuration
