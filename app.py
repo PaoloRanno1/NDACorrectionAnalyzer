@@ -249,39 +249,64 @@ def display_detailed_comparison(comparison_analysis):
     """Display detailed comparison results"""
     st.header("🔍 Detailed Comparison")
     
-    if not comparison_analysis or comparison_analysis.strip() == "":
+    if not comparison_analysis:
         st.warning("No comparison analysis data available.")
         return
     
-    # Parse the comparison analysis
-    formatted_results = format_analysis_results(comparison_analysis)
-    
-    # Check if parsing found any structured data
-    has_structured_data = any(len(items) > 0 for items in formatted_results.values())
-    
-    if has_structured_data:
-        # Display structured results
-        for category, items in formatted_results.items():
-            if items:
-                if category == "correctly_identified":
-                    st.subheader("✅ Issues Correctly Identified by AI")
-                    color = "green"
-                elif category == "missed_by_ai":
-                    st.subheader("❌ Issues Missed by AI")
-                    color = "red"
-                elif category == "not_addressed_by_hr":
-                    st.subheader("⚠️ Issues Flagged by AI but Not Addressed by HR")
-                    color = "orange"
-                
-                for idx, item in enumerate(items):
-                    with st.expander(f"{item['title']}", expanded=False):
-                        st.markdown(f"**Analysis:** {item['analysis']}")
-                        if item.get('section'):
-                            st.markdown(f"**Section:** {item['section']}")
+    # Check if comparison_analysis is already JSON (new format) or text (old format)
+    if isinstance(comparison_analysis, dict):
+        # New JSON format
+        if comparison_analysis.get("text_fallback"):
+            # JSON parsing failed, show text fallback
+            st.subheader("📄 Comparison Analysis Results")
+            st.markdown(comparison_analysis["text_fallback"])
+        else:
+            # Display structured JSON results
+            categories = [
+                ("correctly_identified", "✅ Issues Correctly Identified by AI", "green"),
+                ("missed_by_ai", "❌ Issues Missed by AI", "red"), 
+                ("not_addressed_by_hr", "⚠️ Issues Flagged by AI but Not Addressed by HR", "orange")
+            ]
+            
+            for category_key, title, color in categories:
+                items = comparison_analysis.get(category_key, [])
+                if items:
+                    st.subheader(title)
+                    for idx, item in enumerate(items):
+                        with st.expander(f"{item.get('issue', f'Issue {idx+1}')}", expanded=False):
+                            st.markdown(f"**Analysis:** {item.get('analysis', 'No analysis provided')}")
+                elif category_key == "correctly_identified":
+                    st.subheader(title)
+                    st.info("No issues were correctly identified by the AI.")
+                elif category_key == "missed_by_ai":
+                    st.subheader(title)
+                    st.info("The AI did not miss any issues that HR addressed.")
+                elif category_key == "not_addressed_by_hr":
+                    st.subheader(title)
+                    st.info("All AI-flagged issues were addressed by HR.")
     else:
-        # Fallback: Display raw comparison analysis with better formatting
-        st.subheader("📄 Comparison Analysis Results")
-        st.markdown(comparison_analysis)
+        # Old text format - use existing parsing logic
+        formatted_results = format_analysis_results(comparison_analysis)
+        has_structured_data = any(len(items) > 0 for items in formatted_results.values())
+        
+        if has_structured_data:
+            for category, items in formatted_results.items():
+                if items:
+                    if category == "correctly_identified":
+                        st.subheader("✅ Issues Correctly Identified by AI")
+                    elif category == "missed_by_ai":
+                        st.subheader("❌ Issues Missed by AI")
+                    elif category == "not_addressed_by_hr":
+                        st.subheader("⚠️ Issues Flagged by AI but Not Addressed by HR")
+                    
+                    for idx, item in enumerate(items):
+                        with st.expander(f"{item['title']}", expanded=False):
+                            st.markdown(f"**Analysis:** {item['analysis']}")
+                            if item.get('section'):
+                                st.markdown(f"**Section:** {item['section']}")
+        else:
+            st.subheader("📄 Comparison Analysis Results")
+            st.markdown(comparison_analysis)
 
 def display_raw_data_export(comparison_analysis, ai_review_data, hr_edits_data):
     """Display raw data export section"""

@@ -80,23 +80,39 @@ c)Issues Flagged by the AI but Not Addressed by HR – HR left the AI's point un
 
 ## Output Requirements
 
-Present your findings using the exact format below. If any category has no issues, write "None."
+Return your analysis as a JSON object with the following structure:
 
-### Issues Correctly Identified by the AI
-For each issue where the AI flagged a problem AND HR made a corresponding edit:
-- **Issue**: [Brief description, e.g., "Return & Destruction of Information clause", (also mention the section, e.g. section 3))]
-    - **Analysis**: [1-2 sentences comparing what the AI suggested vs. what HR actually did, AI proposed <summary>. HR implemented <summary>.]
+```json
+{
+  "correctly_identified": [
+    {
+      "issue": "Brief description with section reference",
+      "analysis": "1-2 sentences comparing AI suggestion vs HR implementation"
+    }
+  ],
+  "missed_by_ai": [
+    {
+      "issue": "Brief description of what HR changed with section reference", 
+      "analysis": "Explanation of what AI missed and what HR did"
+    }
+  ],
+  "not_addressed_by_hr": [
+    {
+      "issue": "Brief description of AI-flagged issue with section reference",
+      "analysis": "AI's concern and why HR may not have addressed it"
+    }
+  ],
+  "summary": {
+    "total_ai_issues": 0,
+    "total_hr_changes": 0,
+    "correctly_identified_count": 0,
+    "missed_by_ai_count": 0,
+    "not_addressed_by_hr_count": 0
+  }
+}
+```
 
-### Issues Missed by the AI
-For each edit HR made that the AI did not flag:
-- **Issue**: [Brief description of what HR changed, e.g., "Deleted ambiguous termination clause" or Uncategorized Change,(also mention the section, e.g. section 3)]
-    - **Analysis**: [AI did not mention this. HR added/removed <summary>. also mention the additions/deletions of text by the AI]
-
-
-### Issues Flagged by AI but Not Addressed by HR
-For each issue the AI flagged that HR did not edit:
-- **Issue**: [Brief description, e.g., "Overly broad confidentiality scope" ,(also mention the section, e.g. section 3))]
-    - **Analysis**: [1-2 sentences describing the AI's concern and why HR may not have addressed it]
+**Important**: Return ONLY the JSON object, no additional text or markdown formatting.
 
 # Quality Standards
 - Be precise in your matching logic
@@ -179,13 +195,33 @@ class TestingChain:
                 "ai_review_json": json.dumps(ai_review_json, indent=2),
                 "hr_edits_json": json.dumps(hr_edits_json, indent=2)
             })
-            print("✅ Comparison analysis completed")
+            
+            # Parse JSON response
+            try:
+                comparison_json = json.loads(comparison_response.strip())
+                print("✅ Comparison analysis completed and parsed successfully")
+            except json.JSONDecodeError as e:
+                print(f"⚠️ Warning: Could not parse comparison response as JSON: {e}")
+                print("Falling back to text format")
+                comparison_json = {
+                    "text_fallback": comparison_response,
+                    "correctly_identified": [],
+                    "missed_by_ai": [],
+                    "not_addressed_by_hr": [],
+                    "summary": {
+                        "total_ai_issues": len(ai_review_json.get('red_flags', [])) + len(ai_review_json.get('yellow_flags', [])),
+                        "total_hr_changes": len(hr_edits_json),
+                        "correctly_identified_count": 0,
+                        "missed_by_ai_count": 0,
+                        "not_addressed_by_hr_count": 0
+                    }
+                }
 
             print("\n" + "=" * 60)
             print("ANALYSIS COMPLETED SUCCESSFULLY!")
             print("=" * 60)
 
-            return comparison_response, ai_review_json, hr_edits_json
+            return comparison_json, ai_review_json, hr_edits_json
 
         except Exception as e:
             print(f"❌ Error during testing analysis: {str(e)}")

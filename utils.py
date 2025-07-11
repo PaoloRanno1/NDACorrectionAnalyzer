@@ -53,12 +53,12 @@ def safe_json_loads(json_str: str) -> Optional[Dict]:
     except json.JSONDecodeError:
         return None
 
-def extract_metrics_from_analysis(comparison_analysis: str, ai_review_data: Dict, hr_edits_data: List) -> Dict:
+def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_edits_data: List) -> Dict:
     """
     Extract key metrics from analysis results
     
     Args:
-        comparison_analysis: Text analysis comparing AI vs HR
+        comparison_analysis: JSON object or text analysis comparing AI vs HR
         ai_review_data: AI review JSON data
         hr_edits_data: HR edits JSON data
         
@@ -79,37 +79,48 @@ def extract_metrics_from_analysis(comparison_analysis: str, ai_review_data: Dict
         yellow_flags = ai_review_data.get('yellow_flags', [])
         metrics['ai_total_issues'] = len(red_flags) + len(yellow_flags)
     
-    # Extract metrics from comparison analysis text
+    # Extract metrics from comparison analysis
     if comparison_analysis:
-        # Count correctly identified issues
-        correctly_identified_section = re.search(
-            r'### Issues Correctly Identified by the AI\n(.*?)(?=### |$)', 
-            comparison_analysis, 
-            re.DOTALL
-        )
-        if correctly_identified_section:
-            content = correctly_identified_section.group(1)
-            metrics['correctly_identified'] = len(re.findall(r'- \*\*Issue\*\*:', content))
-        
-        # Count missed by AI
-        missed_section = re.search(
-            r'### Issues Missed by the AI\n(.*?)(?=### |$)', 
-            comparison_analysis, 
-            re.DOTALL
-        )
-        if missed_section:
-            content = missed_section.group(1)
-            metrics['missed_by_ai'] = len(re.findall(r'- \*\*Issue\*\*:', content))
-        
-        # Count not addressed by HR
-        not_addressed_section = re.search(
-            r'### Issues Flagged by AI but Not Addressed by HR\n(.*?)(?=### |$)', 
-            comparison_analysis, 
-            re.DOTALL
-        )
-        if not_addressed_section:
-            content = not_addressed_section.group(1)
-            metrics['not_addressed_by_hr'] = len(re.findall(r'- \*\*Issue\*\*:', content))
+        if isinstance(comparison_analysis, dict):
+            # New JSON format - extract directly from summary or count arrays
+            if 'summary' in comparison_analysis:
+                summary = comparison_analysis['summary']
+                metrics['correctly_identified'] = summary.get('correctly_identified_count', 0)
+                metrics['missed_by_ai'] = summary.get('missed_by_ai_count', 0)
+                metrics['not_addressed_by_hr'] = summary.get('not_addressed_by_hr_count', 0)
+            else:
+                # Count from arrays if summary is missing
+                metrics['correctly_identified'] = len(comparison_analysis.get('correctly_identified', []))
+                metrics['missed_by_ai'] = len(comparison_analysis.get('missed_by_ai', []))
+                metrics['not_addressed_by_hr'] = len(comparison_analysis.get('not_addressed_by_hr', []))
+        else:
+            # Old text format - use regex parsing
+            correctly_identified_section = re.search(
+                r'### Issues Correctly Identified by the AI\n(.*?)(?=### |$)', 
+                comparison_analysis, 
+                re.DOTALL
+            )
+            if correctly_identified_section:
+                content = correctly_identified_section.group(1)
+                metrics['correctly_identified'] = len(re.findall(r'- \*\*Issue\*\*:', content))
+            
+            missed_section = re.search(
+                r'### Issues Missed by the AI\n(.*?)(?=### |$)', 
+                comparison_analysis, 
+                re.DOTALL
+            )
+            if missed_section:
+                content = missed_section.group(1)
+                metrics['missed_by_ai'] = len(re.findall(r'- \*\*Issue\*\*:', content))
+            
+            not_addressed_section = re.search(
+                r'### Issues Flagged by AI but Not Addressed by HR\n(.*?)(?=### |$)', 
+                comparison_analysis, 
+                re.DOTALL
+            )
+            if not_addressed_section:
+                content = not_addressed_section.group(1)
+                metrics['not_addressed_by_hr'] = len(re.findall(r'- \*\*Issue\*\*:', content))
     
     return metrics
 
