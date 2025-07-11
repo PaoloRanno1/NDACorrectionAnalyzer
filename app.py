@@ -44,7 +44,7 @@ def initialize_session_state():
     if 'analysis_config' not in st.session_state:
         st.session_state.analysis_config = {
             'model': 'gemini-2.5-flash',
-            'temperature': 0.1,
+            'temperature': 0.0,
             'analysis_mode': 'Full Analysis'
         }
 
