@@ -135,8 +135,8 @@ class TestingChain:
             temperature=temperature,
             google_api_key=os.environ.get("GOOGLE_API_KEY")
         )
-        self.review_chain = NDA_Review_chain.StradaComplianceChain(model=model, temperature=temperature)
-        self.compliance_chain = NDA_HR_review_chain.NDAComplianceChain(model=model, temperature=temperature)
+        self.review_chain = NDA_Review_chain.StradaComplianceChain()
+        self.compliance_chain = NDA_HR_review_chain.NDAComplianceChain()
         self.prompt = create_testing_template()
         self.chain = self._create_chain()
 
