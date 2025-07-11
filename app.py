@@ -382,9 +382,9 @@ def display_json_viewers(ai_review_data, hr_edits_data):
             st.info("No HR edits data available")
 
 def display_single_nda_review(model, temperature):
-    """Display single NDA review section"""
-    st.header("⚖️ Single NDA Review")
-    st.info("Upload a single NDA document to get AI compliance analysis based on Strada's policies.")
+    """Display clean NDA review section"""
+    st.header("⚖️ Clean NDA Review")
+    st.info("Upload a clean NDA document to get AI compliance analysis based on Strada's policies.")
     
     # File upload
     st.subheader("📄 Upload NDA Document")
@@ -411,8 +411,8 @@ def display_single_nda_review(model, temperature):
             st.error("❌ Invalid file format or size")
             return
     
-    # Analysis configuration
-    st.subheader("🔧 Analysis Configuration")
+    # Review configuration
+    st.subheader("🔧 Review Configuration")
     col1, col2 = st.columns([3, 1])
     
     with col1:
@@ -421,15 +421,15 @@ def display_single_nda_review(model, temperature):
     
     with col2:
         run_single_analysis = st.button(
-            "🚀 Analyze NDA",
+            "🚀 Review NDA",
             disabled=not uploaded_file,
             use_container_width=True,
             key="run_single_analysis"
         )
     
-    # Run analysis
+    # Run review
     if run_single_analysis and uploaded_file:
-        with st.spinner("Analyzing NDA... This may take a minute."):
+        with st.spinner("Reviewing NDA... This may take a minute."):
             try:
                 # Import the NDA Review chain
                 from NDA_Review_chain import StradaComplianceChain
@@ -450,11 +450,11 @@ def display_single_nda_review(model, temperature):
                 st.session_state.single_nda_results = compliance_report
                 st.session_state.single_nda_raw = raw_response
                 
-                st.success("✅ Analysis completed successfully!")
+                st.success("✅ Review completed successfully!")
                 st.rerun()
                 
             except Exception as e:
-                st.error(f"❌ Analysis failed: {str(e)}")
+                st.error(f"❌ Review failed: {str(e)}")
                 st.error("Please check your API key and try again.")
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
@@ -464,7 +464,7 @@ def display_single_nda_review(model, temperature):
         st.markdown("---")
         
         # Results summary
-        st.subheader("📊 Analysis Summary")
+        st.subheader("📊 Review Summary")
         compliance_report = st.session_state.single_nda_results
         
         if compliance_report:
@@ -482,7 +482,7 @@ def display_single_nda_review(model, temperature):
         st.markdown("---")
         
         # Detailed results
-        st.subheader("🔍 Detailed Analysis Results")
+        st.subheader("🔍 Detailed Review Results")
         
         # Red flags
         if red_flags:
@@ -526,7 +526,7 @@ def display_single_nda_review(model, temperature):
         
         with col2:
             # Create summary text
-            summary_text = f"""NDA Compliance Analysis Report
+            summary_text = f"""NDA Compliance Review Report
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 SUMMARY:
@@ -546,7 +546,7 @@ RED FLAGS:
             st.download_button(
                 label="📄 Download Text Summary",
                 data=summary_text,
-                file_name=f"nda_analysis_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                file_name=f"nda_review_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
                 mime="text/plain"
             )
         
@@ -567,14 +567,14 @@ def main():
     model, temperature, analysis_mode = display_sidebar()
     
     # Create main tabs
-    tab1, tab2, tab3 = st.tabs(["🔬 NDA Analysis", "📋 Policies Playbook", "⚖️ Single NDA Review"])
+    tab1, tab2, tab3 = st.tabs(["🔬 NDA Testing", "📋 Policies Playbook", "⚖️ Clean NDA Review"])
     
     with tab1:
         # File upload section
         clean_file, corrected_file = display_file_upload_section()
         
         # Analysis section
-        st.header("🔬 Analysis Configuration")
+        st.header("🔬 Testing Configuration")
         
         col1, col2 = st.columns([3, 1])
         
@@ -583,14 +583,14 @@ def main():
         
         with col2:
             run_analysis_button = st.button(
-                "🚀 Run Analysis",
+                "🚀 Run Testing",
                 disabled=not (clean_file and corrected_file),
                 use_container_width=True
             )
         
-        # Run analysis when button is clicked
+        # Run testing when button is clicked
         if run_analysis_button and clean_file and corrected_file:
-            with st.spinner("Running analysis... This may take a few minutes."):
+            with st.spinner("Running testing... This may take a few minutes."):
                 comparison_analysis, ai_review_data, hr_edits_data = run_analysis(
                     clean_file, corrected_file, model, temperature, analysis_mode
                 )
@@ -601,7 +601,7 @@ def main():
                     st.session_state.ai_review_data = ai_review_data
                     st.session_state.hr_edits_data = hr_edits_data
                     
-                    st.success("🎉 Analysis completed successfully!")
+                    st.success("🎉 Testing completed successfully!")
                     st.rerun()
         
         # Display results if available
@@ -649,7 +649,7 @@ def main():
         display_policies_playbook()
     
     with tab3:
-        # Single NDA Review tab
+        # Clean NDA Review tab
         display_single_nda_review(model, temperature)
 
 if __name__ == "__main__":
