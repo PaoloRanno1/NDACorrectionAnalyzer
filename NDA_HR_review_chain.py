@@ -557,7 +557,18 @@ class NDAComplianceChain:
             response = self.chain.invoke({"nda_text": nda_text})
 
             print("Parsing compliance report...")
-            compliance_report = parse_compliance_response(response)
+            try:
+                compliance_report = parse_compliance_response(response)
+            except Exception as parse_error:
+                print(f"⚠️ JSON parsing failed: {str(parse_error)}")
+                # Return a fallback structure with the raw response
+                compliance_report = [{
+                    "issue": "JSON Parsing Error",
+                    "change_type": "Error",
+                    "section": "Response Processing",
+                    "citation": "Unable to parse AI response",
+                    "problem": f"The AI response could not be parsed as valid JSON. Raw response: {response[:200]}..."
+                }]
 
             print("✅ Analysis completed successfully!")
             return compliance_report, response
