@@ -789,17 +789,22 @@ def display_single_nda_review(model, temperature):
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 SUMMARY:
-- Red Flags (Mandatory): {len(red_flags)}
-- Yellow Flags (Preferential): {len(yellow_flags)}
-- Total Issues: {len(red_flags) + len(yellow_flags)}
+- High Priority (Mandatory): {len(high_priority)}
+- Medium Priority (Preferential): {len(medium_priority)}
+- Low Priority (Optional): {len(low_priority)}
+- Total Issues: {len(high_priority) + len(medium_priority) + len(low_priority)}
 
-RED FLAGS:
+HIGH PRIORITY:
 """
-            for idx, flag in enumerate(red_flags):
+            for idx, flag in enumerate(high_priority):
                 summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
             
-            summary_text += "\nYELLOW FLAGS:\n"
-            for idx, flag in enumerate(yellow_flags):
+            summary_text += "\nMEDIUM PRIORITY:\n"
+            for idx, flag in enumerate(medium_priority):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+            
+            summary_text += "\nLOW PRIORITY:\n"
+            for idx, flag in enumerate(low_priority):
                 summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
             
             st.download_button(

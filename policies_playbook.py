@@ -5,233 +5,194 @@ Contains the complete NDA policies for display in the application
 
 import streamlit as st
 
-POLICIES_CONTENT = """
-**Strada's NDA Playbook**
-
-**Golden Rule of NDA Review:**
-
-As a guiding principle, Strada prefers concise and focused NDAs. Every
-clause introduces a potential obligation or restriction. A shorter
-agreement with fewer clauses is therefore often better, as it translates
-to greater **operational freedom** and less **contractual risk**.
-
-When reviewing, always question if a clause is truly necessary. 
-While the complete deletion of a problematic clause is an option, it is often preferable to "soften" its language to better align with our positions. 
-This approach can be more agreeable to the counterparty than outright removal. However,
- if an NDA is missing a clause that we might otherwise prefer (like a 'No Commitment' clause), do not add it. The fewer promises we make, the better.
-
-*Policies are categorized as "Red Flag" (mandatory changes) or
-"Yellow Flag" (preferential changes).*
-"""
-
-POLICIES = [
-    {
-        "id": "policy_1",
-        "title": "Policy 1: Handling of Unacceptable Clauses",
-        "category": "Red Flag",
-        "content": """
-**A. Prohibited Clauses (Must Be Removed)** The NDA must **NOT** contain any of the following:
-
-- A requirement for Strada to compensate for **indirect, consequential, special, or punitive damages**.
-- A **penalty or liquidated damages clause** that specifies a fixed monetary amount per breach (e.g., €500,000 per infringement). A general damages clause is acceptable.
-- A **non-competition** clause.
-- Any clause that explicitly or implicitly **transfers or licenses intellectual property rights**.
-
-**B. Restricted Clauses (Must Be Modified)** The following clause is permissible **only if modified** as described:
-
-- **Clause:** Non-Solicitation of Clients/Customers.
-- **Required Modification:** The clause must be amended to include an exception for pre-existing relationships.
-
-**Approved Language:**
-- **Liability:** "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
-- **IP:** "No provision in this Agreement shall be construed as granting any license or rights, by implication, estoppel or otherwise, to any intellectual property of either party."
-- **Non-Solicitation of Clients/Customers:** Add "...except for contacts that were already established in the ordinary course of business."
-        """
-    },
-    {
-        "id": "policy_2",
-        "title": "Policy 2: Permitted Recipients (Disclosees)",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** The definition of who can receive information ("Representatives") must be broad enough to include Strada's directors, employees, affiliates, shareholders, potential syndicate members, other providers of finance, and professional advisers. Any clause requiring Strada to **act alone** or **prohibiting consortiums must be deleted**.
-
-- **Approved Language:** "Confidential Information may be disclosed by the Recipient to its affiliates and its and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, "Representatives"), who need to know such information for the Purpose, provided that the Recipient shall be responsible for any breach of this Agreement by its Representatives."
-        """
-    },
-    {
-        "id": "policy_3",
-        "title": "Policy 3: Return & Destruction of Information",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** The NDA must not require the **absolute destruction** of information. It must explicitly permit retention of information stored on **automated backup systems**, contained in **internal work product** ("Secondary Information"), and required for **legal/regulatory compliance**, provided it all remains subject to confidentiality obligations.
-
-- **Approved Language:** "Upon the Disclosing Party's written request, the Recipient shall return or destroy all Confidential Information. However, this obligation shall not apply to: (i) Confidential Information that the Recipient or its Representatives must retain under any applicable law, rule or regulation, including the rules of a professional body and good corporate governance practice; (ii) Confidential Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on behalf of the Recipient which incorporate Confidential Information ('Secondary Information'). Any Confidential Information or Secondary Information that is not returned or destroyed shall remain subject to the confidentiality terms of this Agreement."
-        """
-    },
-    {
-        "id": "policy_4",
-        "title": "Policy 4: Non-Solicitation of Employees",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** A non-solicitation clause must meet **all** of the following criteria:
-  - The term must **not exceed two (2) years**.
-  - It must **NOT apply** to Strada's affiliated entities or portfolio companies.
-  - It must explicitly exempt hiring individuals who respond to general, non-targeted advertisements or make unsolicited applications. This exemption must apply to all employees, including management.
-
-- **Approved Language:** "For a period of one/two (1/2) year from the date of this Agreement, the Recipient agrees not to directly solicit for employment any employee of the Disclosing Party with whom the Recipient had material contact in connection with the Purpose. This restriction shall not apply to any of the Recipient's affiliated portfolio companies, nor shall it apply to employees who respond to general public advertisements, make an unsolicited application for employment, are referred by a third-party recruiter who was not instructed to target the Disclosing Party's employees, or whose employment was terminated by the Disclosing Party. An exception for a 'bona fide recruitment campaign' is also acceptable."
-        """
-    },
-    {
-        "id": "policy_5",
-        "title": "Policy 5: No-Contact with Stakeholders",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** A "no-contact" clause must be narrowly defined and meet **both** of the following criteria:
-  - **Scope Limitation:** The restriction must apply **only** to the counterparty's directors, officers, or employees directly involved in the transaction. Any clause restricting contact with customers, suppliers, former employees, lenders, or shareholders must be softened to allow for pre-existing relationships (e.g., "except for contacts that existed already in the ordinary course of business").
-  - **Business Exception:** The clause must contain a clear exception for contact made in the **ordinary course of business**, unrelated to the transaction.
-
-- **Approved Language:** "Without the prior written consent of the Disclosing Party, the Recipient agrees not to contact any directors, officers, or employees of the Disclosing Party in connection with the Purpose. This restriction shall not be breached by any contact made for another purpose than the purpose of evaluating and negotiating the Proposed Transaction."
-
-- **Rationale:** Overly broad no-contact clauses create significant operational risk. This policy ensures the restriction is tightly focused on its legitimate purpose without hampering normal business operations.
-        """
-    },
-    {
-        "id": "policy_6",
-        "title": "Policy 6: No-Solicitation of Key Business Relationships",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** For a period **not to exceed two (2) years**, the Recipient may agree not to solicit the counterparty's key representatives (e.g., investment managers) with the intent to harm the business relationship. This is a narrow alternative to a prohibited non-solicit of all customers/suppliers.
-
-- **Note:** If the term in the agreement does not exceed two years, do not flag the clause.
-
-- **Approved Language:** "For a period of one/two (1/2) year from the date of this Agreement, the Recipient agrees not to solicit any representative or investment manager of the Disclosing Party with whom it had contact in relation to the Purpose, and agrees not to persuade any such representative or investment manager to terminate or adversely alter its relationship with the Disclosing Party."
-        """
-    },
-    {
-        "id": "policy_7",
-        "title": "Policy 7: No Third-Party Beneficiaries",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** The agreement must **not grant enforceable rights** to any entity that is not a signatory to the contract.
-
-- **Guidance:** Clauses stating that a party's "affiliates" are "third-party beneficiaries" should be deleted. Similarly, any reference to specific legislation granting such rights (e.g., the UK's Contracts (Rights of Third Parties) Act 1999) must be removed to clarify that only the parties to the agreement can enforce its terms.
-        """
-    },
-    {
-        "id": "policy_8",
-        "title": "Policy 8: Guideline on \"No Commitment to Invest\" Clauses",
-        "category": "Red Flag",
-        "content": """
-- **Guideline:** This clause is **optional**. If the NDA does not contain a 'No Commitment' clause, it is acceptable and no action is needed. **Do not add one**.
-
-- **Action:** If the other party's NDA already includes such a clause, it is safe to accept. Ensure the language is similar to the approved text below.
-
-- **Standard Language (Safe to Accept):** "The parties acknowledge that this Agreement and the exchange of Confidential Information do not create any obligation to enter into any further agreement or transaction, including but not limited to any investment, partnership, or joint venture."
-        """
-    },
-    {
-        "id": "policy_9",
-        "title": "Policy 9: Assignment of Agreement",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** The NDA must **not prohibit Strada from assigning its rights**. The preferred position is a mutual right for either party to assign the agreement to its affiliates. A silent clause is acceptable; a one-sided restriction is not.
-
-- **Approved Language:** "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
-        """
-    },
-    {
-        "id": "policy_10",
-        "title": "Policy 10: Omission of Redundant Legal Acknowledgements",
-        "category": "Red Flag",
-        "content": """
-- **Rule:** The NDA should not contain clauses where a party formally acknowledges existing legal obligations (e.g., under market abuse or insider trading laws).
-
-- **Guidance:** These clauses are unnecessary as the underlying laws apply regardless of the contract. **Delete any such clauses** to streamline the agreement.
-        """
-    },
-    {
-        "id": "policy_11",
-        "title": "Policy 11: Governing Law & Jurisdiction",
-        "category": "Yellow Flag",
-        "content": """
-- **Rule:** The strong preference is for the NDA to be governed by **Belgian law** with exclusive jurisdiction in the courts of **Antwerp, Belgium**.
-  - **Acceptable Alternatives** (in order of preference): (1) The laws of another European jurisdiction; (2) The laws of the Target company's location, provided it is not an "exotic" jurisdiction. Jurisdiction outside of Europe should be flagged.
-
-- **Approved Language:** "This Agreement, and any contractual or non-contractual obligations arising out of or in connection to it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
-        """
-    },
-    {
-        "id": "policy_12",
-        "title": "Policy 12: Confidentiality Term",
-        "category": "Yellow Flag",
-        "content": """
-- **Rule:** The preferred confidentiality term is **two (2) years**. A term of three (3) years is the maximum acceptable length. The term must be explicitly stated.
-
-- **Approved Language:** "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Project; and (ii) the date that is two or three (2 or 3) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
-        """
-    },
-    {
-        "id": "policy_13",
-        "title": "Policy 13: Liability for Representatives",
-        "category": "Yellow Flag",
-        "content": """
-- **Rule:** The NDA should, where possible, limit Strada's liability for breaches by its external Representatives by using an **efforts-based standard** rather than one of strict liability.
-
-- **Approved Language:** "The Recipient will use its best efforts to procure that each of its Representatives who receives any Confidential Information is aware of and adheres to the terms of this Agreement. The Recipient shall be responsible for any breach of the confidentiality obligations of this Agreement by its Representatives."
-        """
-    },
-    {
-        "id": "policy_14",
-        "title": "Policy 14: Definition of Confidential Information",
-        "category": "Yellow Flag",
-        "content": """
-- **Rule:** The definition of "Confidential Information" should include **standard market exceptions** to clarify the scope of the obligations.
-
-- **Approved Language:** "Confidential Information does not include information that: (a) is or becomes generally available to the public through no breach by Recipient of the confidentiality undertakings hereunder; (b) was in Recipient's lawful possession before receipt from Discloser, without any obligation of confidentiality owed to the Discloser; (c) was received in good faith by Recipient from a third party that is not subject to an obligation of confidentiality owed to Discloser; or (d) was disclosed by Recipient pursuant to the written permission of a duly authorized representative of the Discloser."
-        """
-    }
-]
-
 def display_policies_playbook():
     """Display the policies playbook with expandable sections"""
-    st.header("📋 NDA Policies Playbook")
     
-    # Introduction
-    st.markdown(POLICIES_CONTENT)
+    st.header("📋 Strada's NDA Playbook")
     
-    # Filter by category
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        category_filter = st.selectbox(
-            "Filter by Policy Type:",
-            ["All Policies", "Red Flag (Mandatory)", "Yellow Flag (Preferential)"]
-        )
+    st.markdown("""
+    This comprehensive playbook outlines Strada's policies for NDA review and compliance.
+    *Policies are grouped by **High**, **Medium**, or **Low** priority.*
+    """)
     
-    with col2:
-        st.info(f"**Total Policies:** {len(POLICIES)}")
+    # Golden Rule
+    with st.expander("🌟 Golden Rule of NDA Review", expanded=True):
+        st.markdown("""
+        **As a guiding principle, Strada prefers concise and focused NDAs.**
+        
+        Every clause introduces a potential obligation or restriction; fewer clauses mean 
+        **greater operational freedom** and **lower contractual risk**.
+        
+        When reviewing, **question whether each clause is truly necessary**.
+        
+        If language is problematic, soften it where possible—outright deletion is a last resort.
+        
+        Conversely, **never add extra clauses** (e.g., a "No Commitment" clause) just because 
+        we like them; the fewer promises we make, the better.
+        """)
     
     st.markdown("---")
     
-    # Display policies
-    for policy in POLICIES:
-        # Filter by category
-        if category_filter == "Red Flag (Mandatory)" and policy["category"] != "Red Flag":
-            continue
-        elif category_filter == "Yellow Flag (Preferential)" and policy["category"] != "Yellow Flag":
-            continue
+    # HIGH PRIORITY
+    st.subheader("🔴 HIGH PRIORITY")
+    st.markdown("*These policies address the most critical issues that must be resolved.*")
+    
+    with st.expander("POLICY 1: Handling of Unacceptable Clauses"):
+        st.markdown("""
+        **A. Prohibited Clauses (Must Be Removed)**
+        - Any requirement for Strada to pay **indirect, consequential, special, or punitive damages**
+        - Any **penalty or liquidated-damages** clause specifying a fixed sum per breach (e.g., €50 000). References to specific monetary amounts must always be deleted.
+        - **Non-competition** clauses
+        - Clauses that **transfer or license intellectual-property rights**
         
-        # Category badge
-        if policy["category"] == "Red Flag":
-            badge_color = "🔴"
-            category_text = "Red Flag (Mandatory)"
-        else:
-            badge_color = "🟡"
-            category_text = "Yellow Flag (Preferential)"
+        **B. Restricted Clause (Must Be Modified)**
+        - **Non-Solicitation of Clients/Customers** → add an exception for pre-existing relationships
         
-        # Create expandable section
-        with st.expander(f"{badge_color} {policy['title']}", expanded=False):
-            st.markdown(f"**Category:** {category_text}")
-            st.markdown(policy["content"])
-            
+        **Approved Language:**
+        - **Liability:** "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+        - **IP:** "No provision in this Agreement shall be construed as granting any license or rights, by implication, estoppel, or otherwise, to any intellectual property of either party."
+        - **Non-Solicitation of Clients/Customers:** "… except for contacts that were already established in the ordinary course of business."
+        """)
+    
+    with st.expander("POLICY 2: Permitted Recipients (Disclosees)"):
+        st.markdown("""
+        - Definition of "Representatives" must ideally cover our **directors, employees, affiliates, shareholders, potential syndicate members, other finance providers, and professional advisers**
+        - Adherence Letters: If potential finance providers or advisers are excluded from the definition of "Disclosees" or "Representatives", we must ensure they sign an Adherence Letter to the NDA before we share information with them
+        - Any clause forcing Strada to **act alone** or prohibiting consortiums **must be deleted**
+        
+        **Approved Language:**
+        "Confidential Information may be disclosed by the Recipient to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such information for the Purpose, provided the Recipient remains responsible for any breach of this Agreement by its Representatives."
+        """)
+    
+    with st.expander("POLICY 3: Return & Destruction of Information"):
+        st.markdown("""
+        - The NDA **must not require absolute destruction**
+        - Must allow retention on **automated backups**, in **internal work product** ("Secondary Information"), and for **legal / regulatory compliance**, all subject to confidentiality
+        
+        **Approved Language:**
+        "Upon the Disclosing Party's written request, the Recipient shall return or destroy all Confidential Information. However, this obligation shall not apply to:
+        (i) Confidential Information the Recipient or its Representatives must retain under applicable law, rule, or regulation;
+        (ii) Confidential Information saved to electronic media under automatic archiving or data-security procedures; and
+        (iii) reports, notes, or other materials prepared by or on behalf of the Recipient that incorporate Confidential Information ('Secondary Information').
+        Any material not returned or destroyed remains subject to this Agreement's confidentiality obligations."
+        """)
+    
+    with st.expander("POLICY 4: Non-Solicitation of Employees"):
+        st.markdown("""
+        The clause must:
+        - Be for a term of no more than two (2) years
+        - **Not** apply to Strada's affiliates or portfolio companies
+        - Exempt hires resulting from generalised searches or advertisements and unsolicited applications
+        
+        **Approved Language:**
+        "For a period of one/two (1/2) year(s) from the date of this Agreement, the Recipient agrees not to directly solicit for employment any employee of the Disclosing Party with whom the Recipient had material contact in connection with the Purpose. This restriction shall not apply to any of the Recipient's affiliated portfolio companies, nor to employees who respond to public advertisements, make unsolicited applications, are referred by an unaffiliated recruiter, or whose employment commences more than six (6) months after the date of this Agreement."
+        """)
+    
+    with st.expander("POLICY 5: No-Solicitation of Key Business Relationships"):
+        st.markdown("""
+        - Term **may not exceed two (2) years**
+        - Restriction limited to soliciting the counterparty's **key representatives** (e.g., investment managers)
+        - Do **not** flag if the term ≤ 2 years
+        
+        **Approved Language:**
+        "For a period of one/two (1/2) year(s) from the date of this Agreement, the Recipient agrees not to solicit any representative or investment manager of the Disclosing Party with whom it had contact in relation to the Purpose, nor to persuade any such person to terminate or adversely alter their relationship with the Disclosing Party."
+        """)
+    
     st.markdown("---")
-    st.info("💡 **Tip:** Use the filter above to focus on specific policy types. Red Flag policies are mandatory changes, while Yellow Flag policies are preferential but can be negotiated.")
+    
+    # MEDIUM PRIORITY
+    st.subheader("🟡 MEDIUM PRIORITY")
+    st.markdown("*These policies address important issues that should be resolved when possible.*")
+    
+    with st.expander("POLICY 6: No-Contact with Stakeholders"):
+        st.markdown("""
+        - **Scope Limitation:** Only the counterparty's **directors, officers, or employees directly involved in the transaction**. Broader lists (customers, suppliers, etc.) must allow pre-existing relationships
+        - **Business Exception:** Must allow contact in the **ordinary course of business**
+        
+        **Approved Language:**
+        "Without the prior written consent of the Disclosing Party, the Recipient agrees not to contact any directors, officers, or employees of the Disclosing Party in connection with the Purpose. This restriction shall not be breached by contact made for another purpose than evaluating or negotiating the Proposed Transaction."
+        """)
+    
+    with st.expander("POLICY 7: No Third-Party Beneficiaries"):
+        st.markdown("""
+        - The NDA **must not grant enforceable rights** to non-signatories
+        - Delete references to affiliates as beneficiaries or legislation (e.g., UK Contracts (Rights of Third Parties) Act 1999)
+        """)
+    
+    with st.expander("POLICY 8: 'No Commitment to Invest' Clauses"):
+        st.markdown("""
+        - **Optional**. If absent, **do nothing**
+        - If present, ensure language is acceptable:
+        
+        "The parties acknowledge that this Agreement and the exchange of Confidential Information create no obligation to enter into any further agreement or transaction, including any investment, partnership, or joint venture."
+        """)
+    
+    with st.expander("POLICY 9: Assignment of Agreement"):
+        st.markdown("""
+        - NDA must **not prohibit Strada from assigning its rights**
+        - Ideal: each party may assign to **affiliates**; silence is acceptable; one-sided restriction is not
+        
+        **Approved Language:**
+        "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
+        """)
+    
+    with st.expander("POLICY 10: Omission of Redundant Legal Acknowledgements"):
+        st.markdown("""
+        - Remove clauses that merely restate pre-existing legal duties (e.g., insider-trading laws)
+        - These add no value and clutter the agreement
+        """)
+    
+    st.markdown("---")
+    
+    # LOW PRIORITY
+    st.subheader("🟢 LOW PRIORITY")
+    st.markdown("*These policies address preferences that can be addressed if time permits.*")
+    
+    with st.expander("POLICY 11: Governing Law & Jurisdiction"):
+        st.markdown("""
+        - Preference: **Belgian law**; exclusive courts of **Antwerp, Belgium**
+        - Acceptable fall-backs (in order):
+          1. Another European jurisdiction
+        - Non-European jurisdictions should be **flagged**
+        
+        **Approved Language:**
+        "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+        """)
+    
+    with st.expander("POLICY 12: Confidentiality Term"):
+        st.markdown("""
+        - Preferred term: **2 years** (maximum **3 years**)
+        - Term must be explicit
+        
+        **Approved Language:**
+        "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Project; and (ii) the date that is two or three (2 or 3) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
+        """)
+    
+    with st.expander("POLICY 13: Liability for Representatives"):
+        st.markdown("""
+        - Aim to limit Strada's liability for Representatives using an **efforts-based standard** (not strict)
+        
+        **Approved Language:**
+        "The Recipient will use its best efforts to procure that each of its Representatives who receives any Confidential Information is aware of and adheres to the terms of this Agreement. The Recipient shall be responsible for any breach of the confidentiality obligations of this Agreement by its Representatives."
+        """)
+    
+    with st.expander("POLICY 14: Definition of Confidential Information"):
+        st.markdown("""
+        - Definition should include **standard market exceptions**
+        
+        **Approved Language:**
+        "Confidential Information does not include information that:
+        (a) is or becomes generally available to the public through no breach by Recipient of the confidentiality undertakings hereunder;
+        (b) was in Recipient's lawful possession before receipt from Discloser, without any obligation of confidentiality;
+        (c) was received in good faith by Recipient from a third party not under an obligation of confidentiality to Discloser; or
+        (d) was disclosed by Recipient with the written permission of an authorized representative of the Discloser."
+        """)
+    
+    st.markdown("---")
+    
+    # Footer
+    st.info("""
+    **Note:** This playbook is designed to ensure consistency in NDA review processes. 
+    Always consult with legal counsel for complex situations or when in doubt about specific provisions.
+    """)
+    st.markdown("*Last updated: January 2025*")
