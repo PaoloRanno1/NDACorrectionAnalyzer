@@ -92,9 +92,14 @@ def display_header():
     - Export results as JSON or text summaries
     
     **📋 Policies Playbook Tab**: Reference NDA compliance policies
-    - Browse all 14 NDA policies organized by Red Flag (mandatory) and Yellow Flag (preferential) categories
+    - Browse all 14 NDA policies organized by High, Medium, and Low priority categories
     - Filter policies by type for quick reference
     - Expandable sections with detailed policy descriptions and approved language
+    
+    **✏️ Edit Playbook Tab**: Customize NDA analysis policies
+    - Edit and modify the playbook content used by both analysis chains
+    - Preview changes before saving
+    - Reset to default policies when needed
     
     **⚖️ Clean NDA Review Tab**: Analyze individual NDA documents
     - Upload any single NDA document for AI compliance analysis
@@ -228,8 +233,12 @@ def run_analysis(clean_file, corrected_file, model, temperature, analysis_mode):
             corrected_temp.write(corrected_file.getvalue())
             corrected_temp_path = corrected_temp.name
         
+        # Get current playbook content
+        from playbook_manager import get_current_playbook
+        playbook_content = get_current_playbook()
+        
         # Initialize testing chain
-        test_chain = TestingChain(model=model, temperature=temperature)
+        test_chain = TestingChain(model=model, temperature=temperature, playbook_content=playbook_content)
         
         # Create progress placeholder
         progress_placeholder = st.empty()
@@ -684,8 +693,12 @@ def display_single_nda_review(model, temperature):
                         os.unlink(temp_file_path)
                         return
                 
+                # Get current playbook content
+                from playbook_manager import get_current_playbook
+                playbook_content = get_current_playbook()
+                
                 # Initialize and run analysis
-                review_chain = StradaComplianceChain(model=model, temperature=temperature)
+                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                 compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
                 
                 # Clean up temporary file
@@ -837,7 +850,7 @@ def main():
     model, temperature, analysis_mode = display_sidebar()
     
     # Create main tabs
-    tab1, tab2, tab3 = st.tabs(["🔬 NDA Testing", "📋 Policies Playbook", "⚖️ Clean NDA Review"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🔬 NDA Testing", "📋 Policies Playbook", "✏️ Edit Playbook", "⚖️ Clean NDA Review"])
     
     with tab1:
         # File upload section
@@ -927,6 +940,11 @@ def main():
         display_policies_playbook()
     
     with tab3:
+        # Edit Playbook tab
+        from playbook_manager import display_editable_playbook
+        display_editable_playbook()
+    
+    with tab4:
         # Clean NDA Review tab
         display_single_nda_review(model, temperature)
 

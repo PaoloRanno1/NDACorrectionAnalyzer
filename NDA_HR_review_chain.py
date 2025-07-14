@@ -70,9 +70,12 @@ def load_nda_document(file_path: str) -> str:
         raise Exception(f"Error loading document: {str(e)}")
 
 
-def create_NDA_compliance_check_template():
+def create_NDA_compliance_check_template(playbook_content: str = None):
     """
     Create the prompt template based on the playbook to review the changes
+    
+    Args:
+        playbook_content (str, optional): Custom playbook content. If None, uses default.
     """
 
     template = """
@@ -90,32 +93,13 @@ You will be given a markdown file (`.md`) of an NDA. This document has been revi
 
 Your analysis MUST be based *exclusively* on the provided "Strada's NDA Playbook". This playbook is the single source of truth for determining if a change is compliant or not.
 
-
 ---
 
 <<START OF PLAYBOOK>>
 
-# Strada's NDA Playbook  
+{playbook_content}
 
-*Policies are grouped by **High**, **Medium**, or **Low** priority.*
-
----
-
-## Golden Rule of NDA Review  
-
-
-
-As a guiding principle, **Strada prefers concise and focused NDAs**.  
-
-Every clause introduces a potential obligation or restriction; fewer clauses mean **greater operational freedom** and **lower contractual risk**.  
-
-When reviewing, **question whether each clause is truly necessary**.  
-
-If language is problematic, soften it where possible—outright deletion is a last resort.  
-
-Conversely, **never add extra clauses** (e.g., a "No Commitment" clause) just because we like them; the fewer promises we make, the better.
-
-
+<<END OF PLAYBOOK>>
 
 ---
 
@@ -407,9 +391,17 @@ syndicate members,++"
 Analyze the above NDA and provide your report in the required JSON format.
 """
 
+    # Use default playbook if none provided
+    if playbook_content is None:
+        from playbook_manager import get_current_playbook
+        playbook_content = get_current_playbook()
+
+    # Format the template with the playbook content
+    formatted_template = template.format(playbook_content=playbook_content)
+
     return PromptTemplate(
         input_variables=["nda_text"],
-        template=template
+        template=formatted_template
     )
 
 
@@ -485,16 +477,17 @@ class NDAComplianceChain:
     Main chain for analyzing NDA changes against compliance requirements
     """
 
-    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0):
+    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0, playbook_content: str = None):
         """
         Initialize the compliance analysis chain
 
         Args:
             model (str): LLM model to use
             temperature (float): Temperature for response generation
+            playbook_content (str, optional): Custom playbook content
         """
         self.llm = setup_gemini_llm(model, temperature)
-        self.prompt = create_NDA_compliance_check_template()
+        self.prompt = create_NDA_compliance_check_template(playbook_content)
         self.chain = self._create_chain()
 
     def _create_chain(self):

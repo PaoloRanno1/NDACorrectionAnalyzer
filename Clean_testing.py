@@ -176,21 +176,22 @@ class TestingChain:
     Chain for comparing AI review results with HR edits to evaluate AI performance
     """
 
-    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0):
+    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0, playbook_content: str = None):
         """
         Initialize the testing chain
 
         Args:
             model (str): LLM model to use
             temperature (float): Temperature for response generation
+            playbook_content (str, optional): Custom playbook content
         """
         self.llm = ChatGoogleGenerativeAI(
             model=model,
             temperature=temperature,
             google_api_key=os.environ.get("GOOGLE_API_KEY")
         )
-        self.review_chain = StradaComplianceChain()
-        self.compliance_chain = NDAComplianceChain()
+        self.review_chain = StradaComplianceChain(playbook_content=playbook_content)
+        self.compliance_chain = NDAComplianceChain(playbook_content=playbook_content)
         self.prompt = create_testing_template()
         self.chain = self._create_chain()
 

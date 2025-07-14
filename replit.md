@@ -104,3 +104,11 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Enhanced JSON Parsing**: Added robust error handling for AI response parsing failures
 - **Updated UI**: Modified all display functions to show priority-based results with color coding (🔴🟡🟢)
 - **Module Updates**: All analysis modules updated to use new priority structure and consistent temperature defaults (0.0)
+
+### Editable Playbook Feature (January 2025)
+- **Dynamic Playbook System**: Created playbook_manager.py to handle editable playbook content
+- **Template Updates**: Modified both NDA_Review_chain.py and NDA_HR_review_chain.py to use dynamic playbook variables
+- **Session State Management**: Playbook content stored in Streamlit session state for persistence
+- **UI Integration**: Added "Edit Playbook" tab with text editor, preview, save, and reset functionality
+- **Chain Integration**: All analysis chains now automatically use the current playbook from session state
+- **Backward Compatibility**: Default playbook content maintained for initial state
