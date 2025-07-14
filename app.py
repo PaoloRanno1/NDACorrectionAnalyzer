@@ -263,8 +263,9 @@ def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data
     """Display executive summary with metrics and charts"""
     st.header("📊 Executive Summary")
     
-    # Extract metrics
-    metrics = extract_metrics_from_analysis(comparison_analysis, ai_review_data, hr_edits_data)
+    # Extract detailed metrics for stacked chart
+    from utils import extract_detailed_metrics_from_analysis
+    metrics = extract_detailed_metrics_from_analysis(comparison_analysis, ai_review_data, hr_edits_data)
     
     # Display key metrics
     col1, col2, col3, col4 = st.columns(4)

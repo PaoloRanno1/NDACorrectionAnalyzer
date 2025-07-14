@@ -53,6 +53,95 @@ def safe_json_loads(json_str: str) -> Optional[Dict]:
     except json.JSONDecodeError:
         return None
 
+def extract_detailed_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_edits_data: List) -> Dict:
+    """
+    Extract detailed metrics with priority breakdowns for stacked charts
+    """
+    metrics = {
+        'ai_total_issues': 0,
+        'ai_high_priority': 0,
+        'ai_medium_priority': 0,
+        'ai_low_priority': 0,
+        'hr_total_changes': 0,
+        'hr_high_priority': 0,
+        'hr_medium_priority': 0,
+        'hr_low_priority': 0,
+        'correctly_identified': 0,
+        'correctly_identified_high': 0,
+        'correctly_identified_medium': 0,
+        'correctly_identified_low': 0,
+        'missed_by_ai': 0,
+        'missed_by_ai_high': 0,
+        'missed_by_ai_medium': 0,
+        'missed_by_ai_low': 0,
+        'not_addressed_by_hr': 0,
+        'not_addressed_by_hr_high': 0,
+        'not_addressed_by_hr_medium': 0,
+        'not_addressed_by_hr_low': 0
+    }
+    
+    # Count AI issues by priority
+    if ai_review_data:
+        high_priority = ai_review_data.get('High Priority', [])
+        medium_priority = ai_review_data.get('Medium Priority', [])
+        low_priority = ai_review_data.get('Low Priority', [])
+        metrics['ai_high_priority'] = len(high_priority)
+        metrics['ai_medium_priority'] = len(medium_priority)
+        metrics['ai_low_priority'] = len(low_priority)
+        metrics['ai_total_issues'] = metrics['ai_high_priority'] + metrics['ai_medium_priority'] + metrics['ai_low_priority']
+    
+    # Count HR issues by priority
+    if isinstance(hr_edits_data, list):
+        for edit in hr_edits_data:
+            priority = edit.get('Priority', '').lower()
+            if priority == 'high':
+                metrics['hr_high_priority'] += 1
+            elif priority == 'medium':
+                metrics['hr_medium_priority'] += 1
+            elif priority == 'low':
+                metrics['hr_low_priority'] += 1
+        metrics['hr_total_changes'] = len(hr_edits_data)
+    
+    # Extract comparison metrics with priority breakdown
+    if comparison_analysis and isinstance(comparison_analysis, dict):
+        # Correctly identified
+        correctly_identified = comparison_analysis.get('Issues Correctly Identified by the AI', [])
+        for item in correctly_identified:
+            priority = item.get('Priority', '').lower()
+            if priority == 'high':
+                metrics['correctly_identified_high'] += 1
+            elif priority == 'medium':
+                metrics['correctly_identified_medium'] += 1
+            elif priority == 'low':
+                metrics['correctly_identified_low'] += 1
+        metrics['correctly_identified'] = len(correctly_identified)
+        
+        # Missed by AI
+        missed_by_ai = comparison_analysis.get('Issues Missed by the AI', [])
+        for item in missed_by_ai:
+            priority = item.get('Priority', '').lower()
+            if priority == 'high':
+                metrics['missed_by_ai_high'] += 1
+            elif priority == 'medium':
+                metrics['missed_by_ai_medium'] += 1
+            elif priority == 'low':
+                metrics['missed_by_ai_low'] += 1
+        metrics['missed_by_ai'] = len(missed_by_ai)
+        
+        # Not addressed by HR
+        not_addressed_by_hr = comparison_analysis.get('Issues Flagged by AI but Not Addressed by HR', [])
+        for item in not_addressed_by_hr:
+            priority = item.get('Priority', '').lower()
+            if priority == 'high':
+                metrics['not_addressed_by_hr_high'] += 1
+            elif priority == 'medium':
+                metrics['not_addressed_by_hr_medium'] += 1
+            elif priority == 'low':
+                metrics['not_addressed_by_hr_low'] += 1
+        metrics['not_addressed_by_hr'] = len(not_addressed_by_hr)
+    
+    return metrics
+
 def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_edits_data: List) -> Dict:
     """
     Extract key metrics from analysis results
@@ -133,43 +222,106 @@ def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_
 
 def create_comparison_chart(metrics: Dict) -> go.Figure:
     """
-    Create a comparison chart showing AI vs HR metrics
+    Create a stacked comparison chart showing AI vs HR metrics with priority breakdowns
     
     Args:
-        metrics: Dictionary containing metrics
+        metrics: Dictionary containing detailed metrics with priority breakdowns
         
     Returns:
         Plotly figure object
     """
-    # Create comparison data
     categories = ['AI Issues Flagged', 'HR Changes Made', 'Correctly Identified', 'Missed by AI', 'Not Addressed by HR']
-    values = [
-        metrics['ai_total_issues'],
-        metrics['hr_total_changes'],
-        metrics['correctly_identified'],
-        metrics['missed_by_ai'],
-        metrics['not_addressed_by_hr']
+    
+    # Use the passed metrics directly (they should contain detailed breakdowns)
+    detailed_metrics = metrics
+    
+    # High Priority data (red)
+    high_priority_values = [
+        detailed_metrics.get('ai_high_priority', 0),
+        detailed_metrics.get('hr_high_priority', 0),
+        detailed_metrics.get('correctly_identified_high', 0),
+        detailed_metrics.get('missed_by_ai_high', 0),
+        detailed_metrics.get('not_addressed_by_hr_high', 0)
     ]
     
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#ff9500']
+    # Medium Priority data (orange)
+    medium_priority_values = [
+        detailed_metrics.get('ai_medium_priority', 0),
+        detailed_metrics.get('hr_medium_priority', 0),
+        detailed_metrics.get('correctly_identified_medium', 0),
+        detailed_metrics.get('missed_by_ai_medium', 0),
+        detailed_metrics.get('not_addressed_by_hr_medium', 0)
+    ]
     
-    # Create bar chart
-    fig = go.Figure(data=[
-        go.Bar(
-            x=categories,
-            y=values,
-            marker_color=colors,
-            text=values,
-            textposition='auto',
-        )
-    ])
+    # Low Priority data (blue)
+    low_priority_values = [
+        detailed_metrics.get('ai_low_priority', 0),
+        detailed_metrics.get('hr_low_priority', 0),
+        detailed_metrics.get('correctly_identified_low', 0),
+        detailed_metrics.get('missed_by_ai_low', 0),
+        detailed_metrics.get('not_addressed_by_hr_low', 0)
+    ]
+    
+    # Create stacked bar chart
+    fig = go.Figure()
+    
+    # Add High Priority bars (bottom layer)
+    fig.add_trace(go.Bar(
+        name='High Priority',
+        x=categories,
+        y=high_priority_values,
+        marker_color='#d62728',  # Red
+        text=[str(v) if v > 0 else '' for v in high_priority_values],
+        textposition='inside',
+        textfont=dict(color='white', size=10)
+    ))
+    
+    # Add Medium Priority bars (middle layer)
+    fig.add_trace(go.Bar(
+        name='Medium Priority',
+        x=categories,
+        y=medium_priority_values,
+        marker_color='#ff7f0e',  # Orange
+        text=[str(v) if v > 0 else '' for v in medium_priority_values],
+        textposition='inside',
+        textfont=dict(color='white', size=10)
+    ))
+    
+    # Add Low Priority bars (top layer)
+    fig.add_trace(go.Bar(
+        name='Low Priority',
+        x=categories,
+        y=low_priority_values,
+        marker_color='#1f77b4',  # Blue
+        text=[str(v) if v > 0 else '' for v in low_priority_values],
+        textposition='inside',
+        textfont=dict(color='white', size=10)
+    ))
+    
+    # Add total count on top of each bar
+    total_values = [h + m + l for h, m, l in zip(high_priority_values, medium_priority_values, low_priority_values)]
+    fig.add_trace(go.Scatter(
+        x=categories,
+        y=[t + 0.3 for t in total_values],  # Slightly above the bars
+        mode='text',
+        text=[str(t) if t > 0 else '0' for t in total_values],
+        textfont=dict(color='black', size=12, family='Arial'),
+        showlegend=False
+    ))
     
     fig.update_layout(
         title='Analysis Comparison Overview',
         xaxis_title='Category',
         yaxis_title='Count',
         height=400,
-        showlegend=False
+        barmode='stack',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
     
     return fig
