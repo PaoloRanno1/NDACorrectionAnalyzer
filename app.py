@@ -827,6 +827,34 @@ HIGH PRIORITY:
                 mime="text/plain"
             )
         
+        st.markdown("---")
+        
+        # JSON Data Viewer
+        st.subheader("📋 JSON Data Viewer")
+        
+        tab1, tab2 = st.tabs(["📊 Analysis Results", "🔍 Raw Response"])
+        
+        with tab1:
+            st.subheader("Analysis Results JSON")
+            if compliance_report:
+                st.json(compliance_report)
+            else:
+                st.info("No analysis results available")
+        
+        with tab2:
+            st.subheader("Raw AI Response")
+            if hasattr(st.session_state, 'single_nda_raw') and st.session_state.single_nda_raw:
+                st.text_area(
+                    "Raw Response from AI Model",
+                    st.session_state.single_nda_raw,
+                    height=300,
+                    disabled=True
+                )
+            else:
+                st.info("No raw response available")
+        
+        st.markdown("---")
+        
         # Clear results
         if st.button("🗑️ Clear Results", key="clear_single_results"):
             if hasattr(st.session_state, 'single_nda_results'):
