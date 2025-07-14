@@ -309,173 +309,147 @@ def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data
         st.plotly_chart(fig, use_container_width=True)
 
 def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_edits_data):
-    """Display detailed comparison tables as requested"""
+    """Display detailed comparison tables matching the reference design"""
     st.subheader("📊 Detailed Comparison Tables")
     
-    # Import pandas for this function
     import pandas as pd
     
-    # Extract detailed data for tables
-    from utils import extract_detailed_comparison_data
-    table_data = extract_detailed_comparison_data(comparison_analysis, ai_review_data, hr_edits_data)
-    
-    # Custom CSS for better table styling
+    # Custom CSS for professional table styling
     st.markdown("""
     <style>
-    .comparison-table {
+    .dataframe {
         border: 1px solid #ddd;
         border-radius: 8px;
         overflow: hidden;
-        margin: 10px 0;
+        font-family: 'Arial', sans-serif;
     }
-    .table-header {
-        background-color: #4a90e2;
+    .dataframe th {
+        background-color: #2c3e50;
         color: white;
-        padding: 12px;
         font-weight: bold;
-        text-align: center;
-        border-bottom: 2px solid #357abd;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid #34495e;
     }
-    .table-cell {
+    .dataframe td {
         padding: 10px;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #ecf0f1;
         vertical-align: top;
     }
-    .table-row:nth-child(even) {
-        background-color: #f9f9f9;
+    .dataframe tr:nth-child(even) {
+        background-color: #f8f9fa;
     }
-    .table-row:nth-child(odd) {
+    .dataframe tr:nth-child(odd) {
         background-color: #ffffff;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create three columns for the tables
-    col1, col2 = st.columns(2)
+    # Extract data from comparison analysis
+    correctly_identified = []
+    missed_by_ai = []
+    not_addressed_by_hr = []
     
-    # Table 1: AI Correctly Identified flags
-    with col1:
-        st.markdown("### 🟢 AI Correctly Identified Flags")
-        correctly_identified = table_data['correctly_identified']
-        
-        if correctly_identified:
-            # Prepare data with proper text wrapping
-            table_data_clean = []
-            for item in correctly_identified:
-                flag_text = item['flag'][:100] + "..." if len(item['flag']) > 100 else item['flag']
-                desc_text = item['description'][:200] + "..." if len(item['description']) > 200 else item['description']
-                table_data_clean.append({
-                    'AI Correctly Identified flags': flag_text,
-                    'Description of the flag': desc_text
+    if isinstance(comparison_analysis, dict):
+        correctly_identified = comparison_analysis.get('Issues Correctly Identified by the AI', [])
+        missed_by_ai = comparison_analysis.get('Issues Missed by the AI', [])
+        not_addressed_by_hr = comparison_analysis.get('Issues Flagged by AI but Not Addressed by HR', [])
+    
+    # Helper function to create table data matching the reference design
+    def create_table_data(issues_list, issue_key="issue", section_key="section", priority_key="priority", analysis_key="analysis"):
+        table_data = []
+        for item in issues_list:
+            if isinstance(item, dict):
+                issue = item.get(issue_key, "N/A")
+                section = item.get(section_key, "N/A") 
+                priority = item.get(priority_key, "N/A")
+                analysis = item.get(analysis_key, "N/A")
+                
+                table_data.append({
+                    "Issue": issue,
+                    "Section": section,
+                    "Priority": priority,
+                    "Analysis": analysis
                 })
-            
-            table_df1 = pd.DataFrame(table_data_clean)
-            st.dataframe(
-                table_df1, 
-                use_container_width=True, 
-                hide_index=True,
-                height=300,
-                column_config={
-                    "AI Correctly Identified flags": st.column_config.TextColumn(
-                        "AI Correctly Identified flags",
-                        width="medium",
-                    ),
-                    "Description of the flag": st.column_config.TextColumn(
-                        "Description of the flag",
-                        width="large",
-                    )
-                }
-            )
-        else:
-            # Show empty table structure with better styling
-            empty_df1 = pd.DataFrame({
-                'AI Correctly Identified flags': ['No issues correctly identified'], 
-                'Description of the flag': ['No matching issues found between AI and HR reviews']
-            })
-            st.dataframe(empty_df1, use_container_width=True, hide_index=True, height=100)
+        return table_data
     
-    # Table 2: Missed Flags by the AI
-    with col2:
-        st.markdown("### 🔴 Missed Flags by the AI")
-        missed_flags = table_data['missed_flags']
-        
-        if missed_flags:
-            # Prepare data with proper text wrapping
-            table_data_clean = []
-            for item in missed_flags:
-                flag_text = item['flag'][:100] + "..." if len(item['flag']) > 100 else item['flag']
-                desc_text = item['description'][:200] + "..." if len(item['description']) > 200 else item['description']
-                table_data_clean.append({
-                    'Missed Flags by the AI': flag_text,
-                    'Description of the flag': desc_text
-                })
-            
-            table_df2 = pd.DataFrame(table_data_clean)
-            st.dataframe(
-                table_df2, 
-                use_container_width=True, 
-                hide_index=True,
-                height=300,
-                column_config={
-                    "Missed Flags by the AI": st.column_config.TextColumn(
-                        "Missed Flags by the AI",
-                        width="medium",
-                    ),
-                    "Description of the flag": st.column_config.TextColumn(
-                        "Description of the flag",
-                        width="large",
-                    )
-                }
-            )
-        else:
-            # Show empty table structure
-            empty_df2 = pd.DataFrame({
-                'Missed Flags by the AI': ['No issues missed'], 
-                'Description of the flag': ['AI successfully identified all relevant issues']
-            })
-            st.dataframe(empty_df2, use_container_width=True, hide_index=True, height=100)
-    
-    # Table 3: Flagged by AI but not addressed by HR (full width)
-    st.markdown("### 🟡 Flagged by AI but not addressed by HR")
-    false_positives = table_data['false_positives']
-    
-    if false_positives:
-        # Prepare data with proper text wrapping
-        table_data_clean = []
-        for item in false_positives:
-            flag_text = item['flag'][:120] + "..." if len(item['flag']) > 120 else item['flag']
-            desc_text = item['description'][:300] + "..." if len(item['description']) > 300 else item['description']
-            table_data_clean.append({
-                'Flagged by AI but not addressed by HR': flag_text,
-                'Description of the flag': desc_text
-            })
-        
-        table_df3 = pd.DataFrame(table_data_clean)
+    # Table 1: Issues Correctly Identified By The AI
+    st.markdown("### ✅ Issues Correctly Identified By The AI")
+    if correctly_identified:
+        table1_data = create_table_data(correctly_identified)
+        df1 = pd.DataFrame(table1_data)
         st.dataframe(
-            table_df3, 
+            df1, 
             use_container_width=True, 
             hide_index=True,
             height=300,
             column_config={
-                "Flagged by AI but not addressed by HR": st.column_config.TextColumn(
-                    "Flagged by AI but not addressed by HR",
-                    width="medium",
-                ),
-                "Description of the flag": st.column_config.TextColumn(
-                    "Description of the flag",
-                    width="large",
-                )
+                "Issue": st.column_config.TextColumn("Issue", width="large"),
+                "Section": st.column_config.TextColumn("Section", width="small"),
+                "Priority": st.column_config.TextColumn("Priority", width="small"),
+                "Analysis": st.column_config.TextColumn("Analysis", width="large")
             }
         )
     else:
-        # Show empty table structure
+        empty_df1 = pd.DataFrame({
+            "Issue": ["No issues correctly identified"],
+            "Section": ["N/A"], 
+            "Priority": ["N/A"],
+            "Analysis": ["No matching issues found between AI and HR reviews"]
+        })
+        st.dataframe(empty_df1, use_container_width=True, hide_index=True, height=100)
+    
+    # Table 2: Issues Missed By The AI  
+    st.markdown("### ❌ Issues Missed By The AI")
+    if missed_by_ai:
+        table2_data = create_table_data(missed_by_ai)
+        df2 = pd.DataFrame(table2_data)
+        st.dataframe(
+            df2, 
+            use_container_width=True, 
+            hide_index=True,
+            height=300,
+            column_config={
+                "Issue": st.column_config.TextColumn("Issue", width="large"),
+                "Section": st.column_config.TextColumn("Section", width="small"),
+                "Priority": st.column_config.TextColumn("Priority", width="small"),
+                "Analysis": st.column_config.TextColumn("Analysis", width="large")
+            }
+        )
+    else:
+        empty_df2 = pd.DataFrame({
+            "Issue": ["No issues missed"],
+            "Section": ["N/A"],
+            "Priority": ["N/A"], 
+            "Analysis": ["AI successfully identified all relevant issues"]
+        })
+        st.dataframe(empty_df2, use_container_width=True, hide_index=True, height=100)
+    
+    # Table 3: Issues Flagged By AI But Not Addressed By HR
+    st.markdown("### ⚠️ Issues Flagged By AI But Not Addressed By HR")
+    if not_addressed_by_hr:
+        table3_data = create_table_data(not_addressed_by_hr)
+        df3 = pd.DataFrame(table3_data)
+        st.dataframe(
+            df3, 
+            use_container_width=True, 
+            hide_index=True,
+            height=300,
+            column_config={
+                "Issue": st.column_config.TextColumn("Issue", width="large"),
+                "Section": st.column_config.TextColumn("Section", width="small"),
+                "Priority": st.column_config.TextColumn("Priority", width="small"),
+                "Analysis": st.column_config.TextColumn("Analysis", width="large")
+            }
+        )
+    else:
         empty_df3 = pd.DataFrame({
-            'Flagged by AI but not addressed by HR': ['No additional flags'], 
-            'Description of the flag': ['All AI-flagged issues were appropriately addressed by HR']
+            "Issue": ["No additional flags"],
+            "Section": ["N/A"],
+            "Priority": ["N/A"],
+            "Analysis": ["All AI-flagged issues were appropriately addressed by HR"]
         })
         st.dataframe(empty_df3, use_container_width=True, hide_index=True, height=100)
-    
-    st.markdown("---")
 
 def display_detailed_comparison(comparison_analysis):
     """Display detailed comparison results"""
@@ -592,11 +566,11 @@ def display_raw_data_export(comparison_analysis, ai_review_data, hr_edits_data):
         mime="application/json"
     )
 
-def display_json_viewers(ai_review_data, hr_edits_data):
-    """Display JSON data viewers"""
+def display_json_viewers(ai_review_data, hr_edits_data, comparison_analysis=None):
+    """Display JSON data viewers including testing comparison"""
     st.header("📋 Analysis Data")
     
-    tab1, tab2 = st.tabs(["AI Review Results", "HR Edits Analysis"])
+    tab1, tab2, tab3 = st.tabs(["AI Review Results", "HR Edits Analysis", "Testing Comparison"])
     
     with tab1:
         st.subheader("AI Review JSON")
@@ -611,6 +585,13 @@ def display_json_viewers(ai_review_data, hr_edits_data):
             st.json(hr_edits_data)
         else:
             st.info("No HR edits data available")
+    
+    with tab3:
+        st.subheader("Testing Comparison JSON")
+        if comparison_analysis:
+            st.json(comparison_analysis)
+        else:
+            st.info("No testing comparison data available")
 
 def display_single_nda_review(model, temperature):
     """Display clean NDA review section"""
@@ -913,7 +894,8 @@ def main():
             # JSON Viewers
             display_json_viewers(
                 st.session_state.ai_review_data,
-                st.session_state.hr_edits_data
+                st.session_state.hr_edits_data,
+                st.session_state.analysis_results
             )
             
             st.markdown("---")
