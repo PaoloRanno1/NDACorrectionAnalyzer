@@ -356,14 +356,15 @@ def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_e
         not_addressed_by_hr = comparison_analysis.get('Issues Flagged by AI but Not Addressed by HR', [])
     
     # Helper function to create table data matching the reference design
-    def create_table_data(issues_list, issue_key="issue", section_key="section", priority_key="priority", analysis_key="analysis"):
+    def create_table_data(issues_list):
         table_data = []
         for item in issues_list:
             if isinstance(item, dict):
-                issue = item.get(issue_key, "N/A")
-                section = item.get(section_key, "N/A") 
-                priority = item.get(priority_key, "N/A")
-                analysis = item.get(analysis_key, "N/A")
+                # Use exact key names from the JSON structure
+                issue = item.get("Issue", "N/A")
+                section = item.get("Section", "N/A") 
+                priority = item.get("Priority", "N/A")
+                analysis = item.get("Analysis", "N/A")
                 
                 table_data.append({
                     "Issue": issue,
