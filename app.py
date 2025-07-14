@@ -80,41 +80,7 @@ def display_header():
     
     st.markdown("""
     This tool compares AI-generated NDA reviews against HR corrections to evaluate AI 
-    performance in legal document analysis. Upload your clean NDA and HR-corrected 
-    version to get started.
-    
-    ### 📋 Application Features
-    
-    **🔬 NDA Testing Tab**: Compare AI performance against HR edits
-    - Upload a clean NDA document and an HR-corrected version
-    - Get detailed comparison analysis with accuracy metrics
-    - View structured tables showing correctly identified issues, missed flags, and false positives
-    - Export results as JSON or text summaries
-    
-    **📋 Policies Playbook Tab**: Reference NDA compliance policies
-    - Browse all 14 NDA policies organized by High, Medium, and Low priority categories
-    - Filter policies by type for quick reference
-    - Expandable sections with detailed policy descriptions and approved language
-    
-    **✏️ Edit Playbook Tab**: Customize NDA analysis policies
-    - Edit and modify the playbook content used by both analysis chains
-    - Preview changes before saving
-    - Reset to default policies when needed
-    
-    **⚖️ Clean NDA Review Tab**: Analyze individual NDA documents
-    - Upload any single NDA document for AI compliance analysis
-    - Get structured red flag and yellow flag issues with descriptions
-    - Export compliance reports in multiple formats
-    
-    ### 📄 File Format Requirements
-    
-    **Clean NDA File**: Upload the original, unmodified NDA document (PDF, DOCX, TXT, or MD format)
-    
-    **Corrected NDA File**: Upload the HR-edited version with tracked changes using these markers:
-    - `++text++` for additions made by HR
-    - `--text--` for deletions made by HR
-    
-    Example: `Information may be made available to ++directors and++ employees within your organisation`
+    performance in legal document analysis.
     """)
 
 def display_sidebar():
