@@ -158,12 +158,10 @@ Analyze the above NDA and provide your compliance report in the required JSON fo
         from playbook_manager import get_current_playbook
         playbook_content = get_current_playbook()
 
-    # Format the template with the playbook content
-    formatted_template = template.format(playbook_content=playbook_content)
-
     return PromptTemplate(
-        input_variables=["nda_text"],
-        template=formatted_template
+        input_variables=["nda_text", "playbook_content"],
+        template=template,
+        partial_variables={"playbook_content": playbook_content}
     )
 
 
