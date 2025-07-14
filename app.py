@@ -45,7 +45,7 @@ def initialize_session_state():
         st.session_state.corrected_file_content = None
     if 'analysis_config' not in st.session_state:
         st.session_state.analysis_config = {
-            'model': 'gemini-2.5-flash',
+            'model': 'gemini-2.5-pro',
             'temperature': 0.0,
             'analysis_mode': 'Full Analysis'
         }
@@ -83,7 +83,7 @@ def display_sidebar():
     st.sidebar.header("⚙️ Configuration")
     
     # Model selection
-    model_options = ["gemini-2.5-flash", "gemini-2.5-pro"]
+    model_options = ["gemini-2.5-pro", "gemini-2.5-flash"]
     selected_model = st.sidebar.selectbox(
         "Select AI Model",
         model_options,
