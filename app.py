@@ -72,16 +72,11 @@ def display_header():
     # Add logout button in the top right
     col1, col2 = st.columns([6, 1])
     with col1:
-        st.title("⚖️ NDA Analysis Comparison Tool")
+        pass  # Empty space
     with col2:
         if st.button("Logout", type="secondary"):
             st.session_state.authenticated = False
             st.rerun()
-    
-    st.markdown("""
-    This tool compares AI-generated NDA reviews against HR corrections to evaluate AI 
-    performance in legal document analysis.
-    """)
 
 def display_sidebar():
     """Display sidebar with configuration options"""
