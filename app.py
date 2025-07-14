@@ -468,11 +468,11 @@ def display_detailed_comparison(comparison_analysis):
             st.subheader("📄 Comparison Analysis Results")
             st.markdown(comparison_analysis["text_fallback"])
         else:
-            # Display structured JSON results
+            # Display structured JSON results using the correct key names
             categories = [
-                ("correctly_identified", "✅ Issues Correctly Identified by AI", "green"),
-                ("missed_by_ai", "❌ Issues Missed by AI", "red"), 
-                ("not_addressed_by_hr", "⚠️ Issues Flagged by AI but Not Addressed by HR", "orange")
+                ("Issues Correctly Identified by the AI", "✅ Issues Correctly Identified by AI", "green"),
+                ("Issues Missed by the AI", "❌ Issues Missed by AI", "red"), 
+                ("Issues Flagged by AI but Not Addressed by HR", "⚠️ Issues Flagged by AI but Not Addressed by HR", "orange")
             ]
             
             for category_key, title, color in categories:
@@ -480,17 +480,18 @@ def display_detailed_comparison(comparison_analysis):
                 if items:
                     st.subheader(title)
                     for idx, item in enumerate(items):
-                        with st.expander(f"{item.get('issue', f'Issue {idx+1}')}", expanded=False):
-                            st.markdown(f"**Analysis:** {item.get('analysis', 'No analysis provided')}")
-                elif category_key == "correctly_identified":
+                        with st.expander(f"{item.get('Issue', f'Issue {idx+1}')}", expanded=False):
+                            st.markdown(f"**Section:** {item.get('Section', 'N/A')}")
+                            st.markdown(f"**Priority:** {item.get('Priority', 'N/A')}")
+                            st.markdown(f"**Analysis:** {item.get('Analysis', 'No analysis provided')}")
+                else:
                     st.subheader(title)
-                    st.info("No issues were correctly identified by the AI.")
-                elif category_key == "missed_by_ai":
-                    st.subheader(title)
-                    st.info("The AI did not miss any issues that HR addressed.")
-                elif category_key == "not_addressed_by_hr":
-                    st.subheader(title)
-                    st.info("All AI-flagged issues were addressed by HR.")
+                    if "Correctly Identified" in category_key:
+                        st.info("No issues were correctly identified by the AI.")
+                    elif "Missed" in category_key:
+                        st.info("The AI did not miss any issues that HR addressed.")
+                    elif "Not Addressed" in category_key:
+                        st.info("All AI-flagged issues were addressed by HR.")
     else:
         # Old text format - use existing parsing logic
         formatted_results = format_analysis_results(comparison_analysis)

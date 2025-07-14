@@ -90,10 +90,10 @@ def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_
                 metrics['missed_by_ai'] = summary.get('missed_by_ai_count', 0)
                 metrics['not_addressed_by_hr'] = summary.get('not_addressed_by_hr_count', 0)
             else:
-                # Count from arrays if summary is missing
-                metrics['correctly_identified'] = len(comparison_analysis.get('correctly_identified', []))
-                metrics['missed_by_ai'] = len(comparison_analysis.get('missed_by_ai', []))
-                metrics['not_addressed_by_hr'] = len(comparison_analysis.get('not_addressed_by_hr', []))
+                # Count from arrays using exact key names
+                metrics['correctly_identified'] = len(comparison_analysis.get('Issues Correctly Identified by the AI', []))
+                metrics['missed_by_ai'] = len(comparison_analysis.get('Issues Missed by the AI', []))
+                metrics['not_addressed_by_hr'] = len(comparison_analysis.get('Issues Flagged by AI but Not Addressed by HR', []))
         else:
             # Old text format - use regex parsing
             correctly_identified_section = re.search(
