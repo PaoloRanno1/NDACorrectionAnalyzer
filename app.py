@@ -863,9 +863,227 @@ HIGH PRIORITY:
                 delattr(st.session_state, 'single_nda_raw')
             st.rerun()
 
+def display_homepage():
+    """Display the homepage with functionality descriptions"""
+    st.title("🏠 NDA Analysis Platform")
+    
+    st.markdown("""
+    Welcome to the comprehensive NDA Analysis Platform! This application helps evaluate AI performance 
+    in legal document analysis and provides powerful tools for NDA compliance review.
+    """)
+    
+    st.markdown("---")
+    
+    # Feature cards
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### 🔬 NDA Testing
+        Compare AI-generated NDA reviews against HR corrections to assess accuracy and coverage.
+        
+        **Key Features:**
+        - Upload original and HR-corrected NDA documents
+        - Get detailed comparison analysis with accuracy metrics
+        - View structured tables showing correctly identified issues, missed flags, and false positives
+        - Export results as JSON or text summaries
+        """)
+        
+        if st.button("🔬 Go to NDA Testing", key="nav_testing", use_container_width=True):
+            st.session_state.current_page = "testing"
+            st.rerun()
+    
+    with col2:
+        st.markdown("""
+        ### 📋 Policies Playbook
+        Browse and reference the complete NDA compliance policies.
+        
+        **Key Features:**
+        - Browse all 14 NDA policies organized by High, Medium, and Low priority categories
+        - Filter policies by type for quick reference
+        - Expandable sections with detailed policy descriptions and approved language
+        """)
+        
+        if st.button("📋 Go to Policies Playbook", key="nav_policies", use_container_width=True):
+            st.session_state.current_page = "policies"
+            st.rerun()
+    
+    st.markdown("---")
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown("""
+        ### ✏️ Edit Playbook
+        Customize and modify the NDA analysis policies used by both analysis chains.
+        
+        **Key Features:**
+        - Edit and modify the playbook content used by both analysis chains
+        - Preview changes before saving
+        - Reset to default policies when needed
+        - Real-time application to all future analyses
+        """)
+        
+        if st.button("✏️ Go to Edit Playbook", key="nav_edit", use_container_width=True):
+            st.session_state.current_page = "edit"
+            st.rerun()
+    
+    with col4:
+        st.markdown("""
+        ### ⚖️ Clean NDA Review
+        Analyze individual NDA documents for compliance issues.
+        
+        **Key Features:**
+        - Upload individual NDA documents for analysis
+        - Get detailed compliance reports with priority-based categorization
+        - View JSON output and raw AI responses
+        - Export results in multiple formats
+        """)
+        
+        if st.button("⚖️ Go to Clean NDA Review", key="nav_clean", use_container_width=True):
+            st.session_state.current_page = "clean"
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Additional info
+    st.markdown("""
+    ### 🔧 Configuration
+    Use the sidebar to configure:
+    - **AI Model**: Choose between Gemini 2.5 Flash or Pro
+    - **Temperature**: Control response creativity (0.0 - 1.0)
+    - **Analysis Mode**: Select Full Analysis or Quick Testing
+    
+    ### 📊 About the Priority System
+    - **🔴 High Priority (Policies 1-5)**: Mandatory changes required
+    - **🟡 Medium Priority (Policies 6-10)**: Preferential changes
+    - **🟢 Low Priority (Policies 11-14)**: Optional changes
+    """)
+
+def display_navigation():
+    """Display navigation bar"""
+    st.markdown("---")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        if st.button("🏠 Home", key="nav_home", use_container_width=True):
+            st.session_state.current_page = "home"
+            st.rerun()
+    
+    with col2:
+        if st.button("🔬 Testing", key="nav_testing_top", use_container_width=True):
+            st.session_state.current_page = "testing"
+            st.rerun()
+    
+    with col3:
+        if st.button("📋 Policies", key="nav_policies_top", use_container_width=True):
+            st.session_state.current_page = "policies"
+            st.rerun()
+    
+    with col4:
+        if st.button("✏️ Edit", key="nav_edit_top", use_container_width=True):
+            st.session_state.current_page = "edit"
+            st.rerun()
+    
+    with col5:
+        if st.button("⚖️ Review", key="nav_clean_top", use_container_width=True):
+            st.session_state.current_page = "clean"
+            st.rerun()
+
+def display_testing_page(model, temperature, analysis_mode):
+    """Display the NDA testing page"""
+    st.header("🔬 NDA Testing")
+    
+    # File upload section
+    clean_file, corrected_file = display_file_upload_section()
+    
+    # Analysis section
+    st.header("🔬 Testing Configuration")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.info(f"**Model:** {model} | **Temperature:** {temperature} | **Mode:** {analysis_mode}")
+    
+    with col2:
+        run_analysis_button = st.button(
+            "🚀 Run Testing",
+            disabled=not (clean_file and corrected_file),
+            use_container_width=True
+        )
+    
+    # Run testing when button is clicked
+    if run_analysis_button and clean_file and corrected_file:
+        with st.spinner("Running testing... This may take a few minutes."):
+            comparison_analysis, ai_review_data, hr_edits_data = run_analysis(
+                clean_file, corrected_file, model, temperature, analysis_mode
+            )
+            
+            if comparison_analysis:
+                # Store results in session state
+                st.session_state.analysis_results = comparison_analysis
+                st.session_state.ai_review_data = ai_review_data
+                st.session_state.hr_edits_data = hr_edits_data
+                
+                st.success("🎉 Testing completed successfully!")
+                st.rerun()
+    
+    # Display results if available
+    if st.session_state.analysis_results:
+        st.markdown("---")
+        
+        # Executive Summary
+        display_executive_summary(
+            st.session_state.analysis_results,
+            st.session_state.ai_review_data,
+            st.session_state.hr_edits_data
+        )
+        
+        st.markdown("---")
+        
+        # Detailed Comparison Tables
+        display_detailed_comparison_tables(
+            st.session_state.analysis_results,
+            st.session_state.ai_review_data,
+            st.session_state.hr_edits_data
+        )
+        
+        # Detailed Comparison
+        display_detailed_comparison(st.session_state.analysis_results)
+        
+        st.markdown("---")
+        
+        # JSON Viewers
+        display_json_viewers(
+            st.session_state.ai_review_data,
+            st.session_state.hr_edits_data,
+            st.session_state.analysis_results
+        )
+        
+        st.markdown("---")
+        
+        # Raw Data Export
+        display_raw_data_export(
+            st.session_state.analysis_results,
+            st.session_state.ai_review_data,
+            st.session_state.hr_edits_data
+        )
+        
+        # Clear results option
+        if st.button("🗑️ Clear Results", key="clear_results"):
+            st.session_state.analysis_results = None
+            st.session_state.ai_review_data = None
+            st.session_state.hr_edits_data = None
+            st.rerun()
+
 def main():
     """Main application function"""
     initialize_session_state()
+    
+    # Initialize current page if not set
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = "home"
     
     # Check authentication
     if not st.session_state.authenticated:
@@ -877,103 +1095,20 @@ def main():
     # Sidebar configuration
     model, temperature, analysis_mode = display_sidebar()
     
-    # Create main tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["🔬 NDA Testing", "📋 Policies Playbook", "✏️ Edit Playbook", "⚖️ Clean NDA Review"])
+    # Navigation
+    display_navigation()
     
-    with tab1:
-        # File upload section
-        clean_file, corrected_file = display_file_upload_section()
-        
-        # Analysis section
-        st.header("🔬 Testing Configuration")
-        
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            st.info(f"**Model:** {model} | **Temperature:** {temperature} | **Mode:** {analysis_mode}")
-        
-        with col2:
-            run_analysis_button = st.button(
-                "🚀 Run Testing",
-                disabled=not (clean_file and corrected_file),
-                use_container_width=True
-            )
-        
-        # Run testing when button is clicked
-        if run_analysis_button and clean_file and corrected_file:
-            with st.spinner("Running testing... This may take a few minutes."):
-                comparison_analysis, ai_review_data, hr_edits_data = run_analysis(
-                    clean_file, corrected_file, model, temperature, analysis_mode
-                )
-                
-                if comparison_analysis:
-                    # Store results in session state
-                    st.session_state.analysis_results = comparison_analysis
-                    st.session_state.ai_review_data = ai_review_data
-                    st.session_state.hr_edits_data = hr_edits_data
-                    
-                    st.success("🎉 Testing completed successfully!")
-                    st.rerun()
-        
-        # Display results if available
-        if st.session_state.analysis_results:
-            st.markdown("---")
-            
-            # Executive Summary
-            display_executive_summary(
-                st.session_state.analysis_results,
-                st.session_state.ai_review_data,
-                st.session_state.hr_edits_data
-            )
-            
-            st.markdown("---")
-            
-            # Detailed Comparison Tables
-            display_detailed_comparison_tables(
-                st.session_state.analysis_results,
-                st.session_state.ai_review_data,
-                st.session_state.hr_edits_data
-            )
-            
-            # Detailed Comparison
-            display_detailed_comparison(st.session_state.analysis_results)
-            
-            st.markdown("---")
-            
-            # JSON Viewers
-            display_json_viewers(
-                st.session_state.ai_review_data,
-                st.session_state.hr_edits_data,
-                st.session_state.analysis_results
-            )
-            
-            st.markdown("---")
-            
-            # Raw Data Export
-            display_raw_data_export(
-                st.session_state.analysis_results,
-                st.session_state.ai_review_data,
-                st.session_state.hr_edits_data
-            )
-            
-            # Clear results option
-            if st.button("🗑️ Clear Results", key="clear_results"):
-                st.session_state.analysis_results = None
-                st.session_state.ai_review_data = None
-                st.session_state.hr_edits_data = None
-                st.rerun()
-    
-    with tab2:
-        # Policies Playbook tab
+    # Page routing
+    if st.session_state.current_page == "home":
+        display_homepage()
+    elif st.session_state.current_page == "testing":
+        display_testing_page(model, temperature, analysis_mode)
+    elif st.session_state.current_page == "policies":
         display_policies_playbook()
-    
-    with tab3:
-        # Edit Playbook tab
+    elif st.session_state.current_page == "edit":
         from playbook_manager import display_editable_playbook
         display_editable_playbook()
-    
-    with tab4:
-        # Clean NDA Review tab
+    elif st.session_state.current_page == "clean":
         display_single_nda_review(model, temperature)
 
 if __name__ == "__main__":
