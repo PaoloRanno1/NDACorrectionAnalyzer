@@ -12,9 +12,11 @@ from typing import Tuple
 from dotenv import load_dotenv
 
 # Import our custom modules
-import NDA_Review_chain
-import NDA_HR_review_chain
-
+from NDA_Review_chain import StradaComplianceChain
+from NDA_HR_review_chain import NDAComplianceChain
+import json
+import os
+import re
 # Load environment variables
 load_dotenv()
 
@@ -29,7 +31,7 @@ You are LexAI, a senior M&A lawyer and diligence analyst with meticulous attenti
 Your task is to compare two JSON arrays describing proposed edits to an NDA—one produced by an AI reviewer, the other by HR—and produce a concise reconciliation.
 
 # Context
--Each object in the arrays represents a single issue flagged in the NDA (red-flag or yellow-flag).
+-Each object in the arrays represents a single issue flagged in the NDA (High, Medium or Low priority).
 -Keys you may encounter include issue, section, citation, problem, suggested_replacement, change_type, etc.
 -Company playbook policies are referenced by number (e.g., "Policy 7").
 
@@ -39,15 +41,19 @@ Your task is to act as a verifier by comparing HR edits against AI-flagged issue
 
 **AI Review JSON Structure:**
 ```json
-[
-  {{
-    "issue": "Short name of the policy violation",
-    "citation": "The exact clause text that is problematic",
-    "section": "Section number or identifier (e.g., '5.1')",
-    "problem": "Explanation of why the clause is problematic",
-    "suggested_fix": "The AI's suggested replacement text"
-  }}
-]
+{{
+  "High Priority": [
+    {{
+      "issue": "Short name of the policy violation",
+      "citation": "The exact clause text that is problematic",
+      "section": "Section number or identifier (e.g., '5.1')",
+      "problem": "Explanation of why the clause is problematic",
+      "suggested_replacement": "The AI's suggested replacement text"
+    }}
+  ],
+  "Medium Priority": [...],
+  "Low Priority": [...]
+}}
 ```
 
 **HR Edits JSON Structure:**
@@ -55,6 +61,7 @@ Your task is to act as a verifier by comparing HR edits against AI-flagged issue
 [
   {{
     "issue": "Descriptive title of the issue",
+    "Priority": "One of: 'High', 'Medium', or 'Low'",
     "change_type": "One of: 'Addition', 'Deletion', or 'Replacement'",
     "section": "Section number or identifier from the NDA where change occurred",
     "citation": "The original text that was changed or the new text that was added",
@@ -68,59 +75,46 @@ Your task is to act as a verifier by comparing HR edits against AI-flagged issue
 ## Analysis Process:
 1. **Match Issues**: Compare items between the two JSON arrays using:
    - Primary matching: Issue
-   - Secondary matching: section
-   - Tertiary matching: citation text similarity and suggested_fix
+   - Secondary matching: Section
+   - Tertiary matching: citation text similarity and suggested_replacement
    - Context matching: Case-insensitive and minor wording differences should still count as a match
 
 2. **Categorize All Issues**: Sort every issue from both lists into exactly one of the following buckets:
-a)Issues Correctly Identified by the AI – HR adopted the AI's point (fully or substantially).
+a)Issues Correctly Identified by the AI – HR adopted the AI's point (fully or partially).
 b)Issues Missed by the AI – HR fixed something the AI never flagged.
 c)Issues Flagged by the AI but Not Addressed by HR – HR left the AI's point unresolved.
 
 
 ## Output Requirements
 
-Return your analysis as a JSON object with the following structure:
+Present your findings using the exact format below.
 
-```json
 {{
-  "correctly_identified": [
+  "Issues Correctly Identified by the AI": [
     {{
-      "issue": "Brief description with section reference",
-      "analysis": "1-2 sentences comparing AI suggestion vs HR implementation"
+      "Issue": "Brief description, e.g., "Return & Destruction of Information clause" ",
+      "Section": "[section of the NDA, take it from the AI json] or 'N/A'",
+      "Priority": "High, Medium or Low",
+      "Analysis":"1-2 sentences comparing what the AI suggested vs. what HR actually did, AI proposed <summary>. HR implemented <summary>."
     }}
   ],
-  "missed_by_ai": [
+  "Issues Missed by the AI": [
     {{
-      "issue": "Brief description of what HR changed with section reference", 
-      "analysis": "Explanation of what AI missed and what HR did"
+      "Issue": "Brief description of what HR changed, e.g.,"Deleted ambiguous termination clause" or Uncategorized Change",
+      "Section": "[section of the NDA, take it from the HR json or 'N/A'",
+      "Priority": "High, Medium or Low",
+      "Analysis": "AI did not mention this. HR added/removed <summary>"
     }}
   ],
-  "not_addressed_by_hr": [
+  "Issues Flagged by AI but Not Addressed by HR": [
     {{
-      "issue": "Brief description of AI-flagged issue with section reference",
-      "analysis": "AI's concern and why HR may not have addressed it"
+      "Issue": "Brief description, e.g., "Overly broad confidentiality scope" ",
+      "Section": "[section of the NDA, take it from the AI JSON] or 'N/A' ",
+      "Priority": "High, Medium or Low",
+      "Analysis": "1-2 sentences describing the AI's concern and why HR may not have addressed it"
     }}
-  ],
-  "summary": {{
-    "total_ai_issues": 0,
-    "total_hr_changes": 0,
-    "correctly_identified_count": 0,
-    "missed_by_ai_count": 0,
-    "not_addressed_by_hr_count": 0
-  }}
+  ]
 }}
-```
-
-**Important**: Return ONLY the JSON object, no additional text or markdown formatting.
-
-# Quality Standards
-- Be precise in your matching logic
-- Provide clear, concise explanations
-- Maintain objectivity in your analysis
-- Focus on substantive issues, not minor formatting changes
--Do not invent fixes—only report what the JSON shows.
--Remain neutral and factual.
 
 AI Review JSON: {ai_review_json}
 
@@ -132,13 +126,57 @@ HR Edits JSON: {hr_edits_json}
         template=template
     )
 
+import re
+import json
+import os
+def parse_compliance_response(response_text: str) -> dict:
+    """
+    Parse LLM response and extract JSON, handling potential formatting issues
+
+    Args:
+        response_text (str): Raw response from LLM
+
+    Returns:
+        dict: Parsed compliance report
+
+    Raises:
+        Exception: If JSON parsing fails
+    """
+    try:
+        # Clean up the response
+        response_text = response_text.strip()
+
+        # Try direct parsing first
+        if response_text.startswith('{'):
+            return json.loads(response_text)
+
+        # Extract JSON from markdown formatting
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1))
+
+        # Look for JSON object in the text
+        obj_start = response_text.find('{')
+        obj_end = response_text.rfind('}') + 1
+        if obj_start != -1 and obj_end > obj_start:
+            json_text = response_text[obj_start:obj_end]
+            return json.loads(json_text)
+
+        raise ValueError("No valid JSON found in response")
+
+    except json.JSONDecodeError as e:
+        raise Exception(f"Failed to parse JSON response: {str(e)}\nResponse: {response_text[:500]}...")
+    except Exception as e:
+        raise Exception(f"Error parsing response: {str(e)}")
+
+
 
 class TestingChain:
     """
     Chain for comparing AI review results with HR edits to evaluate AI performance
     """
 
-    def __init__(self, model: str = "gemini-2.5-flash", temperature: float = 0.1):
+    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0):
         """
         Initialize the testing chain
 
@@ -151,8 +189,8 @@ class TestingChain:
             temperature=temperature,
             google_api_key=os.environ.get("GOOGLE_API_KEY")
         )
-        self.review_chain = NDA_Review_chain.StradaComplianceChain()
-        self.compliance_chain = NDA_HR_review_chain.NDAComplianceChain()
+        self.review_chain = StradaComplianceChain()
+        self.compliance_chain = NDAComplianceChain()
         self.prompt = create_testing_template()
         self.chain = self._create_chain()
 
@@ -160,7 +198,7 @@ class TestingChain:
         """Create the LangChain chain using LCEL syntax"""
         return self.prompt | self.llm | StrOutputParser()
 
-    def analyze_testing(self, clean_nda_path: str, corrected_nda_path: str) -> Tuple[str, dict, list]:
+    def analyze_testing(self, clean_nda_path: str, corrected_nda_path: str) -> Tuple[dict, str, dict, list]:
         """
         Perform comparative analysis between AI review and HR edits
 
@@ -169,7 +207,7 @@ class TestingChain:
             corrected_nda_path (str): Path to the corrected NDA file with tracked changes
 
         Returns:
-            Tuple[str, dict, list]: (comparison_analysis, ai_review_json, hr_edits_json)
+            Tuple[dict, str, dict, list]: (comparison_analysis, comparison_response, ai_review_json, hr_edits_json)
 
         Raises:
             Exception: If analysis fails
@@ -195,81 +233,52 @@ class TestingChain:
                 "ai_review_json": json.dumps(ai_review_json, indent=2),
                 "hr_edits_json": json.dumps(hr_edits_json, indent=2)
             })
-            
-            # Parse JSON response
-            print(f"Raw comparison response: {comparison_response[:200]}...")  # Debug output
-            try:
-                # Clean up the response
-                clean_response = comparison_response.strip()
-                if clean_response.startswith('```json'):
-                    clean_response = clean_response.replace('```json', '').replace('```', '').strip()
-                
-                comparison_json = json.loads(clean_response)
-                print("✅ Comparison analysis completed and parsed successfully")
-            except json.JSONDecodeError as e:
-                print(f"⚠️ Warning: Could not parse comparison response as JSON: {e}")
-                print(f"Response was: '{comparison_response}'")
-                print("Falling back to text format")
-                comparison_json = {
-                    "text_fallback": comparison_response if comparison_response else "No comparison response received",
-                    "correctly_identified": [],
-                    "missed_by_ai": [],
-                    "not_addressed_by_hr": [],
-                    "summary": {
-                        "total_ai_issues": len(ai_review_json.get('red_flags', [])) + len(ai_review_json.get('yellow_flags', [])),
-                        "total_hr_changes": len(hr_edits_json),
-                        "correctly_identified_count": 0,
-                        "missed_by_ai_count": 0,
-                        "not_addressed_by_hr_count": 0
-                    }
-                }
-
+            print("✅ Comparison analysis completed")
+            comparison_analysis = parse_compliance_response(comparison_response)
             print("\n" + "=" * 60)
             print("ANALYSIS COMPLETED SUCCESSFULLY!")
             print("=" * 60)
 
-            return comparison_json, ai_review_json, hr_edits_json
+            return comparison_analysis, comparison_response, ai_review_json, hr_edits_json
 
         except Exception as e:
             print(f"❌ Error during testing analysis: {str(e)}")
             raise
-    def quick_testing(self,ai_review_json,hr_edits_json):
-        print("!!Staring quick testing")
+    
+    def quick_testing(self, ai_review_json, hr_edits_json):
+        print("!!Starting quick testing")
         comparison_response = self.chain.invoke({
             "ai_review_json": json.dumps(ai_review_json, indent=2),
             "hr_edits_json": json.dumps(hr_edits_json, indent=2)
         })
-        return comparison_response
+        comparison_analysis = parse_compliance_response(comparison_response)
+        return comparison_analysis, comparison_response
 
-    def save_results(self, comparison_analysis: str, ai_review: dict, hr_edits: list,
+
+    def save_results(self, comparison_analysis: dict, ai_review: dict, hr_edits: list,
                      output_dir: str = "results") -> None:
         """
         Save all analysis results to files
 
         Args:
-            comparison_analysis (str): The comparative analysis text
+            comparison_analysis (dict): The comparative analysis results
             ai_review (dict): AI review results
             hr_edits (list): HR edits analysis
             output_dir (str): Directory to save results
         """
-        try:
-            # Create output directory if it doesn't exist
-            os.makedirs(output_dir, exist_ok=True)
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
 
-            # Save comparison analysis
-            with open(f"{output_dir}/comparison_analysis.txt", 'w', encoding='utf-8') as f:
-                f.write(comparison_analysis)
+        # Save comparison analysis
+        with open(f"{output_dir}/comparison_analysis.json", 'w', encoding='utf-8') as f:
+            json.dump(comparison_analysis, f, indent=2, ensure_ascii=False)
 
-            # Save AI review results
-            with open(f"{output_dir}/ai_review_results.json", 'w', encoding='utf-8') as f:
-                json.dump(ai_review, f, indent=2, ensure_ascii=False)
+        # Save AI review
+        with open(f"{output_dir}/ai_review.json", 'w', encoding='utf-8') as f:
+            json.dump(ai_review, f, indent=2, ensure_ascii=False)
 
-            # Save HR edits analysis
-            with open(f"{output_dir}/hr_edits_analysis.json", 'w', encoding='utf-8') as f:
-                json.dump(hr_edits, f, indent=2, ensure_ascii=False)
+        # Save HR edits
+        with open(f"{output_dir}/hr_edits.json", 'w', encoding='utf-8') as f:
+            json.dump(hr_edits, f, indent=2, ensure_ascii=False)
 
-            print(f"📁 All results saved to {output_dir}/ directory")
-
-        except Exception as e:
-            print(f"❌ Error saving results: {str(e)}")
-            raise
+        print(f"📁 Results saved to {output_dir}/")

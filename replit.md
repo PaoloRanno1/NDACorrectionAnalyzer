@@ -35,7 +35,10 @@ Preferred communication style: Simple, everyday language.
 
 ### 3. Data Models
 - **ComplianceFlag**: Individual compliance issues with structured fields (issue, citation, section, problem, suggested_replacement)
-- **ComplianceReport**: Complete compliance analysis with red_flags and yellow_flags categorization
+- **ComplianceReport**: Complete compliance analysis with priority-based categorization:
+  - **High Priority**: Policies 1-5 (mandatory changes)
+  - **Medium Priority**: Policies 6-10 (preferential changes)
+  - **Low Priority**: Policies 11-14 (optional changes)
 
 ## Data Flow
 
@@ -89,3 +92,15 @@ Preferred communication style: Simple, everyday language.
 ## Technical Notes
 
 The application uses a sophisticated prompt engineering approach with persona-based AI instructions, treating the AI as "LexAI, a senior M&A lawyer and diligence analyst." The system supports multiple analysis modes and provides detailed reconciliation between AI-generated reviews and human HR edits, making it suitable for legal compliance verification workflows.
+
+## Recent Changes (January 2025)
+
+### Priority System Implementation
+- **Updated Data Structure**: Replaced red_flags/yellow_flags with priority-based categorization
+- **Priority Levels**: 
+  - High Priority (Policies 1-5): Mandatory changes required
+  - Medium Priority (Policies 6-10): Preferential changes 
+  - Low Priority (Policies 11-14): Optional changes
+- **Enhanced JSON Parsing**: Added robust error handling for AI response parsing failures
+- **Updated UI**: Modified all display functions to show priority-based results with color coding (🔴🟡🟢)
+- **Module Updates**: All analysis modules updated to use new priority structure and consistent temperature defaults (0.0)

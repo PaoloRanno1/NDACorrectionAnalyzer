@@ -237,7 +237,7 @@ def run_analysis(clean_file, corrected_file, model, temperature, analysis_mode):
         if analysis_mode == "Full Analysis":
             # Run full analysis
             progress_placeholder.info("🔄 Running AI review on clean NDA...")
-            comparison_analysis, ai_review_data, hr_edits_data = test_chain.analyze_testing(
+            comparison_analysis, comparison_response, ai_review_data, hr_edits_data = test_chain.analyze_testing(
                 clean_temp_path, corrected_temp_path
             )
         else:
@@ -729,47 +729,61 @@ def display_single_nda_review(model, temperature):
         compliance_report = st.session_state.single_nda_results
         
         if compliance_report:
-            red_flags = compliance_report.get('red_flags', [])
-            yellow_flags = compliance_report.get('yellow_flags', [])
+            high_priority = compliance_report.get('High Priority', [])
+            medium_priority = compliance_report.get('Medium Priority', [])
+            low_priority = compliance_report.get('Low Priority', [])
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("🔴 Red Flags (Mandatory)", len(red_flags))
+                st.metric("🔴 High Priority (Mandatory)", len(high_priority))
             with col2:
-                st.metric("🟡 Yellow Flags (Preferential)", len(yellow_flags))
+                st.metric("🟡 Medium Priority (Preferential)", len(medium_priority))
             with col3:
-                st.metric("📋 Total Issues", len(red_flags) + len(yellow_flags))
+                st.metric("🟢 Low Priority (Optional)", len(low_priority))
         
         st.markdown("---")
         
         # Detailed results
         st.subheader("🔍 Detailed Review Results")
         
-        # Red flags
-        if red_flags:
-            st.subheader("🔴 Red Flags (Mandatory Changes Required)")
-            for idx, flag in enumerate(red_flags):
-                with st.expander(f"Red Flag {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+        # High priority issues
+        if high_priority:
+            st.subheader("🔴 High Priority Issues (Mandatory Changes Required)")
+            for idx, flag in enumerate(high_priority):
+                with st.expander(f"High Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
                     st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
                     st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
                     st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
                     if flag.get('suggested_replacement'):
                         st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
         else:
-            st.success("✅ No red flag issues found!")
+            st.success("✅ No high priority issues found!")
         
-        # Yellow flags
-        if yellow_flags:
-            st.subheader("🟡 Yellow Flags (Preferential Changes)")
-            for idx, flag in enumerate(yellow_flags):
-                with st.expander(f"Yellow Flag {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+        # Medium priority issues
+        if medium_priority:
+            st.subheader("🟡 Medium Priority Issues (Preferential Changes)")
+            for idx, flag in enumerate(medium_priority):
+                with st.expander(f"Medium Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
                     st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
                     st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
                     st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
                     if flag.get('suggested_replacement'):
                         st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
         else:
-            st.success("✅ No yellow flag issues found!")
+            st.success("✅ No medium priority issues found!")
+        
+        # Low priority issues
+        if low_priority:
+            st.subheader("🟢 Low Priority Issues (Optional Changes)")
+            for idx, flag in enumerate(low_priority):
+                with st.expander(f"Low Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No low priority issues found!")
         
         st.markdown("---")
         

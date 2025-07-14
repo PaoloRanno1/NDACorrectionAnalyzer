@@ -75,9 +75,10 @@ def extract_metrics_from_analysis(comparison_analysis, ai_review_data: Dict, hr_
     
     # Count AI issues
     if ai_review_data:
-        red_flags = ai_review_data.get('red_flags', [])
-        yellow_flags = ai_review_data.get('yellow_flags', [])
-        metrics['ai_total_issues'] = len(red_flags) + len(yellow_flags)
+        high_priority = ai_review_data.get('High Priority', [])
+        medium_priority = ai_review_data.get('Medium Priority', [])
+        low_priority = ai_review_data.get('Low Priority', [])
+        metrics['ai_total_issues'] = len(high_priority) + len(medium_priority) + len(low_priority)
     
     # Extract metrics from comparison analysis
     if comparison_analysis:
