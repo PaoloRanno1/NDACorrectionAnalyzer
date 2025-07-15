@@ -1191,19 +1191,24 @@ def display_testing_results_page():
     # Display summary statistics
     st.subheader("📈 Summary Statistics")
     
+    # Calculate totals for the metrics
+    total_ai_issues = sum(len(issues) for issues in detailed_analytics["ai_issues"].values())
+    total_hr_edits = sum(len(edits) for edits in detailed_analytics["hr_edits"].values())
+    total_missed = sum(len(missed) for missed in detailed_analytics["missed_by_ai"].values())
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Total Results", results_summary["total_results"])
-    
-    with col2:
         st.metric("Unique NDAs", results_summary["total_ndas"])
     
+    with col2:
+        st.metric("Total AI Issues Flagged", total_ai_issues)
+    
     with col3:
-        st.metric("Avg AI Issues", results_summary["avg_ai_issues"])
+        st.metric("Total HR Edits", total_hr_edits)
     
     with col4:
-        st.metric("Avg HR Edits", results_summary["avg_hr_edits"])
+        st.metric("Total Issues Missed", total_missed)
     
     st.markdown("---")
     
