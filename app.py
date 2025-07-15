@@ -162,6 +162,9 @@ def display_file_upload_section():
                     clean_path, corrected_path = paths
                     clean_file, corrected_file = create_file_objects_from_paths(clean_path, corrected_path)
                     
+                    # Store selected NDA name for saving results
+                    st.session_state.selected_test_nda = selected_nda
+                    
                     col1, col2 = st.columns(2)
                     with col1:
                         st.success(f"✅ Clean NDA: {os.path.basename(clean_path)}")
@@ -170,6 +173,10 @@ def display_file_upload_section():
                     
                     # Show file info
                     st.info(f"**Selected Test NDA:** {selected_nda}")
+            else:
+                # Clear selected NDA if nothing is selected
+                if hasattr(st.session_state, 'selected_test_nda'):
+                    delattr(st.session_state, 'selected_test_nda')
         else:
             st.warning("No test NDAs found in the test_data folder. Please add some test files or use custom upload.")
             st.info("Add files to the `test_data/` folder following the naming convention: `[name]_clean.md` and `[name]_corrected.md`")
@@ -905,6 +912,26 @@ def display_homepage():
     
     with col2:
         st.markdown("""
+        ### 📊 Testing Results
+        View and manage saved testing results from previous NDA analyses.
+        
+        **Key Features:**
+        - Browse saved test results by project name and date
+        - View executive summary charts and detailed comparisons
+        - Export results data and manage saved analyses
+        - Track AI performance across multiple tests
+        """)
+        
+        if st.button("📊 Go to Testing Results", key="nav_results", use_container_width=True):
+            st.session_state.current_page = "results"
+            st.rerun()
+    
+    st.markdown("---")
+    
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.markdown("""
         ### 📋 Policies Playbook
         Browse and reference the complete NDA compliance policies.
         
@@ -918,11 +945,7 @@ def display_homepage():
             st.session_state.current_page = "policies"
             st.rerun()
     
-    st.markdown("---")
-    
-    col3, col4 = st.columns(2)
-    
-    with col3:
+    with col4:
         st.markdown("""
         ### ✏️ Edit Playbook
         Customize and modify the NDA analysis policies used by both analysis chains.
@@ -938,7 +961,11 @@ def display_homepage():
             st.session_state.current_page = "edit"
             st.rerun()
     
-    with col4:
+    st.markdown("---")
+    
+    col5, col6 = st.columns(2)
+    
+    with col5:
         st.markdown("""
         ### ⚖️ Clean NDA Review
         Analyze individual NDA documents for compliance issues.
@@ -974,7 +1001,7 @@ def display_navigation():
     """Display navigation bar"""
     st.markdown("---")
     
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
         if st.button("🏠 Home", key="nav_home", use_container_width=True):
@@ -987,16 +1014,21 @@ def display_navigation():
             st.rerun()
     
     with col3:
+        if st.button("📊 Results", key="nav_results_top", use_container_width=True):
+            st.session_state.current_page = "results"
+            st.rerun()
+    
+    with col4:
         if st.button("📋 Policies", key="nav_policies_top", use_container_width=True):
             st.session_state.current_page = "policies"
             st.rerun()
     
-    with col4:
+    with col5:
         if st.button("✏️ Edit", key="nav_edit_top", use_container_width=True):
             st.session_state.current_page = "edit"
             st.rerun()
     
-    with col5:
+    with col6:
         if st.button("⚖️ Review", key="nav_clean_top", use_container_width=True):
             st.session_state.current_page = "clean"
             st.rerun()
@@ -1080,12 +1112,222 @@ def display_testing_page(model, temperature, analysis_mode):
             st.session_state.hr_edits_data
         )
         
+        st.markdown("---")
+        
+        # Save Results Section
+        st.subheader("💾 Save Testing Results")
+        st.write("Save this analysis for future reference and comparison.")
+        
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            # Get NDA name from file or test selection
+            nda_name = "Custom NDA"
+            if hasattr(st.session_state, 'selected_test_nda') and st.session_state.selected_test_nda:
+                nda_name = st.session_state.selected_test_nda
+            elif clean_file and hasattr(clean_file, 'name'):
+                nda_name = clean_file.name.replace('.md', '').replace('.txt', '').replace('.pdf', '').replace('.docx', '')
+            
+            custom_name = st.text_input("Result Name:", value=nda_name, help="Enter a name for this test result")
+        
+        with col2:
+            if st.button("💾 Save Results", key="save_results", use_container_width=True):
+                if custom_name:
+                    from results_manager import save_testing_results
+                    from utils import create_comparison_chart, extract_detailed_metrics_from_analysis
+                    
+                    # Generate the executive summary chart
+                    metrics = extract_detailed_metrics_from_analysis(
+                        st.session_state.analysis_results,
+                        st.session_state.ai_review_data,
+                        st.session_state.hr_edits_data
+                    )
+                    executive_summary_fig = create_comparison_chart(metrics)
+                    
+                    # Save the results
+                    result_id = save_testing_results(
+                        nda_name=custom_name,
+                        comparison_analysis=st.session_state.analysis_results,
+                        ai_review_data=st.session_state.ai_review_data,
+                        hr_edits_data=st.session_state.hr_edits_data,
+                        executive_summary_fig=executive_summary_fig,
+                        model_used=model,
+                        temperature=temperature,
+                        analysis_mode=analysis_mode
+                    )
+                    
+                    st.success(f"✅ Results saved successfully! ID: {result_id}")
+                    st.info("You can view saved results in the 'Results' tab.")
+                else:
+                    st.error("Please enter a name for the results.")
+        
+        st.markdown("---")
+        
         # Clear results option
         if st.button("🗑️ Clear Results", key="clear_results"):
             st.session_state.analysis_results = None
             st.session_state.ai_review_data = None
             st.session_state.hr_edits_data = None
             st.rerun()
+
+def display_testing_results_page():
+    """Display the testing results page with saved results"""
+    st.title("📊 Testing Results")
+    
+    import json
+    import os
+    from results_manager import get_saved_results, get_results_summary, load_saved_result, delete_saved_result
+    
+    # Get saved results
+    saved_results = get_saved_results()
+    results_summary = get_results_summary()
+    
+    if not saved_results:
+        st.info("No saved results found. Run some tests and save the results to see them here.")
+        return
+    
+    # Display summary statistics
+    st.subheader("📈 Summary Statistics")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Results", results_summary["total_results"])
+    
+    with col2:
+        st.metric("Unique NDAs", results_summary["total_ndas"])
+    
+    with col3:
+        st.metric("Avg AI Issues", results_summary["avg_ai_issues"])
+    
+    with col4:
+        st.metric("Avg HR Edits", results_summary["avg_hr_edits"])
+    
+    st.markdown("---")
+    
+    # Results selection and display
+    st.subheader("📋 Saved Results")
+    
+    # Create dropdown with project names
+    result_options = []
+    for result in saved_results:
+        timestamp = result.get("timestamp", "")
+        if timestamp:
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                formatted_date = dt.strftime("%Y-%m-%d %H:%M")
+            except:
+                formatted_date = timestamp[:16]
+        else:
+            formatted_date = "Unknown"
+        
+        option_text = f"{result['nda_name']} - {formatted_date} ({result['model_used']})"
+        result_options.append(option_text)
+    
+    selected_result_index = st.selectbox(
+        "Select a result to view:",
+        range(len(result_options)),
+        format_func=lambda x: result_options[x] if x < len(result_options) else "",
+        help="Choose a saved result to view detailed analysis"
+    )
+    
+    if selected_result_index is not None and selected_result_index < len(saved_results):
+        selected_result = saved_results[selected_result_index]
+        result_id = selected_result["result_id"]
+        
+        # Display result metadata
+        st.subheader(f"📄 {selected_result['nda_name']}")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.info(f"**Model:** {selected_result['model_used']}")
+            st.info(f"**Temperature:** {selected_result['temperature']}")
+        
+        with col2:
+            st.info(f"**Analysis Mode:** {selected_result['analysis_mode']}")
+            st.info(f"**Date:** {selected_result['timestamp'][:16]}")
+        
+        with col3:
+            st.info(f"**AI Issues:** {selected_result['ai_issues_count']}")
+            st.info(f"**HR Edits:** {selected_result['hr_edits_count']}")
+        
+        st.markdown("---")
+        
+        # Load and display the saved result
+        loaded_result = load_saved_result(result_id)
+        
+        if loaded_result:
+            comparison_analysis, ai_review_data, hr_edits_data, executive_summary_fig = loaded_result
+            
+            # Display executive summary
+            st.subheader("📊 Executive Summary")
+            st.plotly_chart(executive_summary_fig, use_container_width=True)
+            
+            st.markdown("---")
+            
+            # Display detailed comparison tables
+            st.subheader("📋 Detailed Comparison Tables")
+            display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_edits_data)
+            
+            st.markdown("---")
+            
+            # Display detailed comparison
+            st.subheader("🔍 Detailed Analysis")
+            display_detailed_comparison(comparison_analysis)
+            
+            st.markdown("---")
+            
+            # JSON viewers
+            st.subheader("📋 JSON Data")
+            display_json_viewers(ai_review_data, hr_edits_data, comparison_analysis)
+            
+            st.markdown("---")
+            
+            # Export and delete options
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Export button
+                export_data = {
+                    "metadata": selected_result,
+                    "comparison_analysis": comparison_analysis,
+                    "ai_review_data": ai_review_data,
+                    "hr_edits_data": hr_edits_data
+                }
+                
+                st.download_button(
+                    label="📥 Download Result Data",
+                    data=json.dumps(export_data, indent=2),
+                    file_name=f"nda_result_{result_id}.json",
+                    mime="application/json"
+                )
+            
+            with col2:
+                # Delete button
+                if st.button("🗑️ Delete Result", key=f"delete_{result_id}"):
+                    if delete_saved_result(result_id):
+                        st.success("Result deleted successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to delete result.")
+        else:
+            st.error("Failed to load the selected result.")
+    
+    st.markdown("---")
+    
+    # Bulk operations
+    st.subheader("🔧 Bulk Operations")
+    
+    if st.button("🗑️ Clear All Results", key="clear_all_results"):
+        st.warning("This action cannot be undone!")
+        if st.button("⚠️ Confirm Delete All", key="confirm_delete_all"):
+            import shutil
+            if os.path.exists("saved_results"):
+                shutil.rmtree("saved_results")
+                st.success("All results cleared!")
+                st.rerun()
 
 def main():
     """Main application function"""
@@ -1113,6 +1355,8 @@ def main():
         display_homepage()
     elif st.session_state.current_page == "testing":
         display_testing_page(model, temperature, analysis_mode)
+    elif st.session_state.current_page == "results":
+        display_testing_results_page()
     elif st.session_state.current_page == "policies":
         display_policies_playbook()
     elif st.session_state.current_page == "edit":

@@ -129,3 +129,14 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Project Octagon Test Case**: Added first test NDA (Project Octagon) to demonstrate the system
 - **User Self-Management**: Designed system for users to easily add their own test cases by dropping files in test_data folder
 - **Backward Compatibility**: Maintained existing custom file upload functionality alongside new test database
+
+### Results Management System (January 2025)
+- **Results Storage**: Created `results_manager.py` module for saving and loading testing results
+- **Save Results Feature**: Added "Save Results" button to testing page with customizable result names
+- **Testing Results Page**: New navigation page for viewing saved results with dropdown selection by project names
+- **Executive Summary Preservation**: Saves Plotly charts as both HTML and PNG formats for future viewing
+- **Comprehensive Data Storage**: Stores analysis results, AI review data, HR edits, and metadata with timestamps
+- **Results Management**: Features for viewing, exporting, and deleting saved results with bulk operations
+- **Performance Tracking**: Summary statistics showing total results, unique NDAs, and average metrics across tests
+- **Navigation Enhancement**: Added 6-column navigation bar including new Results page
+- **Homepage Integration**: Updated homepage to feature the new Results management functionality
