@@ -1232,6 +1232,15 @@ def display_testing_results_page():
         with st.expander("🤖 AI Issues Flagged by Priority", expanded=False):
             ai_issues = detailed_analytics["ai_issues"]
             
+            # Count summary
+            total_ai = sum(len(issues) for issues in ai_issues.values())
+            high_count = len(ai_issues["high"])
+            medium_count = len(ai_issues["medium"])
+            low_count = len(ai_issues["low"])
+            
+            st.markdown(f"**📊 Total AI Issues Flagged: {total_ai}** (🔴 {high_count} High, 🟡 {medium_count} Medium, 🟢 {low_count} Low)")
+            st.markdown("---")
+            
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.markdown("**🔴 High Priority Issues**")
@@ -1268,6 +1277,15 @@ def display_testing_results_page():
         
         with st.expander("👥 HR Edits Made by Priority", expanded=False):
             hr_edits = detailed_analytics["hr_edits"]
+            
+            # Count summary
+            total_hr = sum(len(edits) for edits in hr_edits.values())
+            hr_high_count = len(hr_edits["high"])
+            hr_medium_count = len(hr_edits["medium"])
+            hr_low_count = len(hr_edits["low"])
+            
+            st.markdown(f"**📊 Total HR Edits Made: {total_hr}** (🔴 {hr_high_count} High, 🟡 {hr_medium_count} Medium, 🟢 {hr_low_count} Low)")
+            st.markdown("---")
             
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -1306,6 +1324,15 @@ def display_testing_results_page():
         with st.expander("❌ Issues Missed by AI", expanded=False):
             missed_issues = detailed_analytics["missed_by_ai"]
             
+            # Count summary
+            total_missed = sum(len(missed) for missed in missed_issues.values())
+            missed_high_count = len(missed_issues["high"])
+            missed_medium_count = len(missed_issues["medium"])
+            missed_low_count = len(missed_issues["low"])
+            
+            st.markdown(f"**📊 Total Issues Missed by AI: {total_missed}** (🔴 {missed_high_count} High, 🟡 {missed_medium_count} Medium, 🟢 {missed_low_count} Low)")
+            st.markdown("---")
+            
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.markdown("**🔴 High Priority Missed**")
@@ -1336,6 +1363,49 @@ def display_testing_results_page():
                             st.write(f"**Issue:** {missed['issue']}")
                 else:
                     st.success("No low priority issues missed!")
+        
+        with st.expander("⚠️ False Positives (AI Flagged but HR Didn't Address)", expanded=False):
+            false_positives = detailed_analytics["false_positives"]
+            
+            # Count summary
+            total_fp = sum(len(fp) for fp in false_positives.values())
+            fp_high_count = len(false_positives["high"])
+            fp_medium_count = len(false_positives["medium"])
+            fp_low_count = len(false_positives["low"])
+            
+            st.markdown(f"**📊 Total False Positives: {total_fp}** (🔴 {fp_high_count} High, 🟡 {fp_medium_count} Medium, 🟢 {fp_low_count} Low)")
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**🔴 High Priority False Positives**")
+                if false_positives["high"]:
+                    for fp in false_positives["high"]:
+                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
+                            st.write(f"**Section:** {fp['section']}")
+                            st.write(f"**Issue:** {fp['issue']}")
+                else:
+                    st.success("No high priority false positives!")
+            
+            with col2:
+                st.markdown("**🟡 Medium Priority False Positives**")
+                if false_positives["medium"]:
+                    for fp in false_positives["medium"]:
+                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
+                            st.write(f"**Section:** {fp['section']}")
+                            st.write(f"**Issue:** {fp['issue']}")
+                else:
+                    st.success("No medium priority false positives!")
+            
+            with col3:
+                st.markdown("**🟢 Low Priority False Positives**")
+                if false_positives["low"]:
+                    for fp in false_positives["low"]:
+                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
+                            st.write(f"**Section:** {fp['section']}")
+                            st.write(f"**Issue:** {fp['issue']}")
+                else:
+                    st.success("No low priority false positives!")
         
         # Project Breakdown Table
         st.subheader("📋 Project Performance Breakdown")

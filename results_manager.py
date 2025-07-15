@@ -330,7 +330,7 @@ def get_detailed_analytics() -> Dict:
         
         # Extract HR edits by priority  
         for edit in hr_edits_data:
-            priority = edit.get("priority", "").lower()
+            priority = edit.get("Priority", "").lower()  # Capital P for Priority
             if priority in ["high", "medium", "low"]:
                 all_hr_edits[priority].append({
                     "project": project_name,
