@@ -1,0 +1,141 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Overly broad non-solicitation clause",
+        "Section": "9.",
+        "Priority": "High",
+        "Analysis": "AI proposed removing the restriction on affiliates and adding standard exceptions. HR implemented a partial fix by removing the restriction on affiliates but did not add the other suggested exceptions."
+      },
+      {
+        "Issue": "Return & Destruction of Information clause",
+        "Section": "12.",
+        "Priority": "High",
+        "Analysis": "AI proposed adding exceptions for information retained for compliance, on backups, or in work product. HR implemented a substantively similar change, adding exceptions for compliance, audit, archiving, and automated backups."
+      }
+    ],
+    "Issues Missed by the AI": [
+      {
+        "Issue": "Vague termination term",
+        "Section": "18.",
+        "Priority": "Low",
+        "Analysis": "AI did not mention this. HR replaced a vague termination time with a specific 2-year term, aligning with company policy."
+      }
+    ],
+    "Issues Flagged by AI but Not Addressed by HR": [
+      {
+        "Issue": "Narrow definition of Representatives",
+        "Section": "7. a.",
+        "Priority": "High",
+        "Analysis": "AI flagged that the definition of who can receive information was too narrow and excluded affiliates, as required by Policy 2. HR did not address this high-priority issue."
+      },
+      {
+        "Issue": "Prohibition on assignment to affiliates",
+        "Section": "19.",
+        "Priority": "Medium",
+        "Analysis": "AI noted the agreement prohibits assignment to affiliates, contrary to Policy 9. HR did not make the required change to permit such assignments."
+      },
+      {
+        "Issue": "Incomplete definition of Confidential Information",
+        "Section": "3.",
+        "Priority": "Low",
+        "Analysis": "AI identified that the exceptions to Confidential Information were missing a standard carve-out for disclosures made with written permission. This low-priority point was not addressed by HR."
+      },
+      {
+        "Issue": "Strict liability for Representative breaches",
+        "Section": "7. a. iv.",
+        "Priority": "Low",
+        "Analysis": "AI flagged that the Buyer has strict liability for breaches by its personnel, whereas Policy 13 prefers a 'best efforts' standard. HR did not amend this clause."
+      },
+      {
+        "Issue": "Incorrect governing law and jurisdiction",
+        "Section": "21.",
+        "Priority": "Low",
+        "Analysis": "AI noted the governing law was Delaware, while Policy 11 requires a European jurisdiction, preferably Belgium. HR did not propose changing the governing law."
+      }
+    ]
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "to such employees, agents, representatives and advisors of the Buyer that have a need to know for the Permitted Purpose provided that:",
+        "section": "7. a.",
+        "problem": "The definition of who may receive Confidential Information is too narrow. It excludes affiliates, shareholders, potential syndicate members, and other finance providers, which is required by Policy 2.",
+        "suggested_replacement": "Confidential Information may be disclosed by the Buyer to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such information for the Permitted Purpose, provided the Buyer remains responsible for any breach of this Agreement by its Representatives."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 4' Clause",
+        "citation": "The Buyer, its affiliates, subsidiaries and representatives will not, from the date of this Agreement for a period of one year, directly or indirectly solicit for employment or employ any person who is now employed or retained by the Seller",
+        "section": "9.",
+        "problem": "The non-solicitation clause violates Policy 4 because it incorrectly applies to the Buyer's affiliates and lacks mandatory exceptions for hires resulting from general advertisements or unsolicited applications.",
+        "suggested_replacement": "For a period of one (1) year from the date of this Agreement, the Buyer agrees not to directly solicit for employment any employee of the Seller with whom the Buyer had material contact in connection with the Permitted Purpose. This restriction shall not apply to any of the Buyer's affiliated portfolio companies, nor to employees who respond to public advertisements, make unsolicited applications, are referred by an unaffiliated recruiter, or whose employment commences more than six (6) months after the date of this Agreement."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 3' Clause",
+        "citation": "return all Confidential Information to the Seller; b. provide a certificate to the Seller to the effect that the Buyer has returned all Confidential Information to the Seller.",
+        "section": "12.",
+        "problem": "The clause requires the absolute return of all Confidential Information, failing to provide mandatory exceptions for retention on automated backups, in internal work product, or for legal/regulatory compliance as required by Policy 3.",
+        "suggested_replacement": "Upon the Seller's written request, the Buyer shall return or destroy all Confidential Information. However, this obligation shall not apply to: (i) Confidential Information the Buyer or its Representatives must retain under applicable law, rule, or regulation; (ii) Confidential Information saved to electronic media under automatic archiving or data-security procedures; and (iii) reports, notes, or other materials prepared by or on behalf of the Buyer that incorporate Confidential Information ('Secondary Information'). Any material not returned or destroyed remains subject to this Agreement's confidentiality obligations."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 9' Clause",
+        "citation": "this Agreement may not be assigned or otherwise transferred by either party in whole or part without the prior written consent of the other party to this Agreement.",
+        "section": "19.",
+        "problem": "The clause prohibits assignment without prior consent. Policy 9 requires that Strada (the Buyer) must be able to assign its rights to its affiliates.",
+        "suggested_replacement": "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 14' Clause",
+        "citation": "Confidential Information will not include the following information: a. Information that is generally known in the industry of the Seller; b. Information that is now or subsequently becomes generally available to the public through no wrongful act of the Buyer;",
+        "section": "3.",
+        "problem": "The definition of what is excluded from 'Confidential Information' is missing the standard exception for information disclosed with the Disclosing Party's written permission.",
+        "suggested_replacement": "Confidential Information does not include information that: (a) is or becomes generally available to the public through no breach by Buyer of the confidentiality undertakings hereunder; (b) was in Buyer's lawful possession before receipt from Seller, without any obligation of confidentiality; (c) was received in good faith by Buyer from a third party not under an obligation of confidentiality to Seller; or (d) was disclosed by Buyer with the written permission of an authorized representative of the Seller."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 13' Clause",
+        "citation": "the Buyer agrees to be responsible for and indemnify the Seller for any breach of this Agreement by its personnel.",
+        "section": "7. a. iv.",
+        "problem": "This clause imposes strict liability on the Buyer for breaches by its personnel. Policy 13 prefers an efforts-based standard to limit this liability.",
+        "suggested_replacement": "The Buyer will use its best efforts to procure that each of its Representatives who receives any Confidential Information is aware of and adheres to the terms of this Agreement. The Buyer shall be responsible for any breach of the confidentiality obligations of this Agreement by its Representatives."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 11' Clause",
+        "citation": "This Agreement will be construed in accordance with and governed by the laws of the State of Delaware.",
+        "section": "21.",
+        "problem": "The agreement is governed by the laws of Delaware, a non-European jurisdiction. Policy 11 expresses a strong preference for Belgian law and courts, or another European jurisdiction as a fallback.",
+        "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Correction aligning with High Priority Policy 4",
+      "Priority": "High",
+      "change_type": "Deletion",
+      "section": "9.",
+      "citation": "Context: 'The Buyer, its --affiliates, -- subsidiaries and representatives will not, from the date of this Agreement for a period of one year, directly or indirectly solicit for employment or employ any person who is now employed or retained by the Seller...'",
+      "problem": "The words 'affiliates' and 'subsidiaries' were removed from the non-solicitation clause. This is a required correction under High Priority Policy 4, which mandates that non-solicitation restrictions must not apply to Strada's affiliates or portfolio companies. This change correctly limits the scope of the restriction to the Buyer only."
+    },
+    {
+      "issue": "Correction aligning with High Priority Policy 3",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "12. c.",
+      "citation": "Context: '...the Buyer will: ... c. ++[However, the Buyer is entitled to keep copies and portions of the Confidential Information which are required to be kept for compliance, audit or archiving purposes. In addition, the Confidential Information that is stored on drives due to automatic back-up procedures does not need to be returned/destroyed]++'",
+      "problem": "An exception was added to the 'Return of Confidential Information' clause. This addition correctly allows Strada to retain information for compliance/archiving and on automated backup systems, which is a mandatory requirement under High Priority Policy 3. The original clause mandated absolute return, which is prohibited."
+    },
+    {
+      "issue": "Correction aligning with Low Priority Policy 12",
+      "Priority": "Low",
+      "change_type": "Replacement",
+      "section": "18.",
+      "citation": "Original: '...all rights and obligations under this Agreement will terminate at that time.' New: '...all rights and obligations under this Agreement will terminate at [the second anniversary of this Agreement].'",
+      "problem": "The vague termination time ('at that time') was replaced with a specific 2-year term. This change aligns with Low Priority Policy 12, which requires an explicit confidentiality term and states a preference for a 2-year duration."
+    }
+  ]
+}
