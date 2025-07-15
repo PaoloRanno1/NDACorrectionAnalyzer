@@ -1241,37 +1241,56 @@ def display_testing_results_page():
             st.markdown(f"**📊 Total AI Issues Flagged: {total_ai}** (🔴 {high_count} High, 🟡 {medium_count} Medium, 🟢 {low_count} Low)")
             st.markdown("---")
             
+            # Group issues by project for cleaner display
+            def group_issues_by_project(issues_list):
+                project_groups = {}
+                for issue in issues_list:
+                    project = issue['project']
+                    if project not in project_groups:
+                        project_groups[project] = []
+                    project_groups[project].append(issue)
+                return project_groups
+
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.markdown("**🔴 High Priority Issues**")
                 if ai_issues["high"]:
-                    for issue in ai_issues["high"]:
-                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
-                            st.write(f"**Section:** {issue['section']}")
-                            st.write(f"**Issue:** {issue['issue']}")
-                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                    high_projects = group_issues_by_project(ai_issues["high"])
+                    for project, issues in high_projects.items():
+                        with st.expander(f"{project} ({len(issues)} issues)"):
+                            for issue in issues:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write(f"  Citation: {issue['citation'][:150]}...")
+                                st.write("---")
                 else:
                     st.info("No high priority issues flagged")
             
             with col2:
                 st.markdown("**🟡 Medium Priority Issues**")
                 if ai_issues["medium"]:
-                    for issue in ai_issues["medium"]:
-                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
-                            st.write(f"**Section:** {issue['section']}")
-                            st.write(f"**Issue:** {issue['issue']}")
-                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                    medium_projects = group_issues_by_project(ai_issues["medium"])
+                    for project, issues in medium_projects.items():
+                        with st.expander(f"{project} ({len(issues)} issues)"):
+                            for issue in issues:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write(f"  Citation: {issue['citation'][:150]}...")
+                                st.write("---")
                 else:
                     st.info("No medium priority issues flagged")
             
             with col3:
                 st.markdown("**🟢 Low Priority Issues**")
                 if ai_issues["low"]:
-                    for issue in ai_issues["low"]:
-                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
-                            st.write(f"**Section:** {issue['section']}")
-                            st.write(f"**Issue:** {issue['issue']}")
-                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                    low_projects = group_issues_by_project(ai_issues["low"])
+                    for project, issues in low_projects.items():
+                        with st.expander(f"{project} ({len(issues)} issues)"):
+                            for issue in issues:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write(f"  Citation: {issue['citation'][:150]}...")
+                                st.write("---")
                 else:
                     st.info("No low priority issues flagged")
         
@@ -1291,33 +1310,42 @@ def display_testing_results_page():
             with col1:
                 st.markdown("**🔴 High Priority HR Edits**")
                 if hr_edits["high"]:
-                    for edit in hr_edits["high"]:
-                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
-                            st.write(f"**Section:** {edit['section']}")
-                            st.write(f"**Issue:** {edit['issue']}")
-                            st.write(f"**Change Type:** {edit['change_type']}")
+                    high_hr_projects = group_issues_by_project(hr_edits["high"])
+                    for project, edits in high_hr_projects.items():
+                        with st.expander(f"{project} ({len(edits)} edits)"):
+                            for edit in edits:
+                                st.markdown(f"**• {edit['issue'][:80]}...**")
+                                st.write(f"  Section: {edit['section']}")
+                                st.write(f"  Change Type: {edit['change_type']}")
+                                st.write("---")
                 else:
                     st.info("No high priority HR edits")
             
             with col2:
                 st.markdown("**🟡 Medium Priority HR Edits**")
                 if hr_edits["medium"]:
-                    for edit in hr_edits["medium"]:
-                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
-                            st.write(f"**Section:** {edit['section']}")
-                            st.write(f"**Issue:** {edit['issue']}")
-                            st.write(f"**Change Type:** {edit['change_type']}")
+                    medium_hr_projects = group_issues_by_project(hr_edits["medium"])
+                    for project, edits in medium_hr_projects.items():
+                        with st.expander(f"{project} ({len(edits)} edits)"):
+                            for edit in edits:
+                                st.markdown(f"**• {edit['issue'][:80]}...**")
+                                st.write(f"  Section: {edit['section']}")
+                                st.write(f"  Change Type: {edit['change_type']}")
+                                st.write("---")
                 else:
                     st.info("No medium priority HR edits")
             
             with col3:
                 st.markdown("**🟢 Low Priority HR Edits**")
                 if hr_edits["low"]:
-                    for edit in hr_edits["low"]:
-                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
-                            st.write(f"**Section:** {edit['section']}")
-                            st.write(f"**Issue:** {edit['issue']}")
-                            st.write(f"**Change Type:** {edit['change_type']}")
+                    low_hr_projects = group_issues_by_project(hr_edits["low"])
+                    for project, edits in low_hr_projects.items():
+                        with st.expander(f"{project} ({len(edits)} edits)"):
+                            for edit in edits:
+                                st.markdown(f"**• {edit['issue'][:80]}...**")
+                                st.write(f"  Section: {edit['section']}")
+                                st.write(f"  Change Type: {edit['change_type']}")
+                                st.write("---")
                 else:
                     st.info("No low priority HR edits")
         
@@ -1337,30 +1365,39 @@ def display_testing_results_page():
             with col1:
                 st.markdown("**🔴 High Priority Missed**")
                 if missed_issues["high"]:
-                    for missed in missed_issues["high"]:
-                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
-                            st.write(f"**Section:** {missed['section']}")
-                            st.write(f"**Issue:** {missed['issue']}")
+                    high_missed_projects = group_issues_by_project(missed_issues["high"])
+                    for project, missed in high_missed_projects.items():
+                        with st.expander(f"{project} ({len(missed)} missed)"):
+                            for issue in missed:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write("---")
                 else:
                     st.success("No high priority issues missed!")
             
             with col2:
                 st.markdown("**🟡 Medium Priority Missed**")
                 if missed_issues["medium"]:
-                    for missed in missed_issues["medium"]:
-                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
-                            st.write(f"**Section:** {missed['section']}")
-                            st.write(f"**Issue:** {missed['issue']}")
+                    medium_missed_projects = group_issues_by_project(missed_issues["medium"])
+                    for project, missed in medium_missed_projects.items():
+                        with st.expander(f"{project} ({len(missed)} missed)"):
+                            for issue in missed:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write("---")
                 else:
                     st.success("No medium priority issues missed!")
             
             with col3:
                 st.markdown("**🟢 Low Priority Missed**")
                 if missed_issues["low"]:
-                    for missed in missed_issues["low"]:
-                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
-                            st.write(f"**Section:** {missed['section']}")
-                            st.write(f"**Issue:** {missed['issue']}")
+                    low_missed_projects = group_issues_by_project(missed_issues["low"])
+                    for project, missed in low_missed_projects.items():
+                        with st.expander(f"{project} ({len(missed)} missed)"):
+                            for issue in missed:
+                                st.markdown(f"**• {issue['issue'][:80]}...**")
+                                st.write(f"  Section: {issue['section']}")
+                                st.write("---")
                 else:
                     st.success("No low priority issues missed!")
         
@@ -1380,30 +1417,39 @@ def display_testing_results_page():
             with col1:
                 st.markdown("**🔴 High Priority False Positives**")
                 if false_positives["high"]:
-                    for fp in false_positives["high"]:
-                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
-                            st.write(f"**Section:** {fp['section']}")
-                            st.write(f"**Issue:** {fp['issue']}")
+                    high_fp_projects = group_issues_by_project(false_positives["high"])
+                    for project, fps in high_fp_projects.items():
+                        with st.expander(f"{project} ({len(fps)} false positives)"):
+                            for fp in fps:
+                                st.markdown(f"**• {fp['issue'][:80]}...**")
+                                st.write(f"  Section: {fp['section']}")
+                                st.write("---")
                 else:
                     st.success("No high priority false positives!")
             
             with col2:
                 st.markdown("**🟡 Medium Priority False Positives**")
                 if false_positives["medium"]:
-                    for fp in false_positives["medium"]:
-                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
-                            st.write(f"**Section:** {fp['section']}")
-                            st.write(f"**Issue:** {fp['issue']}")
+                    medium_fp_projects = group_issues_by_project(false_positives["medium"])
+                    for project, fps in medium_fp_projects.items():
+                        with st.expander(f"{project} ({len(fps)} false positives)"):
+                            for fp in fps:
+                                st.markdown(f"**• {fp['issue'][:80]}...**")
+                                st.write(f"  Section: {fp['section']}")
+                                st.write("---")
                 else:
                     st.success("No medium priority false positives!")
             
             with col3:
                 st.markdown("**🟢 Low Priority False Positives**")
                 if false_positives["low"]:
-                    for fp in false_positives["low"]:
-                        with st.expander(f"{fp['project']}: {fp['issue'][:50]}..."):
-                            st.write(f"**Section:** {fp['section']}")
-                            st.write(f"**Issue:** {fp['issue']}")
+                    low_fp_projects = group_issues_by_project(false_positives["low"])
+                    for project, fps in low_fp_projects.items():
+                        with st.expander(f"{project} ({len(fps)} false positives)"):
+                            for fp in fps:
+                                st.markdown(f"**• {fp['issue'][:80]}...**")
+                                st.write(f"  Section: {fp['section']}")
+                                st.write("---")
                 else:
                     st.success("No low priority false positives!")
         
