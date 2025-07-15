@@ -1176,11 +1176,13 @@ def display_testing_results_page():
     
     import json
     import os
-    from results_manager import get_saved_results, get_results_summary, load_saved_result, delete_saved_result
+    import pandas as pd
+    from results_manager import get_saved_results, get_results_summary, load_saved_result, delete_saved_result, get_detailed_analytics
     
-    # Get saved results
+    # Get saved results and detailed analytics
     saved_results = get_saved_results()
     results_summary = get_results_summary()
+    detailed_analytics = get_detailed_analytics()
     
     if not saved_results:
         st.info("No saved results found. Run some tests and save the results to see them here.")
@@ -1202,6 +1204,155 @@ def display_testing_results_page():
     
     with col4:
         st.metric("Avg HR Edits", results_summary["avg_hr_edits"])
+    
+    st.markdown("---")
+    
+    # Detailed Analytics Dashboard (only latest result per project)
+    st.subheader("🔍 Detailed Analytics Dashboard")
+    st.caption("Based on the most recent test result for each unique NDA project")
+    
+    if detailed_analytics["total_projects"] > 0:
+        # Overall accuracy metrics
+        st.subheader("🎯 Overall Performance Metrics")
+        metrics = detailed_analytics["accuracy_metrics"]
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.metric("Overall Accuracy", f"{metrics['overall_accuracy']}%")
+        with col2:
+            st.metric("Precision", f"{metrics['precision']}%")
+        with col3:
+            st.metric("Recall", f"{metrics['recall']}%")
+        with col4:
+            st.metric("Total Projects", detailed_analytics["total_projects"])
+        with col5:
+            st.metric("Issues Missed", metrics["total_missed"])
+        
+        # Expandable sections for detailed breakdowns
+        with st.expander("🤖 AI Issues Flagged by Priority", expanded=False):
+            ai_issues = detailed_analytics["ai_issues"]
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**🔴 High Priority Issues**")
+                if ai_issues["high"]:
+                    for issue in ai_issues["high"]:
+                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
+                            st.write(f"**Section:** {issue['section']}")
+                            st.write(f"**Issue:** {issue['issue']}")
+                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                else:
+                    st.info("No high priority issues flagged")
+            
+            with col2:
+                st.markdown("**🟡 Medium Priority Issues**")
+                if ai_issues["medium"]:
+                    for issue in ai_issues["medium"]:
+                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
+                            st.write(f"**Section:** {issue['section']}")
+                            st.write(f"**Issue:** {issue['issue']}")
+                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                else:
+                    st.info("No medium priority issues flagged")
+            
+            with col3:
+                st.markdown("**🟢 Low Priority Issues**")
+                if ai_issues["low"]:
+                    for issue in ai_issues["low"]:
+                        with st.expander(f"{issue['project']}: {issue['issue'][:50]}..."):
+                            st.write(f"**Section:** {issue['section']}")
+                            st.write(f"**Issue:** {issue['issue']}")
+                            st.write(f"**Citation:** {issue['citation'][:200]}...")
+                else:
+                    st.info("No low priority issues flagged")
+        
+        with st.expander("👥 HR Edits Made by Priority", expanded=False):
+            hr_edits = detailed_analytics["hr_edits"]
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**🔴 High Priority HR Edits**")
+                if hr_edits["high"]:
+                    for edit in hr_edits["high"]:
+                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
+                            st.write(f"**Section:** {edit['section']}")
+                            st.write(f"**Issue:** {edit['issue']}")
+                            st.write(f"**Change Type:** {edit['change_type']}")
+                else:
+                    st.info("No high priority HR edits")
+            
+            with col2:
+                st.markdown("**🟡 Medium Priority HR Edits**")
+                if hr_edits["medium"]:
+                    for edit in hr_edits["medium"]:
+                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
+                            st.write(f"**Section:** {edit['section']}")
+                            st.write(f"**Issue:** {edit['issue']}")
+                            st.write(f"**Change Type:** {edit['change_type']}")
+                else:
+                    st.info("No medium priority HR edits")
+            
+            with col3:
+                st.markdown("**🟢 Low Priority HR Edits**")
+                if hr_edits["low"]:
+                    for edit in hr_edits["low"]:
+                        with st.expander(f"{edit['project']}: {edit['issue'][:50]}..."):
+                            st.write(f"**Section:** {edit['section']}")
+                            st.write(f"**Issue:** {edit['issue']}")
+                            st.write(f"**Change Type:** {edit['change_type']}")
+                else:
+                    st.info("No low priority HR edits")
+        
+        with st.expander("❌ Issues Missed by AI", expanded=False):
+            missed_issues = detailed_analytics["missed_by_ai"]
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**🔴 High Priority Missed**")
+                if missed_issues["high"]:
+                    for missed in missed_issues["high"]:
+                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
+                            st.write(f"**Section:** {missed['section']}")
+                            st.write(f"**Issue:** {missed['issue']}")
+                else:
+                    st.success("No high priority issues missed!")
+            
+            with col2:
+                st.markdown("**🟡 Medium Priority Missed**")
+                if missed_issues["medium"]:
+                    for missed in missed_issues["medium"]:
+                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
+                            st.write(f"**Section:** {missed['section']}")
+                            st.write(f"**Issue:** {missed['issue']}")
+                else:
+                    st.success("No medium priority issues missed!")
+            
+            with col3:
+                st.markdown("**🟢 Low Priority Missed**")
+                if missed_issues["low"]:
+                    for missed in missed_issues["low"]:
+                        with st.expander(f"{missed['project']}: {missed['issue'][:50]}..."):
+                            st.write(f"**Section:** {missed['section']}")
+                            st.write(f"**Issue:** {missed['issue']}")
+                else:
+                    st.success("No low priority issues missed!")
+        
+        # Project Breakdown Table
+        st.subheader("📋 Project Performance Breakdown")
+        if detailed_analytics["project_breakdown"]:
+            df = pd.DataFrame(detailed_analytics["project_breakdown"])
+            df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.strftime("%Y-%m-%d %H:%M")
+            
+            # Reorder columns for better display
+            column_order = ["project", "accuracy", "ai_total", "hr_total", "missed_total", 
+                          "false_positives_total", "model_used", "timestamp"]
+            df = df[column_order]
+            
+            # Format the dataframe for display
+            df["accuracy"] = df["accuracy"].round(1).astype(str) + "%"
+            df.columns = ["Project", "Accuracy", "AI Issues", "HR Edits", "Missed", "False Positives", "Model", "Date"]
+            
+            st.dataframe(df, use_container_width=True)
     
     st.markdown("---")
     

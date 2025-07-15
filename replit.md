@@ -140,3 +140,11 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Performance Tracking**: Summary statistics showing total results, unique NDAs, and average metrics across tests
 - **Navigation Enhancement**: Added 6-column navigation bar including new Results page
 - **Homepage Integration**: Updated homepage to feature the new Results management functionality
+- **Automatic Cleanup**: System keeps only the last 2 test results per project to prevent storage bloat
+- **Detailed Analytics Dashboard**: Comprehensive analytics based on most recent result per unique project:
+  - Overall performance metrics (accuracy, precision, recall)
+  - All AI issues flagged by priority (High, Medium, Low)
+  - All HR edits made by priority with change types
+  - Issues missed by AI categorized by priority
+  - Project performance breakdown table with accuracy metrics
+  - Expandable sections for detailed issue exploration

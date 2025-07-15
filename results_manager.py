@@ -262,3 +262,140 @@ def get_results_summary() -> Dict:
         "avg_ai_issues": round(avg_ai_issues, 1),
         "avg_hr_edits": round(avg_hr_edits, 1)
     }
+
+def get_detailed_analytics() -> Dict:
+    """
+    Get detailed analytics based on the most recent result for each unique project
+    
+    Returns:
+        Dictionary with comprehensive analytics including issue breakdowns
+    """
+    all_results = get_saved_results()
+    
+    if not all_results:
+        return {
+            "total_projects": 0,
+            "ai_issues": {"high": [], "medium": [], "low": []},
+            "hr_edits": {"high": [], "medium": [], "low": []},
+            "missed_by_ai": {"high": [], "medium": [], "low": []},
+            "false_positives": {"high": [], "medium": [], "low": []},
+            "accuracy_metrics": {},
+            "project_breakdown": []
+        }
+    
+    # Get most recent result for each unique project
+    project_latest = {}
+    for result in all_results:
+        project_name = result.get("nda_name", "Unknown")
+        if project_name not in project_latest:
+            project_latest[project_name] = result
+        else:
+            # Keep the most recent (results are already sorted by timestamp desc)
+            current_time = project_latest[project_name].get("timestamp", "")
+            new_time = result.get("timestamp", "")
+            if new_time > current_time:
+                project_latest[project_name] = result
+    
+    # Aggregate detailed analytics from latest results
+    all_ai_issues = {"high": [], "medium": [], "low": []}
+    all_hr_edits = {"high": [], "medium": [], "low": []}
+    all_missed = {"high": [], "medium": [], "low": []}
+    all_false_positives = {"high": [], "medium": [], "low": []}
+    project_breakdown = []
+    
+    for project_name, result_metadata in project_latest.items():
+        # Load the detailed analysis data
+        result_data = load_saved_result(result_metadata.get("result_id"))
+        if not result_data:
+            continue
+            
+        comparison_analysis, ai_review_data, hr_edits_data, _ = result_data
+        
+        # Extract AI issues by priority
+        for priority in ["high", "medium", "low"]:
+            priority_key = f"{priority}_priority"
+            if priority_key in ai_review_data:
+                for issue in ai_review_data[priority_key]:
+                    all_ai_issues[priority].append({
+                        "project": project_name,
+                        "issue": issue.get("issue", ""),
+                        "section": issue.get("section", ""),
+                        "citation": issue.get("citation", "")
+                    })
+        
+        # Extract HR edits by priority  
+        for edit in hr_edits_data:
+            priority = edit.get("priority", "").lower()
+            if priority in ["high", "medium", "low"]:
+                all_hr_edits[priority].append({
+                    "project": project_name,
+                    "issue": edit.get("issue", ""),
+                    "section": edit.get("section", ""),
+                    "change_type": edit.get("change_type", "")
+                })
+        
+        # Extract missed issues and false positives from comparison
+        if "missed_by_ai" in comparison_analysis:
+            for missed in comparison_analysis["missed_by_ai"]:
+                priority = missed.get("priority", "").lower()
+                if priority in ["high", "medium", "low"]:
+                    all_missed[priority].append({
+                        "project": project_name,
+                        "issue": missed.get("issue", ""),
+                        "section": missed.get("section", "")
+                    })
+        
+        if "false_positives" in comparison_analysis:
+            for fp in comparison_analysis["false_positives"]:
+                priority = fp.get("priority", "").lower()
+                if priority in ["high", "medium", "low"]:
+                    all_false_positives[priority].append({
+                        "project": project_name,
+                        "issue": fp.get("issue", ""),
+                        "section": fp.get("section", "")
+                    })
+        
+        # Project-level breakdown
+        project_breakdown.append({
+            "project": project_name,
+            "ai_total": len(ai_review_data.get("high_priority", [])) + 
+                       len(ai_review_data.get("medium_priority", [])) + 
+                       len(ai_review_data.get("low_priority", [])),
+            "hr_total": len(hr_edits_data),
+            "missed_total": len(comparison_analysis.get("missed_by_ai", [])),
+            "false_positives_total": len(comparison_analysis.get("false_positives", [])),
+            "accuracy": comparison_analysis.get("accuracy_metrics", {}).get("overall_accuracy", 0),
+            "model_used": result_metadata.get("model_used", ""),
+            "timestamp": result_metadata.get("timestamp", "")
+        })
+    
+    # Calculate overall accuracy metrics
+    total_ai_issues = sum(len(issues) for issues in all_ai_issues.values())
+    total_hr_edits = sum(len(edits) for edits in all_hr_edits.values())
+    total_missed = sum(len(missed) for missed in all_missed.values())
+    total_false_positives = sum(len(fp) for fp in all_false_positives.values())
+    
+    overall_accuracy = 0
+    if total_hr_edits > 0:
+        correctly_identified = total_hr_edits - total_missed
+        overall_accuracy = (correctly_identified / total_hr_edits) * 100
+    
+    accuracy_metrics = {
+        "overall_accuracy": round(overall_accuracy, 1),
+        "total_ai_issues": total_ai_issues,
+        "total_hr_edits": total_hr_edits,
+        "total_missed": total_missed,
+        "total_false_positives": total_false_positives,
+        "precision": round((total_ai_issues - total_false_positives) / total_ai_issues * 100, 1) if total_ai_issues > 0 else 0,
+        "recall": round((total_hr_edits - total_missed) / total_hr_edits * 100, 1) if total_hr_edits > 0 else 0
+    }
+    
+    return {
+        "total_projects": len(project_latest),
+        "ai_issues": all_ai_issues,
+        "hr_edits": all_hr_edits,
+        "missed_by_ai": all_missed,
+        "false_positives": all_false_positives,
+        "accuracy_metrics": accuracy_metrics,
+        "project_breakdown": project_breakdown
+    }
