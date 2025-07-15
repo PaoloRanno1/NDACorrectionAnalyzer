@@ -84,9 +84,15 @@ def save_testing_results(
     with open(os.path.join(result_dir, "analysis_results.json"), "w") as f:
         json.dump(analysis_data, f, indent=2)
     
-    # Save executive summary plot as HTML and PNG
+    # Save executive summary plot as HTML and PNG (if possible)
     executive_summary_fig.write_html(os.path.join(result_dir, "executive_summary.html"))
-    executive_summary_fig.write_image(os.path.join(result_dir, "executive_summary.png"))
+    
+    # Try to save PNG, but continue if it fails (Chrome not available)
+    try:
+        executive_summary_fig.write_image(os.path.join(result_dir, "executive_summary.png"))
+    except Exception as e:
+        print(f"Warning: Could not save PNG image: {e}")
+        # Continue without PNG - HTML version is sufficient
     
     # Save the plotly figure object for later use
     with open(os.path.join(result_dir, "executive_summary_fig.pkl"), "wb") as f:
