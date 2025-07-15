@@ -120,3 +120,12 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Clean Architecture**: Separated each functionality into dedicated page functions for better organization
 - **Enhanced UX**: Homepage provides clear overview of all features with direct navigation to specific tools
 - **JSON Viewer Enhancement**: Added JSON output display to Clean NDA Review tab matching testing functionality
+
+### Test Database System (January 2025)
+- **Test Data Directory**: Created `test_data/` folder structure for managing test NDAs consistently
+- **File Naming Convention**: Standardized naming with `[name]_clean.md` and `[name]_corrected.md` format
+- **Database Manager**: Added `test_database.py` module for automated test NDA discovery and loading
+- **Enhanced Testing UI**: Updated file upload section with radio button selection between test database and custom uploads
+- **Project Octagon Test Case**: Added first test NDA (Project Octagon) to demonstrate the system
+- **User Self-Management**: Designed system for users to easily add their own test cases by dropping files in test_data folder
+- **Backward Compatibility**: Maintained existing custom file upload functionality alongside new test database

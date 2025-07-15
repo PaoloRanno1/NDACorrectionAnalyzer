@@ -125,60 +125,109 @@ def display_sidebar():
     return selected_model, temperature, analysis_mode
 
 def display_file_upload_section():
-    """Display file upload section"""
-    st.header("📁 File Upload Section")
+    """Display file upload section with test NDA selection"""
+    st.header("📁 NDA Selection")
     
-    col1, col2 = st.columns(2)
+    # Import test database functions
+    from test_database import get_test_nda_list, get_test_nda_paths, create_file_objects_from_paths
+    import os
     
-    with col1:
-        st.subheader("Clean NDA File")
-        st.markdown("*Upload the original document*")
-        clean_file = st.file_uploader(
-            "Choose clean NDA file",
-            type=['md', 'txt', 'pdf', 'docx'],
-            key="clean_file",
-            help="Upload the original NDA document without any modifications"
-        )
+    # Test NDA selection or custom upload
+    test_mode = st.radio(
+        "Choose your testing method:",
+        ["Select from Test Database", "Upload Custom Files"],
+        help="Use pre-loaded test NDAs for consistent testing or upload your own files"
+    )
+    
+    clean_file = None
+    corrected_file = None
+    
+    if test_mode == "Select from Test Database":
+        st.subheader("📊 Test NDA Database")
         
-        if clean_file:
-            if validate_file(clean_file):
-                st.success(f"✅ File uploaded: {clean_file.name}")
-                st.info(f"File size: {len(clean_file.getvalue())} bytes")
-                
-                # Preview option
-                if st.checkbox("Preview clean file content", key="preview_clean"):
-                    try:
-                        content = clean_file.getvalue().decode('utf-8')
-                        st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-                    except:
-                        st.warning("Cannot preview this file type")
-            else:
-                st.error("❌ Invalid file format or size")
-    
-    with col2:
-        st.subheader("Corrected NDA File")
-        st.markdown("*Upload the document with HR tracked changes*")
-        corrected_file = st.file_uploader(
-            "Choose corrected NDA file",
-            type=['md', 'txt', 'pdf', 'docx'],
-            key="corrected_file",
-            help="Upload the NDA document with HR corrections and tracked changes"
-        )
+        # Get available test NDAs
+        test_nda_list = get_test_nda_list()
         
-        if corrected_file:
-            if validate_file(corrected_file):
-                st.success(f"✅ File uploaded: {corrected_file.name}")
-                st.info(f"File size: {len(corrected_file.getvalue())} bytes")
-                
-                # Preview option
-                if st.checkbox("Preview corrected file content", key="preview_corrected"):
-                    try:
-                        content = corrected_file.getvalue().decode('utf-8')
-                        st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-                    except:
-                        st.warning("Cannot preview this file type")
-            else:
-                st.error("❌ Invalid file format or size")
+        if test_nda_list:
+            selected_nda = st.selectbox(
+                "Select a test NDA:",
+                [""] + test_nda_list,
+                help="Choose from pre-loaded test NDAs for consistent analysis"
+            )
+            
+            if selected_nda:
+                # Get file paths
+                paths = get_test_nda_paths(selected_nda)
+                if paths:
+                    clean_path, corrected_path = paths
+                    clean_file, corrected_file = create_file_objects_from_paths(clean_path, corrected_path)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.success(f"✅ Clean NDA: {os.path.basename(clean_path)}")
+                    with col2:
+                        st.success(f"✅ Corrected NDA: {os.path.basename(corrected_path)}")
+                    
+                    # Show file info
+                    st.info(f"**Selected Test NDA:** {selected_nda}")
+        else:
+            st.warning("No test NDAs found in the test_data folder. Please add some test files or use custom upload.")
+            st.info("Add files to the `test_data/` folder following the naming convention: `[name]_clean.md` and `[name]_corrected.md`")
+    
+    else:  # Custom upload mode
+        st.subheader("📁 Custom File Upload")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Clean NDA File")
+            st.markdown("*Upload the original document*")
+            clean_file = st.file_uploader(
+                "Choose clean NDA file",
+                type=['md', 'txt', 'pdf', 'docx'],
+                key="clean_file",
+                help="Upload the original NDA document without any modifications"
+            )
+            
+            if clean_file:
+                if validate_file(clean_file):
+                    st.success(f"✅ File uploaded: {clean_file.name}")
+                    st.info(f"File size: {len(clean_file.getvalue())} bytes")
+                    
+                    # Preview option
+                    if st.checkbox("Preview clean file content", key="preview_clean"):
+                        try:
+                            content = clean_file.getvalue().decode('utf-8')
+                            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                        except:
+                            st.warning("Cannot preview this file type")
+                else:
+                    st.error("❌ Invalid file format or size")
+        
+        with col2:
+            st.subheader("Corrected NDA File")
+            st.markdown("*Upload the document with HR tracked changes*")
+            corrected_file = st.file_uploader(
+                "Choose corrected NDA file",
+                type=['md', 'txt', 'pdf', 'docx'],
+                key="corrected_file",
+                help="Upload the NDA document with HR corrections and tracked changes"
+            )
+            
+            if corrected_file:
+                if validate_file(corrected_file):
+                    st.success(f"✅ File uploaded: {corrected_file.name}")
+                    st.info(f"File size: {len(corrected_file.getvalue())} bytes")
+                    
+                    # Preview option
+                    if st.checkbox("Preview corrected file content", key="preview_corrected"):
+                        try:
+                            content = corrected_file.getvalue().decode('utf-8')
+                            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                        except:
+                            st.warning("Cannot preview this file type")
+                else:
+                    st.error("❌ Invalid file format or size")
     
     return clean_file, corrected_file
 
