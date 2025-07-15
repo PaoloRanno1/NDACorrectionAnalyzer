@@ -312,11 +312,16 @@ def get_detailed_analytics() -> Dict:
         comparison_analysis, ai_review_data, hr_edits_data, _ = result_data
         
         # Extract AI issues by priority
-        for priority in ["high", "medium", "low"]:
-            priority_key = f"{priority}_priority"
-            if priority_key in ai_review_data:
-                for issue in ai_review_data[priority_key]:
-                    all_ai_issues[priority].append({
+        priority_mapping = {
+            "High Priority": "high",
+            "Medium Priority": "medium", 
+            "Low Priority": "low"
+        }
+        
+        for ai_priority_key, normalized_priority in priority_mapping.items():
+            if ai_priority_key in ai_review_data and isinstance(ai_review_data[ai_priority_key], list):
+                for issue in ai_review_data[ai_priority_key]:
+                    all_ai_issues[normalized_priority].append({
                         "project": project_name,
                         "issue": issue.get("issue", ""),
                         "section": issue.get("section", ""),
@@ -335,35 +340,35 @@ def get_detailed_analytics() -> Dict:
                 })
         
         # Extract missed issues and false positives from comparison
-        if "missed_by_ai" in comparison_analysis:
-            for missed in comparison_analysis["missed_by_ai"]:
-                priority = missed.get("priority", "").lower()
+        if "Issues Missed by the AI" in comparison_analysis:
+            for missed in comparison_analysis["Issues Missed by the AI"]:
+                priority = missed.get("Priority", "").lower()
                 if priority in ["high", "medium", "low"]:
                     all_missed[priority].append({
                         "project": project_name,
-                        "issue": missed.get("issue", ""),
-                        "section": missed.get("section", "")
+                        "issue": missed.get("Issue", ""),
+                        "section": missed.get("Section", "")
                     })
         
-        if "false_positives" in comparison_analysis:
-            for fp in comparison_analysis["false_positives"]:
-                priority = fp.get("priority", "").lower()
+        if "Issues Flagged by AI but Not Addressed by HR" in comparison_analysis:
+            for fp in comparison_analysis["Issues Flagged by AI but Not Addressed by HR"]:
+                priority = fp.get("Priority", "").lower()
                 if priority in ["high", "medium", "low"]:
                     all_false_positives[priority].append({
                         "project": project_name,
-                        "issue": fp.get("issue", ""),
-                        "section": fp.get("section", "")
+                        "issue": fp.get("Issue", ""),
+                        "section": fp.get("Section", "")
                     })
         
         # Project-level breakdown
         project_breakdown.append({
             "project": project_name,
-            "ai_total": len(ai_review_data.get("high_priority", [])) + 
-                       len(ai_review_data.get("medium_priority", [])) + 
-                       len(ai_review_data.get("low_priority", [])),
+            "ai_total": len(ai_review_data.get("High Priority", [])) + 
+                       len(ai_review_data.get("Medium Priority", [])) + 
+                       len(ai_review_data.get("Low Priority", [])),
             "hr_total": len(hr_edits_data),
-            "missed_total": len(comparison_analysis.get("missed_by_ai", [])),
-            "false_positives_total": len(comparison_analysis.get("false_positives", [])),
+            "missed_total": len(comparison_analysis.get("Issues Missed by the AI", [])),
+            "false_positives_total": len(comparison_analysis.get("Issues Flagged by AI but Not Addressed by HR", [])),
             "accuracy": comparison_analysis.get("accuracy_metrics", {}).get("overall_accuracy", 0),
             "model_used": result_metadata.get("model_used", ""),
             "timestamp": result_metadata.get("timestamp", "")
