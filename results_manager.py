@@ -98,6 +98,9 @@ def save_testing_results(
     with open(os.path.join(result_dir, "executive_summary_fig.pkl"), "wb") as f:
         pickle.dump(executive_summary_fig, f)
     
+    # Clean up old results - keep only last 2 for each project
+    cleanup_old_results(nda_name, max_results_per_project=2)
+    
     return result_id
 
 def get_saved_results() -> List[Dict]:
@@ -185,6 +188,43 @@ def delete_saved_result(result_id: str) -> bool:
     except Exception as e:
         print(f"Error deleting result {result_id}: {e}")
         return False
+
+def cleanup_old_results(nda_name: str, max_results_per_project: int = 2) -> None:
+    """
+    Clean up old results, keeping only the most recent results for each project
+    
+    Args:
+        nda_name: Name of the current NDA project
+        max_results_per_project: Maximum number of results to keep per project
+    """
+    try:
+        all_results = get_saved_results()
+        
+        # Group results by NDA name
+        project_results = {}
+        for result in all_results:
+            project_name = result.get("nda_name", "Unknown")
+            if project_name not in project_results:
+                project_results[project_name] = []
+            project_results[project_name].append(result)
+        
+        # Clean up results for each project
+        for project_name, results in project_results.items():
+            if len(results) > max_results_per_project:
+                # Sort by timestamp (newest first)
+                results.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+                
+                # Keep only the newest results and delete the rest
+                results_to_delete = results[max_results_per_project:]
+                for result_to_delete in results_to_delete:
+                    result_id = result_to_delete.get("result_id")
+                    if result_id:
+                        delete_saved_result(result_id)
+                        print(f"Cleaned up old result: {result_id}")
+                        
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
+        # Continue even if cleanup fails
 
 def get_results_summary() -> Dict:
     """
