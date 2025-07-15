@@ -35,12 +35,12 @@ APP_VERSION = "2.1.0"
 def initialize_session_state():
     """Initialize session state variables"""
     # Check for force refresh parameter
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     if 'refresh' in query_params:
         # Clear all session state
         for key in list(st.session_state.keys()):
             del st.session_state[key]
-        st.experimental_set_query_params()  # Clear query params
+        st.query_params.clear()  # Clear query params
     
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
