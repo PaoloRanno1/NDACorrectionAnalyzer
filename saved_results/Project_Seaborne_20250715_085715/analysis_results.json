@@ -1,0 +1,189 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Expanded Definition of Authorised Recipients",
+        "Section": "N/A",
+        "Priority": "High",
+        "Analysis": "AI proposed expanding the definition of 'Authorised Recipients' to include finance providers. HR partially implemented this by adding 'shareholders' and 'potential syndicate members' but did not include the broader 'other providers of financing' language."
+      },
+      {
+        "Issue": "Return & Destruction of Information Clause",
+        "Section": "5",
+        "Priority": "High",
+        "Analysis": "AI proposed adding exceptions for legal retention, automated backups, and internal work product ('Secondary Information'). HR implemented the crucial exceptions for backups and Secondary Information, closely matching the AI's suggestion."
+      },
+      {
+        "Issue": "Removal of Redundant Insider Trading Clause",
+        "Section": "7",
+        "Priority": "Medium",
+        "Analysis": "AI proposed deleting the entire clause acknowledging pre-existing insider trading laws as redundant. HR implemented this change exactly as suggested by deleting the paragraph."
+      },
+      {
+        "Issue": "Removal of Third-Party Rights",
+        "Section": "13",
+        "Priority": "Medium",
+        "Analysis": "AI proposed deleting clauses 13, 14, and a related sentence to remove third-party enforcement rights. HR implemented all three suggested deletions, fully aligning with the AI's comprehensive recommendation."
+      },
+      {
+        "Issue": "Reduced Liability Standard for Authorised Recipients",
+        "Section": "4",
+        "Priority": "Low",
+        "Analysis": "AI proposed changing the strict 'procure' standard to an efforts-based one by adding 'use its best efforts to'. HR implemented this change verbatim, adopting the AI's exact language."
+      },
+      {
+        "Issue": "Change of Governing Law and Jurisdiction",
+        "Section": "15",
+        "Priority": "Low",
+        "Analysis": "AI proposed changing the governing law from English to Belgian and jurisdiction to Antwerp courts. HR implemented this change exactly as suggested, aligning the agreement with Policy 11."
+      }
+    ],
+    "Issues Missed by the AI": [
+      {
+        "Issue": "Removal of 'No Proof of Special Damages' Clause",
+        "Section": "8.",
+        "Priority": "High",
+        "Analysis": "AI did not mention this. HR removed language that lowered the standard for claiming damages, a high-priority risk mitigation step under Policy 1."
+      },
+      {
+        "Issue": "Removal of UK-Specific Statutory Reference",
+        "Section": "Affiliates Definition",
+        "Priority": "Low",
+        "Analysis": "AI did not mention this. HR removed the definition of 'Group undertaking' from the UK Companies Act 2006, a logical cleanup following the change in governing law."
+      }
+    ],
+    "Issues Flagged by AI but Not Addressed by HR": []
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "its officers, employees, consultants, advisers, agents and representatives and those of its group undertakings",
+        "section": "N/A",
+        "problem": "The definition of 'Affiliates', which determines who is an 'Authorised Recipient', does not explicitly include potential syndicate members or other finance providers, which is a mandatory requirement of the playbook.",
+        "suggested_replacement": "Information may be disclosed by the Recipient to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Authorised Recipients'), who need to know such information for the Project, provided the Recipient remains responsible for any breach of this letter by its Authorised Recipients."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 3' Clause",
+        "citation": "...destroy or return to the Discloser on demand any document containing Information... and take all reasonable steps to expunge all Information from any computer or other device containing Information.",
+        "section": "5",
+        "problem": "The clause mandates absolute destruction and expunging of Information from all devices, failing to permit retention on automated backup systems or within internal work product ('Secondary Information'), as required by the playbook.",
+        "suggested_replacement": "Upon the Discloser's written request, the Recipient shall return or destroy all Information. However, this obligation shall not apply to: (i) Information the Recipient or its Authorised Recipients must retain under applicable law, rule, or regulation; (ii) Information saved to electronic media under automatic archiving or data-security procedures; and (iii) reports, notes, or other materials prepared by or on behalf of the Recipient that incorporate Information ('Secondary Information'). Any material not returned or destroyed remains subject to this letter's confidentiality obligations."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 10' Clause",
+        "citation": "...the Information may be inside information for the purposes of the Criminal Justice Act 1993 and/or the Market Abuse Regulation (596/2014)... You acknowledge that you are aware of your obligations...",
+        "section": "7",
+        "problem": "This clause is a redundant legal acknowledgment of pre-existing insider trading laws, which adds no value and should be removed per the playbook.",
+        "suggested_replacement": "This clause should be deleted in its entirety."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 7' Clause",
+        "citation": "Each of our Affiliates shall have the right under the Contracts (Rights of Third Parties) Act 1999 to enforce the terms of this letter...",
+        "section": "13",
+        "problem": "The agreement explicitly grants enforceable rights to non-signatories ('Affiliates'), which is prohibited by the playbook. This issue also appears in paragraph 14 and the third unnumbered paragraph.",
+        "suggested_replacement": "This clause, along with paragraph 14, should be deleted. The sentence 'The undertakings in this letter are given in favour of the other party and each party's Affiliates' in the third unnumbered paragraph should also be deleted."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 13' Clause",
+        "citation": "The Recipient will procure that each of its Authorised Recipients who receives any Information is aware of and adheres to the terms of this letter.",
+        "section": "4",
+        "problem": "The use of 'procure' imposes a standard of liability for Authorised Recipients that is closer to strict liability. The playbook prefers a lower, efforts-based standard.",
+        "suggested_replacement": "The Recipient will use its best efforts to procure that each of its Authorised Recipients who receives any Information is aware of and adheres to the terms of this letter. The Recipient shall be responsible for any breach of the confidentiality obligations of this letter by its Authorised Recipients."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 11' Clause",
+        "citation": "This letter and any non-contractual obligations... shall be governed by, and construed in accordance with, English law, and each party irrevocably submits to the exclusive jurisdiction of the English courts.",
+        "section": "15",
+        "problem": "The governing law and jurisdiction are English, whereas the playbook's primary preference is for Belgian law and the courts of Antwerp, Belgium.",
+        "suggested_replacement": "This letter, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this letter shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Correction aligning with High Priority Policy 2",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "Affiliates Definition",
+      "citation": "Context: '...its officers, employees, consultants, advisers, ++shareholders, potential syndicate members,++ agents and representatives...'",
+      "problem": "The definition of 'Affiliates' (who are 'Authorised Recipients') was expanded to include 'shareholders, potential syndicate members'. This is a positive change that aligns with High Priority Policy 2, which requires a broad definition of who can receive confidential information to facilitate financing activities."
+    },
+    {
+      "issue": "Uncategorized Change",
+      "Priority": "Low",
+      "change_type": "Deletion",
+      "section": "Affiliates Definition",
+      "citation": "Context: '...of their respective group undertakings. --Group undertaking\" shall be construed in accordance with section 1161 of the Companies Act 2006 --'",
+      "problem": "A UK-specific legal definition ('Group undertaking' from the Companies Act 2006) was removed. This change simplifies the agreement and aligns with the overall shift to Belgian law (Policy 11), removing irrelevant foreign statutory references. It follows the Golden Rule of keeping the NDA concise."
+    },
+    {
+      "issue": "Correction aligning with Medium Priority Policy 7",
+      "Priority": "Medium",
+      "change_type": "Deletion",
+      "section": "Undertakings",
+      "citation": "Context: 'The undertakings in this letter are given in favour of the other party-- and each party's Affiliates--.'",
+      "problem": "The text making 'Affiliates' beneficiaries of the agreement's undertakings was removed. This correctly aligns with Medium Priority Policy 7, which prohibits granting enforceable rights to non-signatories."
+    },
+    {
+      "issue": "Correction aligning with Low Priority Policy 13",
+      "Priority": "Low",
+      "change_type": "Addition",
+      "section": "4.",
+      "citation": "Context: 'The Recipient will ++use its best efforts to++ procure that each of its Authorised Recipients who receives any Information ++in connection with the Project ++is aware of and adheres to the terms of this letter.'",
+      "problem": "The phrase 'use its best efforts to' was added, changing Strada's liability for its Representatives from a strict standard to an efforts-based one. This is a favorable change that aligns with Low Priority Policy 13."
+    },
+    {
+      "issue": "Correction aligning with High Priority Policy 3",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "5.",
+      "citation": "Context: '...good corporate governance practice,++ (ii) Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures, and (iii) reports, notes or other materials prepared by or on behalf of the Recipient which incorporate Information (the \"Secondary Information\"), provided that the Secondary Information is kept confidential in accordance with the terms of this letter++. '",
+      "problem": "Exceptions for retaining information on automated backups and in internal work product ('Secondary Information') were added to the return/destruction clause. This change is crucial for compliance with High Priority Policy 3, which mandates that the NDA must not require absolute destruction."
+    },
+    {
+      "issue": "Correction aligning with Medium Priority Policy 10",
+      "Priority": "Medium",
+      "change_type": "Deletion",
+      "section": "7.",
+      "citation": "Context: 'The entire paragraph was deleted: --You recognise and accept, and will advise your Authorised Recipients, that the Information may be inside information for the purposes of the Criminal Justice Act 1993 and/or the Market Abuse Regulation (596/2014) and equivalent provisions in other jurisdictions. You acknowledge that you are aware of your obligations under all applicable law and regulations relating to unpublished, price-sensitive information.--'",
+      "problem": "An entire paragraph acknowledging pre-existing legal duties regarding insider trading was removed. This deletion aligns with Medium Priority Policy 10, which requires the removal of redundant legal acknowledgements to keep the agreement concise."
+    },
+    {
+      "issue": "Correction aligning with High Priority Policy 1",
+      "Priority": "High",
+      "change_type": "Deletion",
+      "section": "8.",
+      "citation": "Context: '...remedies, for an actual breach of its terms --, and no proof of special damages will be necessary to enforce this letter--.'",
+      "problem": "The phrase 'and no proof of special damages will be necessary to enforce this letter' was removed. This deletion reduces contractual risk by removing language that could be interpreted as a penalty or that lowers the standard for claiming damages, aligning with the principles of High Priority Policy 1."
+    },
+    {
+      "issue": "Correction aligning with Medium Priority Policy 7",
+      "Priority": "Medium",
+      "change_type": "Deletion",
+      "section": "13.",
+      "citation": "Context: 'The entire paragraph was deleted: --Each of our Affiliates shall have the right under the Contracts (Rights of Third Parties) Act 1999 to enforce the terms of this letter, subject to and in accordance with the terms of paragraph 15 and the term that the parties to this letter may by agreement terminate or rescind or vary it in any way without the consent of any of our Affiliates--'",
+      "problem": "A clause granting Affiliates enforcement rights under the UK's Contracts (Rights of Third Parties) Act 1999 was deleted. This is a direct and correct implementation of Medium Priority Policy 7, which prohibits granting rights to non-signatories."
+    },
+    {
+      "issue": "Correction aligning with Medium Priority Policy 7",
+      "Priority": "Medium",
+      "change_type": "Deletion",
+      "section": "14.",
+      "citation": "Context: 'The entire paragraph was deleted: --Save as provided in paragraph 13 and save to the Company, which shall also be protected by this letter, a person who is not a party to this letter shall have no right under the Contracts (Rights of Third Parties) Act 1999 to enforce any of its terms.--'",
+      "problem": "A second clause related to the UK's Contracts (Rights of Third Parties) Act 1999, which could have granted rights to 'the Company', was deleted. This further reinforces compliance with Medium Priority Policy 7 by ensuring no non-signatories have enforceable rights."
+    },
+    {
+      "issue": "Correction aligning with Low Priority Policy 11",
+      "Priority": "Low",
+      "change_type": "Replacement",
+      "section": "15.",
+      "citation": "Original: '...governed by, and construed in accordance with, English law, and each party irrevocably submits to the exclusive jurisdiction of the English courts.' New: '...governed by, and construed in accordance with, Belgian law, and each party irrevocably submits to the exclusive jurisdiction of the courts of Antwerp, division Antwerp.'",
+      "problem": "The governing law and jurisdiction were changed from English law and courts to Belgian law and the courts of Antwerp. This change perfectly aligns the agreement with Strada's preferred jurisdiction as stated in Low Priority Policy 11."
+    }
+  ]
+}

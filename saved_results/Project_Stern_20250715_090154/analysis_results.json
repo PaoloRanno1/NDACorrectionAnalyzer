@@ -1,0 +1,144 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Liquidated Damages Clause",
+        "Section": "19)",
+        "Priority": "High",
+        "Analysis": "AI proposed replacing the prohibited liquidated damages clause with a limitation of liability to direct damages. HR implemented a fix by removing the penalty and substituting a clause for injunctive relief, which also resolves the core Policy 1 violation."
+      }
+    ],
+    "Issues Missed by the AI": [],
+    "Issues Flagged by AI but Not Addressed by HR": [
+      {
+        "Issue": "Return & Destruction of Information Clause",
+        "Section": "8)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the clause fails to permit retention on automated backup systems as required by Policy 3. HR did not address this point."
+      },
+      {
+        "Issue": "Prohibition on Acting as a Syndicate",
+        "Section": "13)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the clause violates Policy 2 by prohibiting the formation of a consortium. HR did not address this point."
+      },
+      {
+        "Issue": "Overly Broad Non-Solicitation Clause",
+        "Section": "15)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the non-solicitation clause lacks standard exceptions for general advertisements and portfolio companies, violating Policy 4. HR did not address this point."
+      },
+      {
+        "Issue": "Narrow Definition of 'Representatives'",
+        "Section": "N/A",
+        "Priority": "High",
+        "Analysis": "AI flagged that the definition of 'Representatives' is too narrow and omits key personnel like shareholders and syndicate members, violating Policy 2. HR did not address this point."
+      },
+      {
+        "Issue": "Overly Broad No-Contact Clause",
+        "Section": "3)",
+        "Priority": "Medium",
+        "Analysis": "AI flagged that the no-contact clause extends beyond directors/employees to suppliers and customers, violating Policy 6. HR did not address this point."
+      },
+      {
+        "Issue": "Improper Third-Party Beneficiaries",
+        "Section": "20)",
+        "Priority": "Medium",
+        "Analysis": "AI flagged that the clause grants enforceable rights to non-signatories, which is prohibited by Policy 7. HR did not address this point."
+      },
+      {
+        "Issue": "One-Sided Assignment Clause",
+        "Section": "22)",
+        "Priority": "Medium",
+        "Analysis": "AI flagged that the assignment clause is a one-sided restriction and does not permit assignment to affiliates as required by Policy 9. HR did not address this point."
+      },
+      {
+        "Issue": "Strict Liability for Representative Breaches",
+        "Section": "2)",
+        "Priority": "Low",
+        "Analysis": "AI flagged that the clause imposes strict liability for breaches by Representatives, whereas Policy 13 prefers a more lenient, efforts-based standard. HR did not address this point."
+      }
+    ]
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 3' Clause",
+        "citation": "destroy (or cause to be destroyed), all copies of the Information... An exception is made... for that part of the Information which you or your Representatives are required by law or regulation to retain.",
+        "section": "8)",
+        "problem": "The clause requires absolute destruction of Information, with an exception only for legal/regulatory retention. It fails to permit retention on automated backup systems or in internal work product ('Secondary Information'), as mandated by Policy 3.",
+        "suggested_replacement": "Upon the Company's written request, you shall return or destroy all Information. However, this obligation shall not apply to: (i) Information you or your Representatives must retain under applicable law, rule, or regulation; (ii) Information saved to electronic media under automatic archiving or data-security procedures; and (iii) reports, notes, or other materials prepared by or on behalf of you that incorporate Information ('Secondary Information'). Any material not returned or destroyed remains subject to this Agreement's confidentiality obligations."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "You confirm that you are acting as principal and not as an agent or as part of a syndicate",
+        "section": "13)",
+        "problem": "This clause prohibits acting as part of a syndicate, which directly violates Policy 2's requirement that Strada must not be forced to act alone or be prohibited from forming a consortium.",
+        "suggested_replacement": "This clause must be deleted in its entirety."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 4' Clause",
+        "citation": "you shall not, directly or indirectly... hire, employ, solicit the employment... any person who is or becomes an employee, director, trade representative, manager, consultant, independent contractor or sub-contractor of the Company",
+        "section": "15)",
+        "problem": "The non-solicitation clause violates Policy 4 because it does not exempt hires resulting from general advertisements or unsolicited applications, and it does not explicitly exclude your affiliated portfolio companies from the restriction.",
+        "suggested_replacement": "For a period of two (2) years from the date of this Agreement, you agree not to directly solicit for employment any employee of the Company with whom you had material contact in connection with the Proposed Transaction. This restriction shall not apply to any of your affiliated portfolio companies, nor to employees who respond to public advertisements, make unsolicited applications, are referred by an unaffiliated recruiter, or whose employment commences more than six (6) months after the date of this Agreement."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 1' Clause",
+        "citation": "you shall pay to the Company a lump -- sum compensation (forfaitaire schadevergoeding) of EUR 50.000, to be increased by EUR 1.000 for each day",
+        "section": "19)",
+        "problem": "The clause imposes a liquidated damages penalty of EUR 50,000 plus a daily penalty, which is strictly prohibited by Policy 1.",
+        "suggested_replacement": "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "directors, agents, representatives, employees, officers, management and advisors (including financial advisors, counsels, accountants and potential financiers).",
+        "section": "N/A",
+        "problem": "The definition of 'Representatives' is too narrow. It omits key personnel such as shareholders and potential syndicate members, as required by Policy 2.",
+        "suggested_replacement": "The definition of 'Representatives' should be replaced with: 'shall mean, with respect to any specified person, its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing.'"
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 6' Clause",
+        "citation": "contact or hold discussions with any director, employee, self-employed service provider, agent, supplier, customer or consultant of the Company",
+        "section": "3)",
+        "problem": "The no-contact clause is overly broad, extending to 'supplier, customer or consultant'. Policy 6 requires this restriction to be limited to directors, officers, or employees directly involved in the transaction.",
+        "suggested_replacement": "Without the prior written consent of the Company, you agree not to contact any directors, officers, or employees of the Company in connection with the Proposed Transaction. This restriction shall not be breached by contact made for another purpose than evaluating or negotiating the Proposed Transaction."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 7' Clause",
+        "citation": "the Sellers, the Company and the Sellers' Representatives are to be considered as third party beneficiaries, in the meaning of Article 1121 of the (old) Belgian Civil Code",
+        "section": "20)",
+        "problem": "This clause grants enforceable rights to non-signatories (Sellers' Representatives), which is prohibited by Policy 7.",
+        "suggested_replacement": "This clause must be deleted in its entirety."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 9' Clause",
+        "citation": "Any assignment of this Agreement by you without the prior written consent of the Company... shall be void.",
+        "section": "22)",
+        "problem": "The assignment clause is a one-sided restriction against you. Policy 9 requires that assignment to affiliates be permitted for both parties, or for the clause to be silent.",
+        "suggested_replacement": "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 13' Clause",
+        "citation": "you shall... be responsible for any breach of confidentiality under this Agreement by your Representatives",
+        "section": "2)",
+        "problem": "This clause imposes strict liability for breaches by your Representatives. Policy 13 prefers a more lenient, efforts-based standard.",
+        "suggested_replacement": "You will use your best efforts to procure that each of your Representatives who receives any Information is aware of and adheres to the terms of this Agreement. You shall be responsible for any breach of the confidentiality obligations of this Agreement by your Representatives."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Correction aligning with High Priority Policy 1",
+      "Priority": "High",
+      "change_type": "Replacement",
+      "section": "19.",
+      "citation": "Original: '--In case of a breach of any clause of this Agreement, you shall pay to the Company a lump sum compensation (*forfaitaire schadevergoeding*) of EUR 50.000...' New: '++You understand and agree that any breach of this Agreement could cause serious damage to the Company... you agree that the Company is entitled to ask a law court for an injunction against you++.'",
+      "problem": "The HR representative correctly removed a prohibited liquidated damages clause. The original text imposed a fixed penalty of EUR 50,000 for any breach, which is explicitly forbidden by High Priority Policy 1. This change brings the agreement into compliance with the playbook by eliminating the specific monetary penalty."
+    }
+  ]
+}

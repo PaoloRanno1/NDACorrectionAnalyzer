@@ -199,7 +199,6 @@ def display_file_upload_section():
             if clean_file:
                 if validate_file(clean_file):
                     st.success(f"✅ File uploaded: {clean_file.name}")
-                    st.info(f"File size: {len(clean_file.getvalue())} bytes")
                     
                     # Preview option
                     if st.checkbox("Preview clean file content", key="preview_clean"):
@@ -224,7 +223,6 @@ def display_file_upload_section():
             if corrected_file:
                 if validate_file(corrected_file):
                     st.success(f"✅ File uploaded: {corrected_file.name}")
-                    st.info(f"File size: {len(corrected_file.getvalue())} bytes")
                     
                     # Preview option
                     if st.checkbox("Preview corrected file content", key="preview_corrected"):
@@ -639,7 +637,6 @@ def display_single_nda_review(model, temperature):
     if uploaded_file:
         if validate_file(uploaded_file):
             st.success(f"✅ File uploaded: {uploaded_file.name}")
-            st.info(f"File size: {len(uploaded_file.getvalue())} bytes")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):

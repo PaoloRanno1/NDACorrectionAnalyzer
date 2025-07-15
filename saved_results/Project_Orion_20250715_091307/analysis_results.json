@@ -1,0 +1,139 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Return & Destruction of Information Clause",
+        "Section": "9)",
+        "Priority": "High",
+        "Analysis": "AI proposed adding exceptions for automated backups, legal/regulatory compliance, and internal work product. HR implemented partial corrections, adding exceptions for compliance and automated backups but failed to include the required exception for internal work product (Secondary Information)."
+      },
+      {
+        "Issue": "Non-Solicitation Clause",
+        "Section": "10)",
+        "Priority": "High",
+        "Analysis": "AI identified two violations: the clause applied to affiliates and lacked standard hiring exceptions. HR implemented a partial fix by adding exceptions for general searches and unsolicited applications but failed to remove the clause's application to the Recipient's affiliated companies, leaving a key violation unresolved."
+      }
+    ],
+    "Issues Missed by the AI": [],
+    "Issues Flagged by AI but Not Addressed by HR": [
+      {
+        "Issue": "Unlimited Liability",
+        "Section": "11)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the clause fails to limit liability to direct damages and exclude indirect/consequential damages, a critical violation of Policy 1. HR did not address this high-priority issue."
+      },
+      {
+        "Issue": "Prohibited Non-Competition Clause",
+        "Section": "10)",
+        "Priority": "High",
+        "Analysis": "AI identified language restricting the provision of services to the Discloser's relations, which constitutes a prohibited non-compete clause under Policy 1. HR did not remove this problematic language."
+      },
+      {
+        "Issue": "Narrow Definition of Permitted Recipients",
+        "Section": "6)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the definition of who can receive confidential information is too narrow and violates Policy 2. HR did not expand the definition to include all necessary parties like affiliates, advisors, and finance providers."
+      },
+      {
+        "Issue": "Improper Third-Party Rights",
+        "Section": "11)",
+        "Priority": "Medium",
+        "Analysis": "AI correctly noted that the agreement grants enforceable rights to 'de Onderneming,' a non-signatory, in violation of Policy 7. This issue was not addressed by HR."
+      },
+      {
+        "Issue": "Governing Law and Jurisdiction",
+        "Section": "12)",
+        "Priority": "Low",
+        "Analysis": "AI flagged that the agreement specifies Dutch law and Amsterdam courts, contrary to the playbook preference for Belgian law and Antwerp courts (Policy 11). HR did not make this change."
+      },
+      {
+        "Issue": "Strict Liability for Representatives",
+        "Section": "6)",
+        "Priority": "Low",
+        "Analysis": "AI identified that the term 'staat ervoor in' (guarantees) imposes strict liability on the Recipient for its representatives' actions, violating Policy 13. HR did not soften this to the required efforts-based standard."
+      }
+    ]
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation of 'Policy 1' Clause",
+        "citation": "...aansprakelijk is voor de schade die de aanbieder en/of de Onderneming daardoor lijden.",
+        "section": "11)",
+        "problem": "The agreement does not limit liability to direct damages and fails to exclude indirect, consequential, special, or punitive damages, which is a mandatory requirement under Policy 1.",
+        "suggested_replacement": "Liability for a breach of this geheimhoudingsverklaring shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      },
+      {
+        "issue": "Violation of 'Policy 1' Clause",
+        "citation": "...en van het verlenen van diensten en/of het leveren van goederen aan relaties van de aanbieder en/of de Onderneming...",
+        "section": "10)",
+        "problem": "The clause contains a restriction on providing services or goods to the Discloser's relations, which constitutes a prohibited non-competition clause under Policy 1. This must be removed.",
+        "suggested_replacement": "The problematic phrase 'en van het verlenen van diensten en/of het leveren van goederen aan relaties van de aanbieder en/of de Onderneming' must be deleted from the sentence."
+      },
+      {
+        "issue": "Violation of 'Policy 2' Clause",
+        "citation": "...alleen ter beschikking stellen aan die personen die over de Informatie dienen te beschikken in het kader van (de advisering ten aanzien van) de Transactie.",
+        "section": "6)",
+        "problem": "The definition of permitted recipients is too narrow. It must be expanded to explicitly include the Ontvanger's directors, employees, affiliates, shareholders, potential syndicate members, other finance providers, and professional advisers.",
+        "suggested_replacement": "Informatie may be disclosed by the Ontvanger to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such Informatie for the Transactie, provided the Ontvanger remains responsible for any breach of this geheimhoudingsverklaring by its Representatives."
+      },
+      {
+        "issue": "Violation of 'Policy 3' Clause",
+        "citation": "...zal Ontvanger de Informatie terstond vernietigen en eventuele toegezonden hard copies aan aanbieder retourneren, met inbegrip van gemaakte kopie\u00ebn.",
+        "section": "9)",
+        "problem": "The clause mandates absolute destruction of information upon request. It fails to include the mandatory exceptions for retention on automated backup systems, for legal/regulatory compliance, or within internal work product.",
+        "suggested_replacement": "Upon the aanbieder's written request, the Ontvanger shall return or destroy all Informatie. However, this obligation shall not apply to: (i) Informatie the Ontvanger or its Representatives must retain under applicable law, rule, or regulation; (ii) Informatie saved to electronic media under automatic archiving or data-security procedures; and (iii) reports, notes, or other materials prepared by or on behalf of the Ontvanger that incorporate Informatie ('Secondary Information'). Any material not returned or destroyed remains subject to this geheimhoudingsverklaring's confidentiality obligations."
+      },
+      {
+        "issue": "Violation of 'Policy 4' Clause",
+        "citation": "...mede namens de aan Ontvanger (in)direct gelieerde vennootschappen, zich gedurende een periode van twee (2) jaar... te zullen onthouden van het benaderen van personen die werkzaam zijn bij de Onderneming...",
+        "section": "10)",
+        "problem": "The non-solicitation clause violates Policy 4 in two ways: 1) It incorrectly applies to the Ontvanger's affiliated companies. 2) It lacks the mandatory exemption for hires resulting from general advertisements or unsolicited applications.",
+        "suggested_replacement": "For a period of two (2) years from the date of this geheimhoudingsverklaring, the Ontvanger agrees not to directly solicit for employment any employee of the Onderneming with whom the Ontvanger had material contact in connection with the Transactie. This restriction shall not apply to any of the Ontvanger's affiliated portfolio companies, nor to employees who respond to public advertisements, make unsolicited applications, are referred by an unaffiliated recruiter, or whose employment commences more than six (6) months after the date of this geheimhoudingsverklaring."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation of 'Policy 7' Clause",
+        "citation": "...Ontvanger jegens aanbieder en/of de Onderneming aansprakelijk is voor de schade die de aanbieder en/of de Onderneming daardoor lijden.",
+        "section": "11)",
+        "problem": "The agreement grants enforceable rights to 'de Onderneming' (the Company), which is a non-signatory third party. The NDA must not grant such rights to non-signatories.",
+        "suggested_replacement": "All references granting rights or the ability to claim damages to 'de Onderneming' should be removed from this clause and throughout the agreement. The agreement should only create obligations between the Ontvanger and the aanbieder."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation of 'Policy 11' Clause",
+        "citation": "In geval van geschillen...zal de rechtbank Amsterdam bevoegd zijn... Op deze geheimhoudingsverklaring is het Nederlands recht van toepassing.",
+        "section": "12)",
+        "problem": "The agreement specifies Dutch law and the courts of Amsterdam. The playbook preference is for Belgian law and the exclusive jurisdiction of the courts of Antwerp.",
+        "suggested_replacement": "This geheimhoudingsverklaring, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this geheimhoudingsverklaring shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      },
+      {
+        "issue": "Violation of 'Policy 13' Clause",
+        "citation": "Ontvanger zal ervoor zorgdragen en staat ervoor in dat deze personen de Informatie vertrouwelijk zullen behandelen...",
+        "section": "6)",
+        "problem": "The phrase 'staat ervoor in' (guarantees) imposes strict liability on the Recipient for the actions of its Representatives. This should be softened to an efforts-based standard.",
+        "suggested_replacement": "The Ontvanger will use its best efforts to procure that each of its Representatives who receives any Informatie is aware of and adheres to the terms of this geheimhoudingsverklaring. The Ontvanger shall be responsible for any breach of the confidentiality obligations of this geheimhoudingsverklaring by its Representatives."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Partial Correction; Violation of High Priority Policy 3 Persists",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "N/A",
+      "citation": "Context: '...zal Ontvanger de Informatie terstond vernietigen en eventuele toegezonden hard copies aan aanbieder retourneren, met inbegrip van gemaakte kopie\u00ebn ++, behalve deze die bewaard mogen blijven voor audit of compliance doeleinden of dewelke bewaard worden door automatische archiverings- of back-up procedures.++'",
+      "problem": "The HR representative correctly added exceptions to the destruction clause for compliance and automated backups. However, High Priority Policy 3 also requires an exception for retaining 'internal work product' (Secondary Information). This exception is still missing, meaning the clause does not fully comply with the playbook."
+    },
+    {
+      "issue": "Partial Correction; Violation of High Priority Policy 4 Persists",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "N/A",
+      "citation": "Context: 'Ontvanger verklaart tevens, mede namens de aan Ontvanger (in)direct gelieerde vennootschappen, zich gedurende een periode van twee (2) jaar ... te zullen onthouden van het benaderen van personen die werkzaam zijn bij de Onderneming... ++Dit belet de Ontvanger echter niet om algemene searches uit te voeren naar werknemers... of om werknemers aan te werven die de Ontvanger op eigen initiatief benaderen.++'",
+      "problem": "The HR representative added required exceptions for general searches and unsolicited applications. However, the clause explicitly applies to the Recipient's 'affiliated companies' ('gelieerde vennootschappen'). This is a direct violation of High Priority Policy 4, which states the non-solicitation clause must NOT apply to Strada's affiliates or portfolio companies. This part of the clause was not corrected."
+    }
+  ]
+}

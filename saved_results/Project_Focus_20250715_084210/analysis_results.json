@@ -1,0 +1,186 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Definition of Representatives",
+        "Section": "3",
+        "Priority": "High",
+        "Analysis": "AI proposed broadening the definition of 'VERTEGENWOORDIGERS' to include affiliates and shareholders per Policy 2. HR implemented this partially by adding 'shareholders' to the definition."
+      },
+      {
+        "Issue": "Return & Destruction of Information",
+        "Section": "5",
+        "Priority": "High",
+        "Analysis": "AI proposed adding exceptions for information retained on backups and as internal work product, per Policy 3. HR implemented this by adding exceptions for 'Secondary Information' and information on automated backup systems."
+      },
+      {
+        "Issue": "Liquidated Damages Clause",
+        "Section": "7",
+        "Priority": "High",
+        "Analysis": "AI proposed deleting the \u20ac10,000 minimum penalty, which violates Policy 1. HR implemented this change exactly by deleting the prohibited clause."
+      }
+    ],
+    "Issues Missed by the AI": [],
+    "Issues Flagged by AI but Not Addressed by HR": [
+      {
+        "Issue": "Overly Broad Non-Solicitation Clause",
+        "Section": "6",
+        "Priority": "High",
+        "Analysis": "The AI flagged that the non-solicitation clause extends to the counterparty's affiliates, violating Policy 4. HR did not address this, leaving a key high-priority issue unresolved."
+      },
+      {
+        "Issue": "Overly Broad No-Contact Clause",
+        "Section": "4",
+        "Priority": "Medium",
+        "Analysis": "The AI identified that the no-contact clause was too broad and lacked an exception for contact in the ordinary course of business. This issue remains unaddressed by HR."
+      },
+      {
+        "Issue": "Prohibited Third-Party Beneficiary Clause",
+        "Section": "7",
+        "Priority": "Medium",
+        "Analysis": "The AI flagged a clause granting enforceable rights to non-signatory affiliates, violating Policy 7. HR did not delete this clause as recommended."
+      },
+      {
+        "Issue": "One-Sided Assignment Clause",
+        "Section": "9",
+        "Priority": "Medium",
+        "Analysis": "The AI noted the assignment clause was one-sided and suggested making it mutual for affiliates. This issue remains unaddressed by HR."
+      },
+      {
+        "Issue": "Incomplete Exclusions from Confidential Information",
+        "Section": "2",
+        "Priority": "Low",
+        "Analysis": "The AI flagged the absence of a standard 'prior possession' exclusion from the definition of confidential information. HR did not add this standard market term."
+      },
+      {
+        "Issue": "Strict Liability for Representative Breaches",
+        "Section": "3",
+        "Priority": "Low",
+        "Analysis": "The AI recommended changing the strict liability standard for representative breaches to a more favorable efforts-based standard. This change was not made by HR."
+      },
+      {
+        "Issue": "Governing Law Lacks Exclusive Jurisdiction",
+        "Section": "8",
+        "Priority": "Low",
+        "Analysis": "The AI noted the governing law clause lacked an exclusive jurisdiction provision, creating legal uncertainty. HR did not add the recommended jurisdiction of Antwerp."
+      },
+      {
+        "Issue": "Perpetual Confidentiality Term",
+        "Section": "10",
+        "Priority": "Low",
+        "Analysis": "The AI flagged that key confidentiality obligations were made perpetual, violating the policy requiring a fixed term. HR did not amend this to a fixed 2-year term as suggested."
+      }
+    ]
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "ONTVANGER zal de INFORMATIE niet delen met werknemers die in contact staan met verbonden ondernemingen aan ONTVANGER, behalve na voorafgaandelijke schriftelijke toelating van SDM-Valorum of KLANT.",
+        "section": "3",
+        "problem": "The definition of 'VERTEGENWOORDIGERS' is too narrow as it omits key groups like affiliates and shareholders. Furthermore, the clause explicitly prohibits sharing information with affiliates without prior consent, violating the policy that requires the ability to share with such entities.",
+        "suggested_replacement": "INFORMATIE may be disclosed by the ONTVANGER to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'VERTEGENWOORDIGERS'), who need to know such information for the purpose of the TRANSACTIE, provided the ONTVANGER remains responsible for any breach of this Agreement by its VERTEGENWOORDIGERS."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 3' Clause",
+        "citation": "...alle INFORMATIE, inbegrepen kopie\u00ebn, geschreven nota's, foto's, memoranda en documenten op basis van de INFORMATIE die in verband staat met een mogelijke investering in KLANT, vernietigd worden of teruggezonden worden naar SDM-Valorum...",
+        "section": "5",
+        "problem": "The clause mandates absolute destruction or return of all Information, failing to include the required exceptions for retention on automated backups, in internal work product (Secondary Information), or for legal and regulatory compliance purposes.",
+        "suggested_replacement": "Upon the written request of SDM-Valorum or KLANT, the ONTVANGER shall return or destroy all INFORMATIE. However, this obligation shall not apply to: (i) INFORMATIE the ONTVANGER or its VERTEGENWOORDIGERS must retain under applicable law, rule, or regulation; (ii) INFORMATIE saved to electronic media under automatic archiving or data-security procedures; and (iii) reports, notes, or other materials prepared by or on behalf of the ONTVANGER that incorporate INFORMATIE ('Secondary Information'). Any material not returned or destroyed remains subject to this Agreement's confidentiality obligations."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 4' Clause",
+        "citation": "...geen belangrijke werknemers afwerven van de KLANT of van zijn verbonden ondernemingen.",
+        "section": "6",
+        "problem": "The non-solicitation clause extends to employees of the KLANT's affiliated companies. The restriction should be limited to the KLANT entity only, not its entire corporate group.",
+        "suggested_replacement": "For a period of two (2) years from the date of this Agreement, the ONTVANGER agrees not to directly solicit for employment any employee of the KLANT with whom the ONTVANGER had material contact in connection with the TRANSACTIE. This restriction shall not apply to any of the ONTVANGER's affiliated portfolio companies, nor to employees who respond to public advertisements, make unsolicited applications, are referred by an unaffiliated recruiter, or whose employment commences more than six (6) months after the date of this Agreement."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 1' Clause",
+        "citation": "Het bedrag van de schadevergoeding is de waarde van de veroorzaakte schade, verhoogd met alle gerechtskosten, met een minimum van \u20ac 10.000 per bewezen inbreuk.",
+        "section": "7",
+        "problem": "The clause imposes a minimum penalty of \u20ac10,000 per breach, which constitutes a prohibited liquidated damages or penalty clause.",
+        "suggested_replacement": "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 6' Clause",
+        "citation": "...noch rechtstreeks, noch onrechtstreeks contact zal worden genomen met de werknemers, de leveranciers, de cli\u00ebnten, de mede-eigenaars, overige aandeelhouders of bestuurders van KLANT, zonder de uitdrukkelijke voorafgaande toestemming...",
+        "section": "4",
+        "problem": "The no-contact clause is overly broad, extending to suppliers, clients, and co-owners. It also lacks a necessary exception for contact made in the ordinary course of business unrelated to the transaction.",
+        "suggested_replacement": "Without the prior written consent of the KLANT, the ONTVANGER agrees not to contact any directors, officers, or employees of the KLANT in connection with the TRANSACTIE. This restriction shall not be breached by contact made for another purpose than evaluating or negotiating the TRANSACTIE."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 7' Clause",
+        "citation": "KLANT en zijn verbonden onderneming en SDM-Valorum haar verbonden ondernemingen zijn begunstigde derde partij bij deze OVEREENKOMST en beschikken over het recht de erin opgenomen bepaling te laten uitvoeren.",
+        "section": "7",
+        "problem": "The clause explicitly grants enforceable rights to non-signatory affiliates of the Disclosing Party and its representative, which is a prohibited third-party beneficiary clause.",
+        "suggested_replacement": "This clause should be deleted in its entirety."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 9' Clause",
+        "citation": "SDM-Valorum en KLANT behouden zich het recht voor om alle in deze OVEREENKOMST opgenomen respectievelijke rechten over te dragen... ONTVANGER verklaart zich hierbij akkoord met een dergelijke plaatsvervanging.",
+        "section": "9",
+        "problem": "The assignment clause is one-sided, granting assignment rights only to the Disclosing Party and its client. The agreement should either be silent on assignment or permit mutual assignment to affiliates.",
+        "suggested_replacement": "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 14' Clause",
+        "citation": "Deze verplichting is niet van toepassing op: (a) informatie die werd gepubliceerd... (b) informatie die door ONTVANGER werd verworven van een derde partij... (c) informatie met betrekking tot belastingtechnische implicaties...",
+        "section": "2",
+        "problem": "The definition of what is excluded from 'INFORMATIE' is incomplete. It is missing the standard market exception for information that was already in the Recipient's lawful possession prior to disclosure.",
+        "suggested_replacement": "INFORMATIE does not include information that: (a) is or becomes generally available to the public through no breach by ONTVANGER; (b) was in ONTVANGER's lawful possession before receipt from SDM-Valorum or KLANT, without any obligation of confidentiality; (c) was received in good faith by ONTVANGER from a third party not under an obligation of confidentiality to KLANT; or (d) was disclosed by ONTVANGER with the written permission of an authorized representative of the KLANT."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 13' Clause",
+        "citation": "Indien ONTVANGER hieraan verzuimt, zal hij verantwoordelijk kunnen worden geacht voor elke inbreuk op deze OVEREENKOMST door iedereen die van ONTVANGER toegang kreeg tot de INFORMATIE.",
+        "section": "3",
+        "problem": "The clause imposes strict liability on the ONTVANGER for any breach by its Representatives. The preferred standard is efforts-based to limit liability.",
+        "suggested_replacement": "The ONTVANGER will use its best efforts to procure that each of its VERTEGENWOORDIGERS who receives any INFORMATIE is aware of and adheres to the terms of this Agreement. The ONTVANGER shall be responsible for any breach of the confidentiality obligations of this Agreement by its VERTEGENWOORDIGERS."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 11' Clause",
+        "citation": "Deze OVEREENKOMST, haar rechtsgeldigheid, opbouw, effect en uitvoering wordt beheerst door het recht van het Koninkrijk Belgi\u00eb.",
+        "section": "8",
+        "problem": "While the choice of Belgian law is preferred, the clause fails to specify an exclusive jurisdiction for disputes, creating potential legal uncertainty.",
+        "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 12' Clause",
+        "citation": "...met uitzondering voor paragrafen 1 tot en met 4 en paragraaf 8 welke steeds toepasbaar blijven.",
+        "section": "10",
+        "problem": "The clause makes the core confidentiality and no-contact obligations (Sections 2, 3, and 4) perpetual by excluding them from the 2-year termination date. The confidentiality term must be explicit and limited to 2-3 years.",
+        "suggested_replacement": "The obligations of confidentiality set out in this letter shall continue in full force and effect until the date that is two (2) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Correction aligning with High Priority Policy 2",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "3.",
+      "citation": "Context: '...directeuren, kaderleden, werknemers,++ [aandeelhouders]{.mark}, ++evenals financi\u00eble instellingen, advocaten, adviseurs en agenten (de \"VERTEGENWOORDIGERS\")...'",
+      "problem": "The HR representative added 'shareholders' (aandeelhouders) to the list of permitted recipients ('VERTEGENWOORDIGERS'). This change correctly aligns the clause with High Priority Policy 2, which requires a broad definition of Representatives that includes shareholders."
+    },
+    {
+      "issue": "Correction aligning with High Priority Policy 3",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "5.",
+      "citation": "Context: '...vernietigd worden of teruggezonden worden naar SDM-Valorum... ++ [Evenwel zal ONTVANGER niet verplicht zijn om rapporten, nota's of ander materiaal dat INFORMATIE bevat (de SECUNDAIRE INFORMATIE), te overhandigen... INFORMATIE en SECUNDAIRE INFORMATIE die zijn opgeslagen op elektronische dragers door middel van automatische archivering of data-beveiligingsprocedures dienen evenmin teruggegeven of vernietigd te worden]{.mark}.++'",
+      "problem": "The original clause required absolute return or destruction of information. The HR representative added language creating exceptions for retaining 'Secondary Information' (internal work product) and information on automated backup systems. This change correctly brings the clause into compliance with High Priority Policy 3, which mandates that the NDA must not require absolute destruction."
+    },
+    {
+      "issue": "Correction aligning with High Priority Policy 1",
+      "Priority": "High",
+      "change_type": "Deletion",
+      "section": "7.",
+      "citation": "Context: '...Het bedrag van de schadevergoeding is de waarde van de veroorzaakte schade, verhoogd met alle gerechtskosten-- met een minimum van \u20ac 10.000 per bewezen inbreuk.--'",
+      "problem": "The HR representative removed a liquidated damages clause that specified a minimum penalty of '\u20ac 10,000 per proven breach'. This deletion was necessary to comply with High Priority Policy 1, which prohibits any clause specifying a fixed monetary penalty for a breach."
+    }
+  ]
+}
