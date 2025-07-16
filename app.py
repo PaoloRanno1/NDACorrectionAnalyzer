@@ -927,21 +927,31 @@ def display_single_nda_review(model, temperature):
                 # Handle DOCX conversion if needed
                 if file_extension == 'docx':
                     try:
-                        # Use docx2txt to extract text from DOCX
-                        import docx2txt
+                        # Use pandoc to convert DOCX to markdown
+                        import subprocess
+                        converted_path = temp_file_path.replace('.docx', '.md')
                         
-                        # Extract text from DOCX file
-                        text_content = docx2txt.process(temp_file_path)
-                        
-                        # Create a new text file with the extracted content
-                        converted_path = temp_file_path.replace('.docx', '.txt')
-                        with open(converted_path, 'w', encoding='utf-8') as f:
-                            f.write(text_content)
+                        # Run pandoc conversion
+                        result = subprocess.run([
+                            'pandoc', 
+                            temp_file_path, 
+                            '-o', converted_path,
+                            '--to=markdown'
+                        ], capture_output=True, text=True, check=True)
                         
                         # Clean up original DOCX file
                         os.unlink(temp_file_path)
                         temp_file_path = converted_path
                         
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                        st.error("Please try uploading the file as PDF or TXT format instead.")
+                        os.unlink(temp_file_path)
+                        return
+                    except FileNotFoundError:
+                        st.error("Pandoc is not installed. Please try uploading the file as PDF or TXT format instead.")
+                        os.unlink(temp_file_path)
+                        return
                     except Exception as e:
                         st.error(f"Failed to convert DOCX file: {str(e)}")
                         st.error("Please try uploading the file as PDF or TXT format instead.")
