@@ -1386,17 +1386,16 @@ def display_navigation():
     nav_options = {
         "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
+        "DATABASE": "database",
         "POLICIES": "policies",
         "FAQ": "faq"
     }
     
-    # Special handling for results, edit_playbook, and database pages
+    # Special handling for results and edit_playbook pages
     if st.session_state.current_page == "results":
         nav_options["RESULTS"] = "results"
     elif st.session_state.current_page == "edit_playbook":
         nav_options["EDIT PLAYBOOK"] = "edit_playbook"
-    elif st.session_state.current_page == "database":
-        nav_options["DATABASE"] = "database"
     
     # Get base64 images
     try:
@@ -1460,7 +1459,7 @@ def display_navigation():
     }}
     
     .nav-buttons {{
-        display: none;
+        display: flex;
         gap: 15px;
         padding: 0 2rem;
         justify-content: center;
@@ -1587,8 +1586,8 @@ def display_testing_page(model, temperature, analysis_mode):
             st.rerun()
     
     with col3:
-        if st.button("🗄️ Database", key="quick_database_access", use_container_width=True):
-            st.session_state.current_page = "database"
+        if st.button("📊 View Results", key="quick_results_access", use_container_width=True):
+            st.session_state.current_page = "results"
             st.rerun()
     
     # Display settings modal if activated
