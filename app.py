@@ -914,19 +914,19 @@ def display_single_nda_review(model, temperature):
         )
     else:
         # Database selection
-        from test_database import get_available_test_ndas
-        available_ndas = get_available_test_ndas()
+        from test_database import get_all_clean_ndas
+        clean_ndas = get_all_clean_ndas()
         
-        if available_ndas:
+        if clean_ndas:
             selected_nda = st.selectbox(
                 "Select NDA from database:",
-                list(available_ndas.keys()),
+                list(clean_ndas.keys()),
                 help="Choose a clean NDA from your database to analyze"
             )
             
             if selected_nda:
                 # Create a file-like object from the database file
-                nda_paths = available_ndas[selected_nda]
+                clean_file_path = clean_ndas[selected_nda]
                 
                 class DatabaseFile:
                     def __init__(self, file_path, name):
@@ -941,7 +941,7 @@ def display_single_nda_review(model, temperature):
                         with open(self.file_path, 'r', encoding='utf-8') as f:
                             return f.read().encode('utf-8')
                 
-                uploaded_file = DatabaseFile(nda_paths['clean'], f"{selected_nda}_clean.md")
+                uploaded_file = DatabaseFile(clean_file_path, f"{selected_nda}_clean.md")
                 st.success(f"✅ Loaded from database: {selected_nda}")
         else:
             st.info("No NDAs found in database. Upload some NDAs using the Database tab first.")

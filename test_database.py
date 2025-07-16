@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple, Optional
 
 def get_available_test_ndas() -> Dict[str, Dict[str, str]]:
     """
-    Get all available test NDAs from the test_data directory
+    Get all available test NDAs from the test_data directory (only complete pairs)
     
     Returns:
         Dict mapping NDA names to their file paths
@@ -47,6 +47,38 @@ def get_available_test_ndas() -> Dict[str, Dict[str, str]]:
             }
     
     return test_ndas
+
+def get_all_clean_ndas() -> Dict[str, str]:
+    """
+    Get all clean NDAs from the test_data directory (regardless of corrected version)
+    
+    Returns:
+        Dict mapping NDA names to their clean file paths
+        Format: {
+            "Project Octagon": "test_data/project_octagon_clean.md",
+            "Stiglitz": "test_data/stiglitz_clean.md"
+        }
+    """
+    test_data_dir = "test_data"
+    clean_ndas = {}
+    
+    if not os.path.exists(test_data_dir):
+        return clean_ndas
+    
+    # Find all clean files
+    clean_files = glob.glob(os.path.join(test_data_dir, "*_clean.md"))
+    
+    for clean_file in clean_files:
+        # Extract the project name
+        filename = os.path.basename(clean_file)
+        project_name = filename.replace("_clean.md", "")
+        
+        # Convert project name to display format
+        display_name = project_name.replace("_", " ").title()
+        
+        clean_ndas[display_name] = clean_file
+    
+    return clean_ndas
 
 def get_test_nda_list() -> List[str]:
     """
