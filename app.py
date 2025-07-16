@@ -1914,37 +1914,72 @@ def display_database_page():
         
         st.markdown("---")
         
-        # NDA selection (only show complete projects)
-        if available_ndas:
-            selected_nda = st.selectbox(
-                "Select NDA to view (complete projects only):",
-                list(available_ndas.keys()),
-                help="Choose an NDA from your database to view its contents"
+        # NDA selection (show all projects)
+        if all_projects:
+            # Create list of all projects with their status
+            project_options = []
+            for project_name, status in all_projects.items():
+                display_name = project_name.replace("_", " ").title()
+                if status["clean"] and status["corrected"]:
+                    project_options.append(f"{display_name} (Complete)")
+                elif status["clean"]:
+                    project_options.append(f"{display_name} (Clean only)")
+                elif status["corrected"]:
+                    project_options.append(f"{display_name} (Corrected only)")
+                else:
+                    project_options.append(f"{display_name} (No files)")
+            
+            selected_option = st.selectbox(
+                "Select NDA project to view:",
+                project_options,
+                help="Choose any NDA project from your database to view its contents"
             )
+            
+            # Extract project name from the selected option
+            selected_nda = selected_option.split(" (")[0].replace(" ", "_").lower()
         else:
-            st.info("No complete NDA projects found. Upload both clean and corrected versions to view them here.")
+            st.info("No NDA projects found. Upload some NDAs using the Upload tab.")
             selected_nda = None
+            selected_option = None
         
-        if selected_nda:
-            nda_paths = available_ndas[selected_nda]
+        if selected_nda and selected_nda in all_projects:
+            project_status = all_projects[selected_nda]
             
-            # Display options
-            col1, col2, col3 = st.columns([1, 1, 1])
+            # Display options based on what files are available
+            cols = []
+            if project_status["clean"]:
+                cols.append("clean")
+            if project_status["corrected"]:
+                cols.append("corrected")
+            cols.append("delete")
             
-            with col1:
-                view_clean = st.button("📄 View Clean Version", use_container_width=True)
+            button_cols = st.columns(len(cols))
             
-            with col2:
-                view_corrected = st.button("📝 View Corrected Version", use_container_width=True)
+            view_clean = False
+            view_corrected = False
+            delete_nda = False
             
-            with col3:
-                delete_nda = st.button("🗑️ Delete NDA", use_container_width=True)
+            col_idx = 0
+            if project_status["clean"]:
+                with button_cols[col_idx]:
+                    view_clean = st.button("📄 View Clean Version", use_container_width=True)
+                col_idx += 1
+            
+            if project_status["corrected"]:
+                with button_cols[col_idx]:
+                    view_corrected = st.button("📝 View Corrected Version", use_container_width=True)
+                col_idx += 1
+            
+            with button_cols[col_idx]:
+                delete_nda = st.button("🗑️ Delete Project", use_container_width=True)
             
             # View clean version
-            if view_clean:
-                st.subheader(f"📄 Clean Version: {selected_nda}")
+            if view_clean and project_status["clean"]:
+                display_name = selected_nda.replace("_", " ").title()
+                st.subheader(f"📄 Clean Version: {display_name}")
                 try:
-                    with open(nda_paths['clean'], 'r', encoding='utf-8') as f:
+                    clean_path = f"test_data/{selected_nda}_clean.md"
+                    with open(clean_path, 'r', encoding='utf-8') as f:
                         clean_content = f.read()
                     
                     # Display in expandable section
@@ -1955,7 +1990,7 @@ def display_database_page():
                     st.download_button(
                         label="📥 Download Clean Version",
                         data=clean_content,
-                        file_name=f"{selected_nda}_clean.md",
+                        file_name=f"{display_name}_clean.md",
                         mime="text/markdown"
                     )
                     
@@ -1963,10 +1998,12 @@ def display_database_page():
                     st.error(f"Error reading clean file: {str(e)}")
             
             # View corrected version
-            if view_corrected:
-                st.subheader(f"📝 Corrected Version: {selected_nda}")
+            if view_corrected and project_status["corrected"]:
+                display_name = selected_nda.replace("_", " ").title()
+                st.subheader(f"📝 Corrected Version: {display_name}")
                 try:
-                    with open(nda_paths['corrected'], 'r', encoding='utf-8') as f:
+                    corrected_path = f"test_data/{selected_nda}_corrected.md"
+                    with open(corrected_path, 'r', encoding='utf-8') as f:
                         corrected_content = f.read()
                     
                     # Display in expandable section
@@ -1977,7 +2014,7 @@ def display_database_page():
                     st.download_button(
                         label="📥 Download Corrected Version",
                         data=corrected_content,
-                        file_name=f"{selected_nda}_corrected.md",
+                        file_name=f"{display_name}_corrected.md",
                         mime="text/markdown"
                     )
                     
@@ -1986,16 +2023,35 @@ def display_database_page():
             
             # Delete NDA
             if delete_nda:
-                st.warning(f"Are you sure you want to delete '{selected_nda}' from the database?")
+                display_name = selected_nda.replace("_", " ").title()
+                st.warning(f"Are you sure you want to delete '{display_name}' from the database?")
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     if st.button("⚠️ Confirm Delete", key="confirm_delete"):
                         try:
                             import os
-                            os.remove(nda_paths['clean'])
-                            os.remove(nda_paths['corrected'])
-                            st.success(f"✅ Successfully deleted '{selected_nda}' from the database!")
+                            deleted_files = []
+                            
+                            # Delete clean file if exists
+                            if project_status["clean"]:
+                                clean_path = f"test_data/{selected_nda}_clean.md"
+                                if os.path.exists(clean_path):
+                                    os.remove(clean_path)
+                                    deleted_files.append("clean version")
+                            
+                            # Delete corrected file if exists
+                            if project_status["corrected"]:
+                                corrected_path = f"test_data/{selected_nda}_corrected.md"
+                                if os.path.exists(corrected_path):
+                                    os.remove(corrected_path)
+                                    deleted_files.append("corrected version")
+                            
+                            if deleted_files:
+                                files_str = " and ".join(deleted_files)
+                                st.success(f"✅ Successfully deleted {files_str} for '{display_name}'!")
+                            else:
+                                st.info("No files found to delete.")
                             st.rerun()
                         except Exception as e:
                             st.error(f"❌ Error deleting files: {str(e)}")
@@ -2008,25 +2064,35 @@ def display_database_page():
         st.markdown("---")
         st.subheader("📊 Database Statistics")
         
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Total NDAs", len(available_ndas))
+            st.metric("Total Projects", len(all_projects))
         
         with col2:
-            total_files = len(available_ndas) * 2  # Clean + Corrected
-            st.metric("Total Files", total_files)
+            complete_projects = sum(1 for status in all_projects.values() if status["clean"] and status["corrected"])
+            st.metric("Complete Projects", complete_projects)
         
         with col3:
+            # Count total files
+            total_files = sum(1 for status in all_projects.values() if status["clean"]) + \
+                         sum(1 for status in all_projects.values() if status["corrected"])
+            st.metric("Total Files", total_files)
+        
+        with col4:
             # Calculate total size
             total_size = 0
-            for nda_data in available_ndas.values():
+            for project_name, status in all_projects.items():
                 try:
                     import os
-                    if os.path.exists(nda_data['clean']):
-                        total_size += os.path.getsize(nda_data['clean'])
-                    if os.path.exists(nda_data['corrected']):
-                        total_size += os.path.getsize(nda_data['corrected'])
+                    if status["clean"]:
+                        clean_path = f"test_data/{project_name}_clean.md"
+                        if os.path.exists(clean_path):
+                            total_size += os.path.getsize(clean_path)
+                    if status["corrected"]:
+                        corrected_path = f"test_data/{project_name}_corrected.md"
+                        if os.path.exists(corrected_path):
+                            total_size += os.path.getsize(corrected_path)
                 except:
                     pass
             
