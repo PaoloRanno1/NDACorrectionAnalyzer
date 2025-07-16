@@ -1116,6 +1116,38 @@ def display_faq_page():
         - Track performance trends across multiple tests
         """)
     
+    # Database
+    with st.expander("🗄️ **Database**"):
+        st.markdown("""
+        **Purpose**: Centralized storage and management of NDA test files
+        
+        **What it does**:
+        - **Individual file uploads**: Upload clean OR corrected NDAs separately with project naming
+        - **Project organization**: Files are organized by project name (e.g., "project_name_clean.md", "project_name_corrected.md")
+        - **Status tracking**: Shows completion status for each project (complete when both clean and corrected files are available)
+        - **File management**: View, download, and delete uploaded files
+        - **Integration**: Load clean NDAs directly into the NDA Review tab for analysis
+        
+        **Upload process**:
+        1. **Select upload type**: Choose between Clean NDA or Corrected NDA
+        2. **Name your project**: Enter a descriptive project name
+        3. **Upload file**: Support for PDF, DOCX, MD, and TXT formats
+        4. **Track progress**: Monitor project completion status in the status table
+        
+        **File format requirements**:
+        - **Clean NDAs**: Original, unmodified legal documents
+        - **Corrected NDAs**: Documents with tracked changes marked as:
+          - **Additions**: `++text that was added++`
+          - **Removals**: `--text that was removed--`
+          - **Replacements**: `--old text-- ++new text++`
+        
+        **Best for**:
+        - Building a library of test cases for consistent AI evaluation
+        - Organizing NDA files by project or client
+        - Preparing files for testing once both versions are available
+        - Managing document versions and tracking completion status
+        """)
+    
     # Saved Results
     with st.expander("📊 **Saved Results & Analytics (Accessible from Testing Page)**"):
         st.markdown("""
