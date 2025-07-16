@@ -186,35 +186,6 @@ def display_policies_playbook():
         "Without the prior written consent of the Disclosing Party, the Recipient agrees not to contact any directors, officers, or employees of the Disclosing Party in connection with the Purpose. This restriction shall not be breached by contact made for another purpose than evaluating or negotiating the Proposed Transaction."
         """)
     
-    with st.expander("POLICY 7: No Third-Party Beneficiaries"):
-        st.markdown("""
-        - The NDA **must not grant enforceable rights** to non-signatories
-        - Delete references to affiliates as beneficiaries or legislation (e.g., UK Contracts (Rights of Third Parties) Act 1999)
-        """)
-    
-    with st.expander("POLICY 8: 'No Commitment to Invest' Clauses"):
-        st.markdown("""
-        - **Optional**. If absent, **do nothing**
-        - If present, ensure language is acceptable:
-        
-        "The parties acknowledge that this Agreement and the exchange of Confidential Information create no obligation to enter into any further agreement or transaction, including any investment, partnership, or joint venture."
-        """)
-    
-    with st.expander("POLICY 9: Assignment of Agreement"):
-        st.markdown("""
-        - NDA must **not prohibit Strada from assigning its rights**
-        - Ideal: each party may assign to **affiliates**; silence is acceptable; one-sided restriction is not
-        
-        **Approved Language:**
-        "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
-        """)
-    
-    with st.expander("POLICY 10: Omission of Redundant Legal Acknowledgements"):
-        st.markdown("""
-        - Remove clauses that merely restate pre-existing legal duties (e.g., insider-trading laws)
-        - These add no value and clutter the agreement
-        """)
-    
     st.markdown("---")
     
     # LOW PRIORITY
