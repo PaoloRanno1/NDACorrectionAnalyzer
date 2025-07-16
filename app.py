@@ -1341,11 +1341,13 @@ def display_navigation():
         "FAQ": "faq"
     }
     
-    # Special handling for results and edit_playbook pages
+    # Special handling for results, edit_playbook, and database pages
     if st.session_state.current_page == "results":
         nav_options["RESULTS"] = "results"
     elif st.session_state.current_page == "edit_playbook":
         nav_options["EDIT PLAYBOOK"] = "edit_playbook"
+    elif st.session_state.current_page == "database":
+        nav_options["DATABASE"] = "database"
     
     # Get base64 images
     try:
@@ -1536,8 +1538,8 @@ def display_testing_page(model, temperature, analysis_mode):
             st.rerun()
     
     with col3:
-        if st.button("📊 View Results", key="quick_results_access", use_container_width=True):
-            st.session_state.current_page = "results"
+        if st.button("🗄️ Database", key="quick_database_access", use_container_width=True):
+            st.session_state.current_page = "database"
             st.rerun()
     
     # Display settings modal if activated
@@ -1733,6 +1735,257 @@ def display_testing_page(model, temperature, analysis_mode):
             st.session_state.ai_review_data = None
             st.session_state.hr_edits_data = None
             st.rerun()
+
+def display_database_page():
+    """Display the database management page for viewing and uploading NDAs"""
+    st.title("🗄️ NDA Database")
+    
+    # Header with navigation
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.write("View and manage your NDA test database. Upload new NDAs or view existing ones in markdown format.")
+    
+    with col2:
+        if st.button("📊 Go to Testing", key="goto_testing", use_container_width=True):
+            st.session_state.current_page = "testing"
+            st.rerun()
+    
+    # Two main sections: Upload and View
+    tab1, tab2 = st.tabs(["📤 Upload NDAs", "📋 View Database"])
+    
+    with tab1:
+        st.header("📤 Upload New NDAs")
+        st.write("Upload clean and corrected versions of NDAs to add them to your test database.")
+        
+        # Upload form
+        with st.form("upload_nda_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                project_name = st.text_input(
+                    "Project Name",
+                    help="Enter a descriptive name for this NDA project (e.g., 'Project Alpha', 'Client ABC NDA')"
+                )
+                
+                clean_file = st.file_uploader(
+                    "Clean NDA File",
+                    type=['md', 'txt', 'pdf', 'docx'],
+                    help="Upload the original, clean version of the NDA"
+                )
+            
+            with col2:
+                st.write("")  # Spacer
+                st.write("")  # Spacer
+                
+                corrected_file = st.file_uploader(
+                    "Corrected NDA File",
+                    type=['md', 'txt', 'pdf', 'docx'],
+                    help="Upload the HR-corrected version with tracked changes"
+                )
+            
+            submitted = st.form_submit_button("💾 Upload to Database", use_container_width=True)
+            
+            if submitted:
+                if project_name and clean_file and corrected_file:
+                    try:
+                        # Create test_data directory if it doesn't exist
+                        import os
+                        os.makedirs("test_data", exist_ok=True)
+                        
+                        # Generate safe filename
+                        safe_name = project_name.lower().replace(' ', '_').replace('-', '_')
+                        safe_name = ''.join(c for c in safe_name if c.isalnum() or c == '_')
+                        
+                        # Save clean file
+                        clean_path = f"test_data/{safe_name}_clean.md"
+                        clean_content = ""
+                        
+                        if clean_file.type == "text/markdown" or clean_file.name.endswith('.md'):
+                            clean_content = clean_file.read().decode('utf-8')
+                        elif clean_file.type == "text/plain" or clean_file.name.endswith('.txt'):
+                            clean_content = clean_file.read().decode('utf-8')
+                        elif clean_file.name.endswith('.pdf'):
+                            # Handle PDF files
+                            from NDA_Review_chain import load_nda_document
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+                                tmp.write(clean_file.read())
+                                clean_content = load_nda_document(tmp.name)
+                            os.unlink(tmp.name)
+                        elif clean_file.name.endswith('.docx'):
+                            # Handle DOCX files
+                            from NDA_Review_chain import load_nda_document
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp:
+                                tmp.write(clean_file.read())
+                                clean_content = load_nda_document(tmp.name)
+                            os.unlink(tmp.name)
+                        
+                        # Save corrected file
+                        corrected_path = f"test_data/{safe_name}_corrected.md"
+                        corrected_content = ""
+                        
+                        if corrected_file.type == "text/markdown" or corrected_file.name.endswith('.md'):
+                            corrected_content = corrected_file.read().decode('utf-8')
+                        elif corrected_file.type == "text/plain" or corrected_file.name.endswith('.txt'):
+                            corrected_content = corrected_file.read().decode('utf-8')
+                        elif corrected_file.name.endswith('.pdf'):
+                            # Handle PDF files
+                            from NDA_Review_chain import load_nda_document
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+                                tmp.write(corrected_file.read())
+                                corrected_content = load_nda_document(tmp.name)
+                            os.unlink(tmp.name)
+                        elif corrected_file.name.endswith('.docx'):
+                            # Handle DOCX files
+                            from NDA_Review_chain import load_nda_document
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp:
+                                tmp.write(corrected_file.read())
+                                corrected_content = load_nda_document(tmp.name)
+                            os.unlink(tmp.name)
+                        
+                        # Write files to disk
+                        with open(clean_path, 'w', encoding='utf-8') as f:
+                            f.write(clean_content)
+                        
+                        with open(corrected_path, 'w', encoding='utf-8') as f:
+                            f.write(corrected_content)
+                        
+                        st.success(f"✅ Successfully uploaded '{project_name}' to the database!")
+                        st.info(f"Files saved as:\n- {clean_path}\n- {corrected_path}")
+                        
+                        # Clear the form
+                        st.rerun()
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error uploading files: {str(e)}")
+                else:
+                    st.warning("Please provide a project name and both NDA files.")
+    
+    with tab2:
+        st.header("📋 View Database")
+        
+        # Get available NDAs
+        from test_database import get_available_test_ndas
+        available_ndas = get_available_test_ndas()
+        
+        if not available_ndas:
+            st.info("No NDAs found in the database. Upload some NDAs using the Upload tab.")
+            return
+        
+        # NDA selection
+        selected_nda = st.selectbox(
+            "Select NDA to view:",
+            list(available_ndas.keys()),
+            help="Choose an NDA from your database to view its contents"
+        )
+        
+        if selected_nda:
+            nda_paths = available_ndas[selected_nda]
+            
+            # Display options
+            col1, col2, col3 = st.columns([1, 1, 1])
+            
+            with col1:
+                view_clean = st.button("📄 View Clean Version", use_container_width=True)
+            
+            with col2:
+                view_corrected = st.button("📝 View Corrected Version", use_container_width=True)
+            
+            with col3:
+                delete_nda = st.button("🗑️ Delete NDA", use_container_width=True)
+            
+            # View clean version
+            if view_clean:
+                st.subheader(f"📄 Clean Version: {selected_nda}")
+                try:
+                    with open(nda_paths['clean'], 'r', encoding='utf-8') as f:
+                        clean_content = f.read()
+                    
+                    # Display in expandable section
+                    with st.expander("Click to view full content", expanded=True):
+                        st.markdown(clean_content)
+                    
+                    # Download button
+                    st.download_button(
+                        label="📥 Download Clean Version",
+                        data=clean_content,
+                        file_name=f"{selected_nda}_clean.md",
+                        mime="text/markdown"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"Error reading clean file: {str(e)}")
+            
+            # View corrected version
+            if view_corrected:
+                st.subheader(f"📝 Corrected Version: {selected_nda}")
+                try:
+                    with open(nda_paths['corrected'], 'r', encoding='utf-8') as f:
+                        corrected_content = f.read()
+                    
+                    # Display in expandable section
+                    with st.expander("Click to view full content", expanded=True):
+                        st.markdown(corrected_content)
+                    
+                    # Download button
+                    st.download_button(
+                        label="📥 Download Corrected Version",
+                        data=corrected_content,
+                        file_name=f"{selected_nda}_corrected.md",
+                        mime="text/markdown"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"Error reading corrected file: {str(e)}")
+            
+            # Delete NDA
+            if delete_nda:
+                st.warning(f"Are you sure you want to delete '{selected_nda}' from the database?")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("⚠️ Confirm Delete", key="confirm_delete"):
+                        try:
+                            import os
+                            os.remove(nda_paths['clean'])
+                            os.remove(nda_paths['corrected'])
+                            st.success(f"✅ Successfully deleted '{selected_nda}' from the database!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error deleting files: {str(e)}")
+                
+                with col2:
+                    if st.button("❌ Cancel", key="cancel_delete"):
+                        st.rerun()
+        
+        # Database statistics
+        st.markdown("---")
+        st.subheader("📊 Database Statistics")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Total NDAs", len(available_ndas))
+        
+        with col2:
+            total_files = len(available_ndas) * 2  # Clean + Corrected
+            st.metric("Total Files", total_files)
+        
+        with col3:
+            # Calculate total size
+            total_size = 0
+            for nda_data in available_ndas.values():
+                try:
+                    import os
+                    if os.path.exists(nda_data['clean']):
+                        total_size += os.path.getsize(nda_data['clean'])
+                    if os.path.exists(nda_data['corrected']):
+                        total_size += os.path.getsize(nda_data['corrected'])
+                except:
+                    pass
+            
+            size_mb = total_size / (1024 * 1024)
+            st.metric("Total Size", f"{size_mb:.2f} MB")
 
 def display_testing_results_page():
     """Display the testing results page with saved results"""
@@ -2252,6 +2505,8 @@ def main():
     elif st.session_state.current_page == "edit_playbook":
         from playbook_manager import display_editable_playbook
         display_editable_playbook()
+    elif st.session_state.current_page == "database":
+        display_database_page()
 
 if __name__ == "__main__":
     main()
