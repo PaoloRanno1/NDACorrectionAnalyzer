@@ -1789,17 +1789,12 @@ def display_database_page():
     st.title("🗄️ NDA Database")
     
     # Header with navigation
-    col1, col2, col3 = st.columns([3, 1, 1])
+    col1, col2 = st.columns([4, 1])
     
     with col1:
         st.write("View and manage your NDA test database. Upload new NDAs or view existing ones in markdown format.")
     
     with col2:
-        if st.button("📊 Go to Testing", key="goto_testing", use_container_width=True):
-            st.session_state.current_page = "testing"
-            st.rerun()
-    
-    with col3:
         if st.button("📈 View Results", key="goto_results", use_container_width=True):
             st.session_state.current_page = "results"
             st.rerun()
