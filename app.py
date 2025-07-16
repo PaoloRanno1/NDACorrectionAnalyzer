@@ -82,15 +82,11 @@ def display_login_screen():
 
 def display_header():
     """Display the application header"""
-    # Add settings and logout buttons in the top right
-    col1, col2, col3 = st.columns([6, 1, 1])
+    # Add logout button in the top right
+    col1, col2 = st.columns([6, 1])
     with col1:
         pass  # Empty space
     with col2:
-        if st.button("⚙️ Settings", key="header_settings"):
-            st.session_state.show_settings = not st.session_state.get('show_settings', False)
-            st.rerun()
-    with col3:
         if st.button("Logout", type="secondary"):
             st.session_state.authenticated = False
             st.rerun()
@@ -593,7 +589,17 @@ def display_json_viewers(ai_review_data, hr_edits_data, comparison_analysis=None
 
 def display_single_nda_review(model, temperature):
     """Display clean NDA review section as main homepage"""
-    st.title("⚖️ NDA Legal Compliance Review")
+    # Header with settings button
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.title("⚖️ NDA Legal Compliance Review")
+    
+    with col2:
+        if st.button("⚙️ Settings", key="clean_review_settings", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.get('show_settings', False)
+            st.rerun()
+    
     st.markdown("Upload an NDA document to get AI-powered compliance analysis based on Strada's legal policies.")
     
     # File upload section
@@ -1175,14 +1181,19 @@ def display_navigation():
 
 def display_testing_page(model, temperature, analysis_mode):
     """Display the NDA testing page"""
-    # Header with quick access to results
-    col1, col2 = st.columns([4, 1])
+    # Header with settings and results access
+    col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
         st.header("🔬 NDA Testing")
     
     with col2:
-        if st.button("📊 View Saved Results", key="quick_results_access", use_container_width=True):
+        if st.button("⚙️ Settings", key="testing_settings", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.get('show_settings', False)
+            st.rerun()
+    
+    with col3:
+        if st.button("📊 View Results", key="quick_results_access", use_container_width=True):
             st.session_state.current_page = "results"
             st.rerun()
     
