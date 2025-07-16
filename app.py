@@ -956,6 +956,192 @@ def display_homepage():
     - **🟢 Low Priority (Policies 11-14)**: Optional changes
     """)
 
+def display_faq_page():
+    """Display FAQ and help page with feature explanations"""
+    st.title("❓ FAQ & Help Guide")
+    st.markdown("Complete guide to using the NDA Analysis Tool")
+    
+    # Overview
+    with st.expander("🎯 **What is this tool?**", expanded=True):
+        st.markdown("""
+        The **NDA Analysis Tool** is an AI-powered platform that evaluates legal document compliance 
+        and compares AI performance against human HR edits. It helps legal teams understand how well 
+        AI can identify compliance issues in Non-Disclosure Agreements.
+        """)
+    
+    # Clean NDA Review
+    with st.expander("⚖️ **Clean NDA Review**"):
+        st.markdown("""
+        **Purpose**: Primary AI-powered compliance analysis for single NDAs
+        
+        **What it does**:
+        - Analyzes uploaded NDAs against Strada's legal playbook
+        - Identifies compliance issues categorized by priority (High, Medium, Low)
+        - Provides specific citations, problems, and suggested replacements
+        - Generates downloadable JSON reports
+        
+        **Best for**: 
+        - Quick compliance checks on new NDAs
+        - Getting AI recommendations before human review
+        - Standard legal document analysis workflow
+        
+        **How to use**:
+        1. Upload your NDA file (PDF, DOCX, MD, TXT)
+        2. Click "Analyze NDA" 
+        3. Review results with priority-coded issues
+        4. Download JSON report for records
+        """)
+    
+    # AI Testing & Comparison
+    with st.expander("🔬 **AI Testing & Comparison**"):
+        st.markdown("""
+        **Purpose**: Compare AI analysis accuracy against HR corrections
+        
+        **What it does**:
+        - Analyzes both original and HR-corrected NDA versions
+        - Compares AI findings with actual HR edits
+        - Calculates accuracy metrics (precision, recall, F1 score)
+        - Identifies missed issues and false positives
+        
+        **Best for**:
+        - Evaluating AI performance on your specific NDAs
+        - Training data analysis and improvement
+        - Understanding AI strengths and weaknesses
+        
+        **How to use**:
+        1. Upload original NDA and HR-corrected version
+        2. Run comparison analysis
+        3. Review detailed performance metrics
+        4. Save results for tracking improvement over time
+        """)
+    
+    # Saved Results
+    with st.expander("📊 **Saved Results & Analytics**"):
+        st.markdown("""
+        **Purpose**: Track AI performance over time and across projects
+        
+        **What it provides**:
+        - **Summary Statistics**: Key metrics across all tests
+        - **Detailed Analytics**: Comprehensive breakdown by priority and project
+        - **Project Grouping**: Results organized by NDA project names
+        - **Historical Tracking**: Performance trends over time
+        
+        **Key Metrics**:
+        - **Accuracy**: Overall AI performance percentage
+        - **Issues Missed**: What the AI failed to identify
+        - **False Positives**: Incorrect AI flags
+        - **Priority Breakdown**: Distribution across High/Medium/Low priorities
+        
+        **Best for**:
+        - Performance monitoring and improvement tracking
+        - Comparing different AI models or settings
+        - Reporting to stakeholders on AI effectiveness
+        """)
+    
+    # Policies Playbook
+    with st.expander("📋 **Policies Playbook**"):
+        st.markdown("""
+        **Purpose**: Reference guide for all compliance policies
+        
+        **Content**:
+        - **High Priority (1-5)**: Mandatory compliance requirements
+        - **Medium Priority (6-10)**: Preferential business terms
+        - **Low Priority (11-14)**: Optional improvements
+        
+        **Each policy includes**:
+        - Clear description of the requirement
+        - Examples of compliant language
+        - Common violation patterns to avoid
+        
+        **Best for**:
+        - Understanding what the AI is checking
+        - Training legal team on compliance standards
+        - Reference during manual document review
+        """)
+    
+    # Edit Playbook
+    with st.expander("✏️ **Edit Playbook**"):
+        st.markdown("""
+        **Purpose**: Customize AI analysis criteria
+        
+        **Capabilities**:
+        - Edit policy descriptions and requirements
+        - Add new compliance criteria
+        - Modify priority levels
+        - Update examples and guidance
+        
+        **Changes apply to**:
+        - All new AI analyses
+        - Both Clean Review and Testing modes
+        - Saved as session preferences
+        
+        **Best for**:
+        - Adapting to new legal requirements
+        - Company-specific compliance needs
+        - Testing different policy variations
+        """)
+    
+    # Settings & Configuration
+    with st.expander("⚙️ **Settings & Configuration**"):
+        st.markdown("""
+        **AI Model Options**:
+        - **Gemini 2.5 Pro**: Higher accuracy, slower processing
+        - **Gemini 2.5 Flash**: Faster processing, good accuracy
+        
+        **Temperature Control**:
+        - **0.0**: Most deterministic and consistent
+        - **1.0**: More creative and varied responses
+        - **Recommended**: 0.0-0.3 for legal analysis
+        
+        **File Support**:
+        - PDF documents
+        - Word documents (.docx)
+        - Markdown files (.md)
+        - Plain text files (.txt)
+        """)
+    
+    # Tips & Best Practices
+    with st.expander("💡 **Tips & Best Practices**"):
+        st.markdown("""
+        **For Best Results**:
+        - Use clean, readable document formats
+        - Ensure HR edits include tracked changes
+        - Test with multiple document types
+        - Save results for performance tracking
+        
+        **Common Issues**:
+        - **Large files**: May take longer to process
+        - **Complex formatting**: Can affect AI accuracy
+        - **Multiple languages**: English documents work best
+        
+        **Performance Tips**:
+        - Use test database for consistent results
+        - Compare same documents with different settings
+        - Track accuracy trends over time
+        - Review missed issues to improve prompts
+        """)
+    
+    # Support
+    with st.expander("🔧 **Troubleshooting & Support**"):
+        st.markdown("""
+        **Common Solutions**:
+        - **Upload issues**: Check file format and size
+        - **Analysis errors**: Try different AI model or temperature
+        - **Slow processing**: Use Gemini Flash model
+        - **Missing results**: Ensure proper file format
+        
+        **File Requirements**:
+        - Maximum file size: Varies by format
+        - Supported formats: PDF, DOCX, MD, TXT
+        - Language: English preferred
+        
+        **Getting Help**:
+        - Check this FAQ first
+        - Review error messages carefully
+        - Try different settings if analysis fails
+        - Contact support with specific error details
+        """)
+
 def display_navigation():
     """Display navigation dropdown"""
     # Navigation dropdown
@@ -963,6 +1149,7 @@ def display_navigation():
         "⚖️ Clean NDA Review": "clean_review",
         "🔬 AI Testing & Comparison": "testing", 
         "📊 Saved Results": "results",
+        "❓ FAQ & Help": "faq",
         "📋 Policies Playbook": "policies",
         "✏️ Edit Playbook": "edit_playbook"
     }
@@ -1627,6 +1814,8 @@ def main():
         display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
         display_testing_results_page()
+    elif st.session_state.current_page == "faq":
+        display_faq_page()
     elif st.session_state.current_page == "policies":
         display_policies_playbook()
     elif st.session_state.current_page == "edit_playbook":
