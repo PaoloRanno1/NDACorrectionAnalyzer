@@ -993,6 +993,15 @@ def display_single_nda_review(model, temperature):
     # Display background analysis progress if active
     has_background_analysis = display_background_analysis_progress()
     
+    # Add manual refresh option when analysis is complete
+    if (st.session_state.background_analysis['status'] == 'Analysis complete!' and 
+        not st.session_state.background_analysis['running'] and
+        st.session_state.background_analysis['results']):
+        
+        st.info("✅ Analysis complete! Click the button below to view results.")
+        if st.button("🔄 Show Results", key="show_results_btn"):
+            st.rerun()
+    
     # Review button
     is_disabled = not uploaded_file or st.session_state.background_analysis['running']
     button_text = "🔄 Analysis Running..." if st.session_state.background_analysis['running'] else "🚀 Review NDA"
@@ -1022,6 +1031,33 @@ def display_single_nda_review(model, temperature):
             st.error("Please check your file and try again.")
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
+    
+    # Check if background analysis completed and transfer results
+    if (st.session_state.background_analysis['status'] == 'Analysis complete!' and 
+        st.session_state.background_analysis['results'] and 
+        not st.session_state.background_analysis['running']):
+        
+        # Transfer results from background analysis to display variable
+        results = st.session_state.background_analysis['results']
+        if 'compliance_report' in results:
+            st.session_state.single_nda_results = results['compliance_report']
+            st.session_state.single_nda_raw_response = results.get('raw_response', '')
+            
+            # Clear background analysis to prevent re-processing
+            st.session_state.background_analysis = {
+                'running': False,
+                'progress': 0,
+                'status': 'idle',
+                'results': None,
+                'error': None,
+                'analysis_id': None,
+                'start_time': None,
+                'files': {'clean': None, 'corrected': None},
+                'config': None
+            }
+            
+            st.success("✅ Analysis complete! Results are ready below.")
+            st.rerun()
     
     # Display results if available
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
@@ -1146,6 +1182,18 @@ HIGH PRIORITY:
                 st.json(compliance_report)
             else:
                 st.info("No analysis results available")
+        
+        with tab2:
+            st.subheader("Raw AI Response")
+            if hasattr(st.session_state, 'single_nda_raw_response') and st.session_state.single_nda_raw_response:
+                st.text_area(
+                    "Raw Response from AI Model:",
+                    st.session_state.single_nda_raw_response,
+                    height=400,
+                    help="This is the raw, unprocessed response from the AI model before JSON parsing"
+                )
+            else:
+                st.info("No raw response available")
         
         with tab2:
             st.subheader("Raw AI Response")
