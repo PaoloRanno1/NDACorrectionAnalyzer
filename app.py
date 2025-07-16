@@ -1148,7 +1148,6 @@ def display_navigation():
     nav_options = {
         "⚖️ Clean NDA Review": "clean_review",
         "🔬 AI Testing & Comparison": "testing", 
-        "📊 Saved Results": "results",
         "❓ FAQ & Help": "faq",
         "📋 Policies Playbook": "policies",
         "✏️ Edit Playbook": "edit_playbook"
