@@ -500,13 +500,28 @@ def display_background_analysis_progress():
             # Elapsed time
             if bg_state['start_time']:
                 elapsed = time.time() - bg_state['start_time']
-                st.write(f"**Elapsed time:** {elapsed:.0f}s")
+                minutes = int(elapsed // 60)
+                seconds = int(elapsed % 60)
+                if minutes > 0:
+                    time_str = f"{minutes}m {seconds}s"
+                else:
+                    time_str = f"{seconds}s"
+                st.write(f"**Elapsed time:** {time_str}")
+                
+                # Add auto-refresh hint
+                if elapsed > 5:  # Only show after 5 seconds
+                    st.caption("💡 Tip: Refresh the page manually to see time updates")
             
-            # Cancel button
-            if st.button("⏹️ Cancel Analysis", key="cancel_background"):
-                st.session_state.background_analysis['running'] = False
-                st.session_state.background_analysis['status'] = 'Cancelled by user'
-                st.rerun()
+            # Action buttons
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🔄 Refresh Status", key="refresh_background"):
+                    st.rerun()
+            with col2:
+                if st.button("⏹️ Cancel Analysis", key="cancel_background"):
+                    st.session_state.background_analysis['running'] = False
+                    st.session_state.background_analysis['status'] = 'Cancelled by user'
+                    st.rerun()
                 
         elif bg_state['results']:
             st.success("✅ **Background analysis completed!**")
