@@ -1458,50 +1458,7 @@ def display_navigation():
         font-weight: 300;
     }}
     
-    .nav-buttons {{
-        display: flex;
-        gap: 15px;
-        padding: 0 2rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }}
-    
-    .nav-button {{
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        padding: 12px 25px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        cursor: pointer;
-        font-size: 14px;
-        text-align: center;
-        min-width: 130px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }}
-    
-    .nav-button:hover {{
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }}
-    
-    .nav-button.active {{
-        background: rgba(46, 125, 184, 0.9);
-        border-color: rgba(46, 125, 184, 1);
-        box-shadow: 0 6px 20px rgba(46, 125, 184, 0.4);
-    }}
-    
-    .nav-button.active:hover {{
-        background: rgba(46, 125, 184, 1);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(46, 125, 184, 0.5);
-    }}
+
     
     .nav-divider {{
         height: 60px;
@@ -1522,7 +1479,7 @@ def display_navigation():
     # Inject custom CSS
     st.markdown(nav_css, unsafe_allow_html=True)
     
-    # Create navigation HTML
+    # Create navigation HTML with just the header (no buttons)
     nav_html = f'''
     <div class="nav-container">
         <div class="nav-header">
@@ -1534,50 +1491,17 @@ def display_navigation():
                 </div>
             </div>
         </div>
-        <div class="nav-buttons">
-    '''
-    
-    # Add navigation buttons with data attributes for interaction
-    for display_name, page_key in nav_options.items():
-        active_class = "active" if st.session_state.current_page == page_key else ""
-        nav_html += f'<div class="nav-button {active_class}" data-page="{page_key}" onclick="handleNavClick(\'{page_key}\')">{display_name}</div>'
-    
-    nav_html += '''
-        </div>
     </div>
     <div class="nav-divider"></div>
-    
-    <script>
-    function handleNavClick(pageKey) {
-        // Store the clicked page in session storage
-        sessionStorage.setItem('nav_clicked', pageKey);
-        
-        // Find and click the hidden Streamlit button
-        setTimeout(() => {
-            const buttons = document.querySelectorAll('button');
-            for (let btn of buttons) {
-                if (btn.textContent && btn.textContent.trim() === pageKey.toUpperCase().replace('_', ' ')) {
-                    btn.click();
-                    return;
-                } else if (btn.textContent && btn.textContent.includes(pageKey)) {
-                    btn.click();
-                    return;
-                }
-            }
-        }, 50);
-    }
-    </script>
     '''
     
     st.markdown(nav_html, unsafe_allow_html=True)
     
-    # Streamlit buttons for actual navigation (positioned off-screen but accessible to JavaScript)
-    st.markdown('<style>div[data-testid="column"] > div > div > button { position: absolute; left: -9999px; opacity: 0; }</style>', unsafe_allow_html=True)
-    
-    cols = st.columns(len(nav_options))
+    # Create actual navigation buttons below the header
+    nav_cols = st.columns(len(nav_options))
     
     for i, (display_name, page_key) in enumerate(nav_options.items()):
-        with cols[i]:
+        with nav_cols[i]:
             if st.button(display_name, key=f"nav_{page_key}", use_container_width=True, 
                         type="primary" if st.session_state.current_page == page_key else "secondary"):
                 st.session_state.current_page = page_key
