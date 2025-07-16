@@ -25,17 +25,43 @@ Conversely, **never add extra clauses** (e.g., a "No Commitment" clause) just be
 
 ### **POLICY 1: Handling of Unacceptable Clauses**  
 
-**A. Prohibited Clauses (Must Be Removed)**  
-- Any requirement for Strada to pay **indirect, consequential, special, or punitive damages**.  
-- Any **penalty or liquidated-damages** clause specifying a fixed sum per breach (e.g., €50 000).  References to specific monetary amounts must always be deleted.
-- **Non-competition** clauses.  
-- Clauses that **transfer or license intellectual-property rights**.
-**B. Restricted Clause (Must Be Modified)**  
-- **Non-Solicitation of Clients/Customers** → add an exception for pre-existing relationships.
-**Approved Language**  
-- **Liability:** “Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data.”  
-- **IP:** “No provision in this Agreement shall be construed as granting any license or rights, by implication, estoppel, or otherwise, to any intellectual property of either party.”  
-- **Non-Solicitation of Clients/Customers:** “… except for contacts that were already established in the ordinary course of business.”
+**A. Prohibited Clauses (Must Be Removed)** The NDA must **NOT** contain
+any of the following:
+
+- A requirement for Strada to compensate for **indirect, consequential,
+  special, or punitive damages**.
+
+- A **penalty or liquidated damages clause** that specifies a fixed
+  monetary amount per breach (e.g., €500,000 per infringement). A
+  general damages clause is acceptable.
+
+- A **non-competition** clause.
+
+- Any clause that explicitly or implicitly **transfers or licenses
+  intellectual property rights**.
+
+**B. Restricted Clauses (Must Be Modified)** The following clause is
+permissible **only if modified** as described:
+
+- **Clause:** Non-Solicitation of Clients/Customers.
+
+- **Required Modification:** The clause must be amended to include an
+  exception for pre-existing relationships.
+
+**Approved Language:**
+
+- **Liability:** ): "Liability for a breach of this Agreement shall
+  be limited to proven, direct damages. In no event shall either party
+  be liable for any indirect, consequential, special, punitive, or
+  incidental damages, or for any loss of profits, revenue, or data."
+
+- **IP:** "No provision in this Agreement shall be construed as
+  granting any license or rights, by implication, estoppel or otherwise,
+  to any intellectual property of either party."
+
+- **Non-Solicitation of Clients/Customers:** Add: "..except for
+  contacts that were already established in the ordinary course of
+  business."
 
 ---
 
