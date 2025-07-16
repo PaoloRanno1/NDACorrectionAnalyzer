@@ -302,7 +302,7 @@ def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data
 
 def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_edits_data):
     """Display detailed comparison tables matching the reference design"""
-    st.subheader("📊 Detailed Comparison Tables")
+    # Remove duplicate header - will be added by caller
     
     import pandas as pd
     
@@ -446,7 +446,7 @@ def display_detailed_comparison_tables(comparison_analysis, ai_review_data, hr_e
 
 def display_detailed_comparison(comparison_analysis):
     """Display detailed comparison results"""
-    st.header("🔍 Detailed Comparison")
+    # Remove duplicate header - will be added by caller
     
     if not comparison_analysis:
         st.warning("No comparison analysis data available.")
@@ -1835,14 +1835,14 @@ def display_testing_results_page():
             
             st.markdown("---")
             
-            # Display detailed comparison
+            # Display detailed analysis
             st.subheader("🔍 Detailed Analysis")
             display_detailed_comparison(comparison_analysis)
             
             st.markdown("---")
             
-            # JSON viewers
-            st.subheader("📋 JSON Data")
+            # Analysis data viewers
+            st.subheader("📋 Analysis Data")
             display_json_viewers(ai_review_data, hr_edits_data, comparison_analysis)
             
             st.markdown("---")
@@ -1868,7 +1868,7 @@ def display_testing_results_page():
             
             with col2:
                 # Delete button
-                if st.button("🗑️ Delete Result", key=f"delete_{result_id}"):
+                if st.button("🗑️ Delete Result", key=f"delete_result_{result_id}"):
                     if delete_saved_result(result_id):
                         st.success("Result deleted successfully!")
                         st.rerun()
