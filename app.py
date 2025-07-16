@@ -1365,9 +1365,10 @@ def display_navigation():
         background-position: center;
         background-repeat: no-repeat;
         padding: 25px 0;
-        margin: -1rem -1rem 2rem -1rem;
+        margin: -1rem -1rem 0 -1rem;
         border-radius: 0;
         position: relative;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }}
     
     .nav-header {{
@@ -1453,9 +1454,26 @@ def display_navigation():
     }}
     
     .nav-divider {{
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        margin: 0 -1rem 2rem -1rem;
+        height: 60px;
+        background: linear-gradient(180deg, 
+            rgba(0, 0, 0, 0.6) 0%, 
+            rgba(0, 0, 0, 0.4) 20%, 
+            rgba(0, 0, 0, 0.2) 40%, 
+            rgba(0, 0, 0, 0.1) 60%, 
+            rgba(0, 0, 0, 0.05) 80%, 
+            transparent 100%);
+        margin: 0 -1rem 1rem -1rem;
+    }}
+    
+    .content-wrapper {{
+        background: linear-gradient(180deg, 
+            rgba(248, 249, 250, 0.7) 0%, 
+            rgba(248, 249, 250, 0.9) 30%, 
+            rgba(248, 249, 250, 1) 60%, 
+            white 100%);
+        padding: 2rem 1rem;
+        margin: -1rem -1rem 0 -1rem;
+        border-radius: 0;
     }}
     </style>
     """
@@ -2172,6 +2190,9 @@ def main():
     # Navigation
     display_navigation()
     
+    # Content wrapper for smooth transition
+    st.markdown('<div class="content-wrapper">', unsafe_allow_html=True)
+    
     # Page routing
     if st.session_state.current_page == "clean_review":
         display_single_nda_review(model, temperature)
@@ -2186,6 +2207,9 @@ def main():
     elif st.session_state.current_page == "edit_playbook":
         from playbook_manager import display_editable_playbook
         display_editable_playbook()
+    
+    # Close content wrapper
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
