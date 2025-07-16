@@ -1726,29 +1726,73 @@ def display_testing_results_page():
     # Results selection and display
     st.subheader("📋 Saved Results")
     
-    # Create dropdown with project names
-    result_options = []
-    for result in saved_results:
-        timestamp = result.get("timestamp", "")
-        if timestamp:
-            try:
-                from datetime import datetime
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                formatted_date = dt.strftime("%Y-%m-%d %H:%M")
-            except:
-                formatted_date = timestamp[:16]
-        else:
-            formatted_date = "Unknown"
+    if saved_results:
+        # Create a list of results with delete buttons
+        st.markdown("**Available Results:**")
         
-        option_text = f"{result['nda_name']} - {formatted_date} ({result['model_used']})"
-        result_options.append(option_text)
+        for i, result in enumerate(saved_results):
+            timestamp = result.get("timestamp", "")
+            if timestamp:
+                try:
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    formatted_date = dt.strftime("%Y-%m-%d %H:%M")
+                except:
+                    formatted_date = timestamp[:16]
+            else:
+                formatted_date = "Unknown"
+            
+            col1, col2, col3 = st.columns([6, 1, 1])
+            
+            with col1:
+                result_text = f"**{result['nda_name']}** - {formatted_date} ({result['model_used']})"
+                st.markdown(result_text)
+            
+            with col2:
+                if st.button("👁️ View", key=f"view_{result['result_id']}", use_container_width=True):
+                    st.session_state.selected_result_id = result['result_id']
+                    st.rerun()
+            
+            with col3:
+                if st.button("🗑️ Delete", key=f"delete_{result['result_id']}", use_container_width=True):
+                    from results_manager import delete_saved_result
+                    if delete_saved_result(result['result_id']):
+                        st.success(f"Deleted {result['nda_name']} successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to delete result.")
+        
+        st.markdown("---")
+        
+        # Display selected result if any
+        if hasattr(st.session_state, 'selected_result_id') and st.session_state.selected_result_id:
+            # Find the selected result
+            selected_result = None
+            for result in saved_results:
+                if result['result_id'] == st.session_state.selected_result_id:
+                    selected_result = result
+                    break
+            
+            if selected_result:
+                # Clear selection button
+                if st.button("❌ Clear Selection", key="clear_selection"):
+                    st.session_state.selected_result_id = None
+                    st.rerun()
+            else:
+                # Result was deleted, clear selection
+                st.session_state.selected_result_id = None
+                st.rerun()
+    else:
+        st.info("No saved results found. Run some tests to see results here.")
+        return
     
-    selected_result_index = st.selectbox(
-        "Select a result to view:",
-        range(len(result_options)),
-        format_func=lambda x: result_options[x] if x < len(result_options) else "",
-        help="Choose a saved result to view detailed analysis"
-    )
+    # Set selected_result_index based on session state for compatibility
+    selected_result_index = None
+    if hasattr(st.session_state, 'selected_result_id') and st.session_state.selected_result_id:
+        for i, result in enumerate(saved_results):
+            if result['result_id'] == st.session_state.selected_result_id:
+                selected_result_index = i
+                break
     
     if selected_result_index is not None and selected_result_index < len(saved_results):
         selected_result = saved_results[selected_result_index]
