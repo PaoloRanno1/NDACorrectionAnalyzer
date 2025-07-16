@@ -1271,8 +1271,10 @@ def display_faq_page():
         **Navigation Structure**:
         - **NDA Review**: Main homepage for analyzing individual NDAs with AI compliance checking
         - **Testing**: Compare AI analysis against HR corrections with accuracy metrics and performance tracking
+        - **Database**: Manage and organize NDA test files for consistent testing
         - **Policies**: Browse all 14 compliance policies organized by priority levels (High/Medium/Low)
         - **FAQ**: Comprehensive help guide and troubleshooting (this page)
+        
         
         **Key Features**:
         - Real-time AI analysis using Google Gemini models
@@ -1455,7 +1457,7 @@ def display_faq_page():
         """)
     
     # Edit Playbook
-    with st.expander("✏️ **Edit Playbook**"):
+    with st.expander("✏️ **Edit Playbook** (Accessible from testing page)"):
         st.markdown("""
         **Purpose**: Customize and adapt AI analysis criteria to your specific needs
         
@@ -1811,6 +1813,10 @@ def display_testing_page(model, temperature, analysis_mode):
     
     with col1:
         st.header("🔬 NDA Testing")
+        st.markdown("""- Test Your NDAs 
+        
+- View results of previous tests by clicking the button:📊 View Results
+                    """)
     
     with col2:
         if st.button("⚙️ AI Settings", key="testing_settings", use_container_width=True):
@@ -2076,7 +2082,7 @@ def display_database_page():
     
     with tab1:
         st.header("📤 Upload New NDAs")
-        st.write("Upload clean or corrected versions of NDAs to add them to your test database.")
+        st.write("Upload clean or corrected versions of NDAs to add them to your database. Use the same project name for both versions to create a complete test case.")
         
         # Show success popup if there was a recent upload
         if 'upload_success' in st.session_state:
