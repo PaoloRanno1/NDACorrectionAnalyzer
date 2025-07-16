@@ -11,7 +11,11 @@ import traceback
 from typing import Dict, List, Tuple, Optional
 
 # Import the analysis modules
-from Clean_testing import TestingChain
+try:
+    from Clean_testing import TestingChain
+except ImportError:
+    # Handle import error gracefully
+    TestingChain = None
 from policies_playbook import display_policies_playbook
 from utils import (
     validate_file, 
@@ -972,15 +976,20 @@ def display_faq_page():
     st.markdown("Complete guide to using the NDA Analysis Tool")
     
     # Overview
-    with st.expander("🎯 **What is this tool?**", expanded=True):
+    with st.expander("🎯 **About the App**", expanded=True):
         st.markdown("""
-        The **NDA Analysis Tool** is an AI-powered platform that evaluates legal document compliance 
-        and compares AI performance against human HR edits. It helps legal teams understand how well 
-        AI can identify compliance issues in Non-Disclosure Agreements.
+        This is an AI-powered platform that evaluates NDA legal compliance according to Strada's requirements.
+
+        **Structure**:
+        - Main page: NDA Review (Clean NDA Analysis).
+        - Testing: Compare AI analysis against HR corrections. You need to provide 2 versions of the same NDA (clean and corrected). The AI will analyze both and compare the results. You can also view the testing results for all of the NDAs in the testing database.
+        - Policies: Browse all compliance policies organized by priority. You can also edit the playbook to affect all of the future analysis.
+        - FAQ: This help guide
+        
         """)
     
     # Clean NDA Review
-    with st.expander("⚖️ **Clean NDA Review**"):
+    with st.expander("⚖️ **NDA Review**"):
         st.markdown("""
         **Purpose**: Primary AI-powered compliance analysis for single NDAs
         
@@ -1012,6 +1021,7 @@ def display_faq_page():
         - Compares AI findings with actual HR edits
         - Calculates accuracy metrics (precision, recall, F1 score)
         - Identifies missed issues and false positives
+        - **View saved testing results** accessible from the Testing tab
         
         **Best for**:
         - Evaluating AI performance on your specific NDAs
@@ -1023,6 +1033,11 @@ def display_faq_page():
         2. Run comparison analysis
         3. Review detailed performance metrics
         4. Save results for tracking improvement over time
+        5. **Access saved results** from the Testing tab → Results section
+        
+        **Important**: If uploading custom files, the corrected NDA must have changes marked as:
+        - **Additions**: `++text that was added++`
+        - **Removals**: `--text that was removed--`
         """)
     
     # Saved Results
@@ -1108,6 +1123,11 @@ def display_faq_page():
         - Word documents (.docx)
         - Markdown files (.md)
         - Plain text files (.txt)
+        
+        **NDA Correction Format**:
+        For testing, corrected NDAs must use:
+        - `++text added++` for additions
+        - `--text removed--` for removals
         """)
     
     # Tips & Best Practices
@@ -1115,9 +1135,10 @@ def display_faq_page():
         st.markdown("""
         **For Best Results**:
         - Use clean, readable document formats
-        - Ensure HR edits include tracked changes
+        - Ensure HR edits include tracked changes with `++` and `--` markers
         - Test with multiple document types
         - Save results for performance tracking
+        - Access saved testing results from the Testing tab → Results section
         
         **Common Issues**:
         - **Large files**: May take longer to process
