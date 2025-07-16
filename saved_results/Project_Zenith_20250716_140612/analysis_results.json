@@ -1,0 +1,152 @@
+{
+  "comparison_analysis": {
+    "Issues Correctly Identified by the AI": [
+      {
+        "Issue": "Return & Destruction of Information Clause",
+        "Section": "2)",
+        "Priority": "High",
+        "Analysis": "AI proposed adding exceptions for legal compliance, automated backups, and internal work product. HR implemented the core of this suggestion, adding exceptions for audit/compliance requirements and automated archiving/back-up procedures."
+      },
+      {
+        "Issue": "Confidentiality Term Duration",
+        "Section": "12)",
+        "Priority": "Low",
+        "Analysis": "AI proposed reducing the confidentiality term from three years to the preferred two years. HR implemented this exact change, replacing 'three' with 'two'."
+      }
+    ],
+    "Issues Missed by the AI": [],
+    "Issues Flagged by AI but Not Addressed by HR": [
+      {
+        "Issue": "Narrow Definition of Representatives",
+        "Section": "1)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the definition of who can receive information was too narrow per Policy 2, omitting key personnel like all employees and consultants. HR did not broaden this definition."
+      },
+      {
+        "Issue": "Overly Broad Non-Solicitation Clause",
+        "Section": "6)",
+        "Priority": "High",
+        "Analysis": "AI noted the non-solicitation term was too long (three years vs. a two-year max) and lacked a required exemption for portfolio companies. HR did not address these critical points."
+      },
+      {
+        "Issue": "Unlimited Liability for Damages",
+        "Section": "11)",
+        "Priority": "High",
+        "Analysis": "AI flagged that the indemnity clause exposed the company to unlimited and undefined damages, contrary to Policy 1. HR did not add the required limitation to direct damages only."
+      },
+      {
+        "Issue": "Overly Broad No-Contact Clause",
+        "Section": "4)",
+        "Priority": "Medium",
+        "Analysis": "AI identified the no-contact clause as overly restrictive, lacking exceptions for contacts made in the ordinary course of business. HR did not make any changes to this clause."
+      },
+      {
+        "Issue": "Incomplete Exceptions to Confidentiality",
+        "Section": "5)",
+        "Priority": "Low",
+        "Analysis": "AI flagged that the exceptions to what constitutes 'Information' were incomplete per Policy 14, missing key qualifications. HR did not add the missing exceptions."
+      },
+      {
+        "Issue": "Strict Liability for Representatives",
+        "Section": "11)",
+        "Priority": "Low",
+        "Analysis": "AI noted the clause imposed strict liability for representative breaches, whereas Policy 13 prefers an efforts-based standard. HR did not modify this clause."
+      },
+      {
+        "Issue": "Non-Standard Governing Law & Jurisdiction",
+        "Section": "13)",
+        "Priority": "Low",
+        "Analysis": "AI flagged that the governing law and jurisdiction (Austrian) deviated from the company's preferred choice (Belgian) per Policy 11. HR did not change this clause."
+      }
+    ]
+  },
+  "ai_review_data": {
+    "High Priority": [
+      {
+        "issue": "Violation of 'Policy 2' Clause",
+        "citation": "...other than to our or our affiliates' directors, officers and senior employees and our financing providers and advisers, that are bound to discretion...",
+        "section": "1)",
+        "problem": "The definition of who can receive Information is too narrow. It omits key personnel such as all employees (not just 'senior' ones), shareholders, potential syndicate members, consultants, and agents, as required by the playbook.",
+        "suggested_replacement": "Information may be disclosed by us to our affiliates and our and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such Information to evaluate the Company and to prepare an offer for the acquisition of the Company, provided that we shall be responsible for any breach of this Confidentiality Agreement by our Representatives."
+      },
+      {
+        "issue": "Violation of 'Policy 3' Clause",
+        "citation": "...all information or data received, including copies, will be immediately deleted or destroyed as soon as we decide not to proceed with the evaluation of the acquisition opportunity...",
+        "section": "2)",
+        "problem": "The clause mandates absolute and immediate destruction of Information. It fails to include the required exceptions for retaining Information on automated backup systems, in internal work product (Secondary Information), or for legal and regulatory compliance purposes.",
+        "suggested_replacement": "Upon the written request of Deloitte FA and/or the Company, we shall return or destroy all Information. However, this obligation shall not apply to: (i) Information that we or our Representatives must retain under any applicable law, rule or regulation; (ii) Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on our behalf which incorporate Information ('Secondary Information'). Any Information or Secondary Information that is not returned or destroyed shall remain subject to the confidentiality terms of this Confidentiality Agreement."
+      },
+      {
+        "issue": "Violation of 'Policy 4' Clause",
+        "citation": "we will not directly solicit the employment of any manager or employee of the Company.",
+        "section": "6)",
+        "problem": "The non-solicitation clause violates policy in two ways: 1) Its duration is implicitly three years (per Section 12), exceeding the two-year maximum. 2) It does not contain the mandatory exemption for our affiliated portfolio companies.",
+        "suggested_replacement": "For a period of two (2) years from the date of this Confidentiality Agreement, we agree not to directly solicit for employment any employee of the Company with whom we had material contact in connection with the evaluation of the Company. This restriction shall not apply to any of our affiliated portfolio companies, nor shall it apply to employees who respond to general public advertisements, make an unsolicited application for employment, are referred by a third-party recruiter who was not instructed to target the Company's employees, or whose employment was terminated by the Company."
+      },
+      {
+        "issue": "Violation of 'Policy 1' Clause",
+        "citation": "...we will hold harmless the Company and Deloitte FA from and against any claims, damages, losses, costs or expenses (including attorney's fees and disbursements) arising out of any breach...",
+        "section": "11)",
+        "problem": "The agreement imposes liability for broad and undefined 'damages, losses, costs or expenses'. This violates the policy that prohibits liability for indirect, consequential, special, or punitive damages and requires liability to be limited to direct damages only.",
+        "suggested_replacement": "Liability for a breach of this Confidentiality Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation of 'Policy 6' Clause",
+        "citation": "...we will not directly or indirectly contact the shareholders, the management, the employees, the suppliers, the creditors and the customers of the Company unless we have received a prior written authorization...",
+        "section": "4)",
+        "problem": "The no-contact clause is overly broad. It restricts contact with a wide range of stakeholders (suppliers, creditors, customers) and lacks the required exceptions for contacts made in the ordinary course of business or for pre-existing relationships.",
+        "suggested_replacement": "Without the prior written consent of Deloitte FA, we agree not to contact any directors, officers, or employees of the Company in connection with the evaluation of the Company. This restriction shall not be breached by any contact made for another purpose than the purpose of evaluating and negotiating the proposed acquisition, nor shall it restrict contacts that existed already in the ordinary course of business."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation of 'Policy 14' Clause",
+        "citation": "...this shall not apply to publicly available information or information, which was provided to us by a third party... or as to which we are able to prove that we had already held the information...",
+        "section": "5)",
+        "problem": "The exceptions to the definition of 'Information' are incomplete. They do not specify that publicly available information must become so through no fault of the recipient, and they omit an exception for information disclosed with the Disclosing Party's permission.",
+        "suggested_replacement": "Information does not include information that: (a) is or becomes generally available to the public through no breach by us of the confidentiality undertakings hereunder; (b) was in our lawful possession before receipt from Deloitte FA and/or the Company; (c) was received in good faith by us from a third party that is not subject to an obligation of confidentiality owed to Deloitte FA and/or the Company; or (d) was disclosed by us pursuant to the written permission of a duly authorized representative of Deloitte FA and/or the Company."
+      },
+      {
+        "issue": "Violation of 'Policy 13' Clause",
+        "citation": "...we will be held liable for any breach of this Confidentiality Agreement by ourselves, our employees and any third party to which we have disclosed any Information...",
+        "section": "11)",
+        "problem": "The clause imposes strict liability for any breach by our Representatives. The playbook preference is for an efforts-based standard ('best efforts to procure') rather than absolute responsibility.",
+        "suggested_replacement": "We will use our best efforts to procure that each of our Representatives who receives any Information is aware of and adheres to the terms of this Confidentiality Agreement. We shall be responsible for any breach of the confidentiality obligations of this Confidentiality Agreement by our Representatives."
+      },
+      {
+        "issue": "Violation of 'Policy 12' Clause",
+        "citation": "...the provisions of this Confidentiality Agreement shall terminate three years from that date of this Confidentiality Agreement...",
+        "section": "12)",
+        "problem": "The confidentiality term is three years. While this is the maximum acceptable duration, the playbook's preferred term is two years.",
+        "suggested_replacement": "The obligations of confidentiality set out in this letter shall continue in full force and effect for a period of two (2) years from the date of this Confidentiality Agreement."
+      },
+      {
+        "issue": "Violation of 'Policy 11' Clause",
+        "citation": "...governed by and construed in accordance with substantive Austrian law. We agree that the commercial court of Vienna, Austria, shall have exclusive jurisdiction...",
+        "section": "13)",
+        "problem": "The agreement specifies Austrian law and the courts of Vienna. While this is an acceptable European jurisdiction, it deviates from the primary preference for Belgian law and the exclusive courts of Antwerp, Belgium.",
+        "suggested_replacement": "This Confidentiality Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Confidentiality Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      }
+    ]
+  },
+  "hr_edits_data": [
+    {
+      "issue": "Correction aligning with High Priority Policy 3",
+      "Priority": "High",
+      "change_type": "Addition",
+      "section": "2.",
+      "citation": "Context: '...and the destruction of the information or data. ++[However, we shall be required to keep one (1) copy of the Information (i) pursuant to audit or compliance requirements or (ii) that has been saved under automatic archiving or electronic back-up procedures]{.mark}.++'",
+      "problem": "The original clause required absolute destruction of all information upon request, which violates Policy 3. The HR representative correctly added language to permit the retention of information for compliance/audit purposes and for data stored on automated backup systems. This change brings the clause into alignment with the core requirements of High Priority Policy 3."
+    },
+    {
+      "issue": "Correction aligning with Low Priority Policy 12",
+      "Priority": "Low",
+      "change_type": "Replacement",
+      "section": "12.",
+      "citation": "Original: '...shall terminate --three-- years from that date of this Confidentiality Agreement...' New: '...shall terminate ++[two]{.mark}++ years from that date of this Confidentiality Agreement...'",
+      "problem": "The original confidentiality term was three years, which is the maximum acceptable duration under Policy 12. The HR representative replaced 'three' with 'two', aligning the agreement with Strada's preferred two-year term. This is a positive change that fully complies with the playbook's guidance."
+    }
+  ]
+}
