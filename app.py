@@ -168,6 +168,74 @@ def run_background_analysis(analysis_id, clean_file_content, corrected_file_cont
         st.session_state.background_analysis['running'] = False
         st.session_state.background_analysis['progress'] = 0
 
+def run_background_single_nda_analysis(analysis_id, file_content, file_extension, model, temperature):
+    """Run single NDA analysis in background thread"""
+    try:
+        # Update progress
+        st.session_state.background_analysis['status'] = 'Initializing single NDA analysis...'
+        st.session_state.background_analysis['progress'] = 10
+        
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=f".{file_extension}") as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+        
+        # Convert DOCX to markdown using Pandoc if needed
+        if file_extension == 'docx':
+            st.session_state.background_analysis['status'] = 'Converting DOCX to markdown...'
+            st.session_state.background_analysis['progress'] = 20
+            
+            markdown_temp_path = temp_file_path.replace('.docx', '.md')
+            try:
+                result = subprocess.run([
+                    'pandoc', 
+                    temp_file_path, 
+                    '-o', 
+                    markdown_temp_path,
+                    '--wrap=none'
+                ], capture_output=True, text=True, check=True)
+                
+                os.unlink(temp_file_path)
+                temp_file_path = markdown_temp_path
+                
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                st.session_state.background_analysis['error'] = f"Failed to convert DOCX file: {str(e)}"
+                st.session_state.background_analysis['running'] = False
+                return
+        
+        # Get current playbook content
+        st.session_state.background_analysis['status'] = 'Loading playbook...'
+        st.session_state.background_analysis['progress'] = 30
+        
+        from playbook_manager import get_current_playbook
+        playbook_content = get_current_playbook()
+        
+        # Initialize and run analysis
+        st.session_state.background_analysis['status'] = 'Running AI analysis...'
+        st.session_state.background_analysis['progress'] = 50
+        
+        from NDA_Review_chain import StradaComplianceChain
+        review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+        compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
+        
+        # Clean up temporary file
+        os.unlink(temp_file_path)
+        
+        # Store results
+        st.session_state.background_analysis['status'] = 'Analysis complete!'
+        st.session_state.background_analysis['progress'] = 100
+        st.session_state.background_analysis['results'] = {
+            'compliance_report': compliance_report,
+            'raw_response': raw_response
+        }
+        st.session_state.background_analysis['running'] = False
+        
+    except Exception as e:
+        st.session_state.background_analysis['error'] = str(e)
+        st.session_state.background_analysis['status'] = f'Error: {str(e)}'
+        st.session_state.background_analysis['running'] = False
+        st.session_state.background_analysis['progress'] = 0
+
 def start_background_analysis(clean_file_content, corrected_file_content, model, temperature, analysis_mode):
     """Start background analysis in a separate thread"""
     analysis_id = str(uuid.uuid4())
@@ -189,6 +257,33 @@ def start_background_analysis(clean_file_content, corrected_file_content, model,
     thread = threading.Thread(
         target=run_background_analysis,
         args=(analysis_id, clean_file_content, corrected_file_content, model, temperature, analysis_mode)
+    )
+    thread.daemon = True
+    thread.start()
+    
+    return analysis_id
+
+def start_background_single_nda_analysis(file_content, file_extension, model, temperature):
+    """Start background single NDA analysis in a separate thread"""
+    analysis_id = str(uuid.uuid4())
+    
+    # Reset background analysis state
+    st.session_state.background_analysis = {
+        'running': True,
+        'progress': 0,
+        'status': 'Starting single NDA analysis...',
+        'results': None,
+        'error': None,
+        'analysis_id': analysis_id,
+        'start_time': time.time(),
+        'files': {'single_nda': file_content},
+        'config': {'model': model, 'temperature': temperature, 'analysis_mode': 'single_nda'}
+    }
+    
+    # Start background thread
+    thread = threading.Thread(
+        target=run_background_single_nda_analysis,
+        args=(analysis_id, file_content, file_extension, model, temperature)
     )
     thread.daemon = True
     thread.start()
@@ -391,9 +486,17 @@ def display_background_analysis_progress():
             # Load results button
             if st.button("📊 Load Results", key="load_bg_results"):
                 results = bg_state['results']
-                st.session_state.analysis_results = results['comparison_analysis']
-                st.session_state.ai_review_data = results['ai_review_data']
-                st.session_state.hr_edits_data = results['hr_edits_data']
+                
+                # Handle different result types
+                if 'comparison_analysis' in results:
+                    # Testing analysis results
+                    st.session_state.analysis_results = results['comparison_analysis']
+                    st.session_state.ai_review_data = results['ai_review_data']
+                    st.session_state.hr_edits_data = results['hr_edits_data']
+                elif 'compliance_report' in results:
+                    # Single NDA analysis results
+                    st.session_state.single_nda_results = results['compliance_report']
+                    st.session_state.single_nda_raw = results['raw_response']
                 
                 # Clear background analysis state
                 st.session_state.background_analysis = {
@@ -859,79 +962,38 @@ def display_single_nda_review(model, temperature):
             st.error("❌ Invalid file format or size")
             return
     
+    # Display background analysis progress if active
+    has_background_analysis = display_background_analysis_progress()
+    
     # Review button
+    is_disabled = not uploaded_file or st.session_state.background_analysis['running']
+    button_text = "🔄 Analysis Running..." if st.session_state.background_analysis['running'] else "🚀 Review NDA"
+    
     run_single_analysis = st.button(
-        "🚀 Review NDA",
-        disabled=not uploaded_file,
+        button_text,
+        disabled=is_disabled,
         use_container_width=False,
         key="run_single_analysis"
     )
     
-    # Run review
+    # Run review with background processing
     if run_single_analysis and uploaded_file:
-        with st.spinner("Reviewing NDA... This may take a minute."):
-            try:
-                # Import the NDA Review chain
-                from NDA_Review_chain import StradaComplianceChain
-                
-                file_extension = uploaded_file.name.split('.')[-1].lower()
-                
-                # Create temporary file
-                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=f".{file_extension}") as temp_file:
-                    temp_file.write(uploaded_file.getvalue())
-                    temp_file_path = temp_file.name
-                
-                # Convert DOCX to markdown using Pandoc if needed
-                if file_extension == 'docx':
-                    markdown_temp_path = temp_file_path.replace('.docx', '.md')
-                    try:
-                        # Use Pandoc to convert DOCX to markdown
-                        result = subprocess.run([
-                            'pandoc', 
-                            temp_file_path, 
-                            '-o', 
-                            markdown_temp_path,
-                            '--wrap=none'  # Prevent line wrapping
-                        ], capture_output=True, text=True, check=True)
-                        
-                        # Clean up original DOCX file and use markdown file
-                        os.unlink(temp_file_path)
-                        temp_file_path = markdown_temp_path
-                        
-                        st.info("✅ DOCX file converted to markdown for analysis")
-                        
-                    except subprocess.CalledProcessError as e:
-                        st.error(f"❌ Failed to convert DOCX file: {e}")
-                        os.unlink(temp_file_path)
-                        return
-                    except FileNotFoundError:
-                        st.error("❌ Pandoc not found. Please install Pandoc to process DOCX files.")
-                        os.unlink(temp_file_path)
-                        return
-                
-                # Get current playbook content
-                from playbook_manager import get_current_playbook
-                playbook_content = get_current_playbook()
-                
-                # Initialize and run analysis
-                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
-                
-                # Clean up temporary file
-                os.unlink(temp_file_path)
-                
-                # Store results in session state
-                st.session_state.single_nda_results = compliance_report
-                st.session_state.single_nda_raw = raw_response
-                
-                st.success("✅ Review completed successfully!")
+        try:
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            file_content = uploaded_file.getvalue()
+            
+            # Start background analysis
+            analysis_id = start_background_single_nda_analysis(file_content, file_extension, model, temperature)
+            
+            if analysis_id:
+                st.success("🚀 Analysis started! You can switch tabs freely while it runs.")
                 st.rerun()
                 
-            except Exception as e:
-                st.error(f"❌ Review failed: {str(e)}")
-                st.error("Please check your API key and try again.")
-                with st.expander("Error Details"):
-                    st.code(traceback.format_exc())
+        except Exception as e:
+            st.error(f"❌ Failed to start analysis: {str(e)}")
+            st.error("Please check your file and try again.")
+            with st.expander("Error Details"):
+                st.code(traceback.format_exc())
     
     # Display results if available
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
