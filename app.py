@@ -1143,46 +1143,33 @@ def display_faq_page():
         """)
 
 def display_navigation():
-    """Display navigation dropdown"""
-    # Navigation dropdown
+    """Display horizontal navigation bar"""
+    # Navigation options
     nav_options = {
-        "⚖️ Clean NDA Review": "clean_review",
-        "🔬 AI Testing & Comparison": "testing", 
-        "❓ FAQ & Help": "faq",
-        "📋 Policies Playbook": "policies",
-        "✏️ Edit Playbook": "edit_playbook"
+        "CLEAN REVIEW": "clean_review",
+        "TESTING": "testing", 
+        "FAQ": "faq",
+        "POLICIES": "policies",
+        "EDIT PLAYBOOK": "edit_playbook"
     }
     
-    # Find current page display name
-    current_display = "⚖️ Clean NDA Review"
-    for display_name, page_key in nav_options.items():
-        if page_key == st.session_state.current_page:
-            current_display = display_name
-            break
-    
-    # If current page is not in navigation (like results), don't show dropdown
+    # Special handling for results page
     if st.session_state.current_page == "results":
-        st.markdown("**Current Section:** 📊 Saved Results")
-        st.markdown("---")
-        return
+        nav_options["RESULTS"] = "results"
     
-    col1, col2 = st.columns([3, 9])
+    # Create horizontal navigation
+    cols = st.columns(len(nav_options))
     
-    with col1:
-        selected_page = st.selectbox(
-            "Navigate to:",
-            options=list(nav_options.keys()),
-            index=list(nav_options.keys()).index(current_display),
-            key="navigation_dropdown"
-        )
-        
-        # Update page when selection changes
-        if nav_options[selected_page] != st.session_state.current_page:
-            st.session_state.current_page = nav_options[selected_page]
-            st.rerun()
-    
-    with col2:
-        st.markdown(f"**Current Section:** {selected_page}")
+    for i, (display_name, page_key) in enumerate(nav_options.items()):
+        with cols[i]:
+            # Style active page differently
+            if st.session_state.current_page == page_key:
+                if st.button(display_name, key=f"nav_{page_key}", use_container_width=True, type="primary"):
+                    pass  # Already on this page
+            else:
+                if st.button(display_name, key=f"nav_{page_key}", use_container_width=True):
+                    st.session_state.current_page = page_key
+                    st.rerun()
     
     st.markdown("---")
 
