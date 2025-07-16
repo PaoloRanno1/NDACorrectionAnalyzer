@@ -171,6 +171,20 @@ def run_background_analysis(analysis_id, clean_file_content, corrected_file_cont
 def run_background_single_nda_analysis(analysis_id, file_content, file_extension, model, temperature):
     """Run single NDA analysis in background thread"""
     try:
+        # Ensure background analysis is initialized
+        if 'background_analysis' not in st.session_state:
+            st.session_state.background_analysis = {
+                'running': False,
+                'progress': 0,
+                'status': 'idle',
+                'results': None,
+                'error': None,
+                'analysis_id': None,
+                'start_time': None,
+                'files': {'clean': None, 'corrected': None},
+                'config': None
+            }
+        
         # Update progress
         st.session_state.background_analysis['status'] = 'Initializing single NDA analysis...'
         st.session_state.background_analysis['progress'] = 10
@@ -231,6 +245,20 @@ def run_background_single_nda_analysis(analysis_id, file_content, file_extension
         st.session_state.background_analysis['running'] = False
         
     except Exception as e:
+        # Ensure background analysis exists before setting error
+        if 'background_analysis' not in st.session_state:
+            st.session_state.background_analysis = {
+                'running': False,
+                'progress': 0,
+                'status': 'idle',
+                'results': None,
+                'error': None,
+                'analysis_id': None,
+                'start_time': None,
+                'files': {'clean': None, 'corrected': None},
+                'config': None
+            }
+        
         st.session_state.background_analysis['error'] = str(e)
         st.session_state.background_analysis['status'] = f'Error: {str(e)}'
         st.session_state.background_analysis['running'] = False
@@ -2893,10 +2921,8 @@ def main():
     # Display global background notification if analysis is running
     display_global_background_notification()
     
-    # Auto-refresh for background analysis updates
-    if st.session_state.background_analysis['running']:
-        time.sleep(2)  # Wait 2 seconds before refresh
-        st.rerun()
+    # Auto-refresh for background analysis updates - removed to prevent blinking
+    # Background analysis status will be shown through status indicators only
     
     # Get current settings
     model = st.session_state.analysis_config['model']
