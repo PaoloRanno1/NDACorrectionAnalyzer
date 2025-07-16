@@ -2031,6 +2031,24 @@ def display_database_page():
         st.header("📤 Upload New NDAs")
         st.write("Upload clean or corrected versions of NDAs to add them to your test database.")
         
+        # Show success popup if there was a recent upload
+        if 'upload_success' in st.session_state:
+            success_info = st.session_state.upload_success
+            
+            # Create a prominent success notification
+            st.success(f"""
+            🎉 **File Uploaded Successfully!**
+            
+            **Project:** {success_info['project_name']}  
+            **Type:** {success_info['upload_type']}  
+            **Location:** {success_info['file_path']}
+            
+            {'✅ Project is now complete and ready for testing!' if success_info['complete'] else '⚠️ Upload the other version to make this project available for testing.'}
+            """)
+            
+            # Clear the success message after showing it
+            del st.session_state.upload_success
+        
         # Upload type selection
         upload_type = st.radio(
             "Select upload type:",
@@ -2058,9 +2076,7 @@ def display_database_page():
             submitted = st.form_submit_button("💾 Upload to Database", use_container_width=True)
             
             if submitted:
-                st.write(f"DEBUG: Submit button pressed. Project name: '{project_name}', File: {uploaded_file}")
                 if project_name and uploaded_file:
-                    st.write(f"DEBUG: Starting upload process...")
                     try:
                         # Create test_data directory if it doesn't exist
                         import os
@@ -2101,6 +2117,10 @@ def display_database_page():
                         with open(file_path, 'w', encoding='utf-8') as f:
                             f.write(file_content)
                         
+                        # Show success popup
+                        st.balloons()
+                        
+                        # Success message
                         st.success(f"✅ Successfully uploaded {upload_type.lower()} for '{project_name}'!")
                         st.info(f"File saved as: {file_path}")
                         
@@ -2113,6 +2133,14 @@ def display_database_page():
                             st.info("This project will now appear in the 'Select from Test Database' option during testing.")
                         else:
                             st.info(f"ℹ️ Upload the {other_suffix} version to make this project available for testing.")
+                        
+                        # Store success message in session state for popup
+                        st.session_state.upload_success = {
+                            'project_name': project_name,
+                            'upload_type': upload_type,
+                            'file_path': file_path,
+                            'complete': os.path.exists(other_path)
+                        }
                         
                         # Clear the form
                         st.rerun()
