@@ -42,12 +42,11 @@ Conversely, **never add extra clauses** (e.g., a "No Commitment" clause) just be
 ---
 
 ### **POLICY 2: Permitted Recipients (Disclosees)**  
-- Definition of "Representatives" must ideally cover our **directors, employees, affiliates, shareholders, potential syndicate members, other finance providers, and professional advisers**.  
-- Adherence Letters: If potential finance providers or advisers are excluded from the definition of "Disclosees" or "Representatives", we must ensure they sign an Adherence Letter to the NDA before we share information with them.
-- Any clause forcing Strada to **act alone** or prohibiting consortiums **must be deleted**.
+- The definition of who can receive information ("Representatives") must be broad enough to include Strada's directors, employees, shareholders, potential syndicate members, other providers of finance, and financial and professional advisers. 
+- Any clause requiring Strada to act alone or prohibiting consortiums must be deleted.  
 
 **Approved Language**  
-"Confidential Information may be disclosed by the Recipient to its affiliates and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such information for the Purpose, provided the Recipient remains responsible for any breach of this Agreement by its Representatives."
+"Confidential Information may be disclosed by the Recipient to its affiliates and its and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, "Representatives"), who need to know such information for the Purpose, provided that the Recipient shall be responsible for any breach of this Agreement by its Representatives."
 
 ---
 
