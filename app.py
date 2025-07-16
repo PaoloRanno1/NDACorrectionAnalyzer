@@ -82,51 +82,18 @@ def display_login_screen():
 
 def display_header():
     """Display the application header"""
-    # Add logout button in the top right
-    col1, col2 = st.columns([6, 1])
+    # Add settings and logout buttons in the top right
+    col1, col2, col3 = st.columns([6, 1, 1])
     with col1:
         pass  # Empty space
     with col2:
+        if st.button("⚙️ Settings", key="header_settings"):
+            st.session_state.show_settings = not st.session_state.get('show_settings', False)
+            st.rerun()
+    with col3:
         if st.button("Logout", type="secondary"):
             st.session_state.authenticated = False
             st.rerun()
-
-def display_sidebar():
-    """Display sidebar with configuration options"""
-    st.sidebar.header("⚙️ Configuration")
-    
-    # Model selection
-    model_options = ["gemini-2.5-pro", "gemini-2.5-flash"]
-    selected_model = st.sidebar.selectbox(
-        "Select AI Model",
-        model_options,
-        index=model_options.index(st.session_state.analysis_config['model'])
-    )
-    
-    # Temperature slider
-    temperature = st.sidebar.slider(
-        "Temperature",
-        min_value=0.0,
-        max_value=1.0,
-        value=st.session_state.analysis_config['temperature'],
-        step=0.1,
-        help="Lower values make the AI more focused and deterministic"
-    )
-    
-    # Update session state
-    st.session_state.analysis_config.update({
-        'model': selected_model,
-        'temperature': temperature
-    })
-    
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📋 Supported Formats")
-    st.sidebar.markdown("- Markdown (.md)")
-    st.sidebar.markdown("- Text (.txt)")
-    st.sidebar.markdown("- PDF (.pdf)")
-    st.sidebar.markdown("- Word (.docx)")
-    
-    return selected_model, temperature
 
 def display_file_upload_section():
     """Display file upload section with test NDA selection"""
@@ -1606,8 +1573,49 @@ def main():
     
     display_header()
     
-    # Sidebar configuration
-    model, temperature = display_sidebar()
+    # Settings modal (appears when button is clicked)
+    if st.session_state.get('show_settings', False):
+        with st.expander("⚙️ AI Configuration", expanded=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Model selection
+                model_options = ["gemini-2.5-pro", "gemini-2.5-flash"]
+                selected_model = st.selectbox(
+                    "AI Model",
+                    model_options,
+                    index=model_options.index(st.session_state.analysis_config['model']),
+                    key="model_select"
+                )
+            
+            with col2:
+                # Temperature slider
+                temperature = st.slider(
+                    "Temperature",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=st.session_state.analysis_config['temperature'],
+                    step=0.1,
+                    help="Lower values make the AI more focused and deterministic",
+                    key="temperature_select"
+                )
+            
+            # Update session state
+            st.session_state.analysis_config.update({
+                'model': selected_model,
+                'temperature': temperature
+            })
+            
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("✅ Apply Settings", key="apply_settings", use_container_width=True):
+                    st.session_state.show_settings = False
+                    st.success("Settings updated!")
+                    st.rerun()
+    
+    # Get current settings
+    model = st.session_state.analysis_config['model']
+    temperature = st.session_state.analysis_config['temperature']
     
     # Navigation
     display_navigation()
