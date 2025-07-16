@@ -61,7 +61,7 @@ def initialize_session_state():
             'analysis_mode': 'Full Analysis'
         }
     if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'homepage'
+        st.session_state.current_page = 'clean_review'
 
 def display_login_screen():
     """Display login screen for password protection"""
@@ -634,43 +634,41 @@ def display_json_viewers(ai_review_data, hr_edits_data, comparison_analysis=None
             st.info("No testing comparison data available")
 
 def display_single_nda_review(model, temperature):
-    """Display clean NDA review section"""
-    st.header("⚖️ Clean NDA Review")
-    st.info("Upload a clean NDA document to get AI compliance analysis based on Strada's policies.")
+    """Display clean NDA review section as main homepage"""
+    st.title("⚖️ NDA Legal Compliance Review")
+    st.markdown("Upload an NDA document to get AI-powered compliance analysis based on Strada's legal policies.")
     
-    # File upload
-    st.subheader("📄 Upload NDA Document")
+    # File upload section
     uploaded_file = st.file_uploader(
-        "Choose an NDA file",
+        "Choose an NDA file to analyze",
         type=['pdf', 'docx', 'txt', 'md'],
-        help="Upload the NDA document you want to analyze",
+        help="Upload the NDA document you want to analyze for compliance issues",
         key="single_nda_upload"
     )
     
-    if uploaded_file:
-        if validate_file(uploaded_file):
-            st.success(f"✅ File uploaded: {uploaded_file.name}")
-            
-            # Preview option
-            if st.checkbox("Preview file content", key="preview_single"):
-                try:
-                    content = uploaded_file.getvalue().decode('utf-8')
-                    st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-                except:
-                    st.warning("Cannot preview this file type")
-        else:
-            st.error("❌ Invalid file format or size")
-            return
-    
-    # Review configuration
-    st.subheader("🔧 Review Configuration")
-    col1, col2 = st.columns([3, 1])
+    col1, col2 = st.columns([5, 1])
     
     with col1:
-        st.info(f"**Model:** {model} | **Temperature:** {temperature}")
-        st.caption("Model settings are controlled from the sidebar")
+        if uploaded_file:
+            if validate_file(uploaded_file):
+                st.success(f"✅ File uploaded: {uploaded_file.name}")
+                
+                # Preview option
+                if st.checkbox("Preview file content", key="preview_single"):
+                    try:
+                        content = uploaded_file.getvalue().decode('utf-8')
+                        st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                    except:
+                        st.warning("Cannot preview this file type")
+            else:
+                st.error("❌ Invalid file format or size")
+                return
     
     with col2:
+        st.markdown("**Review Settings**")
+        st.caption(f"Model: {model}")
+        st.caption(f"Temperature: {temperature}")
+        
         run_single_analysis = st.button(
             "🚀 Review NDA",
             disabled=not uploaded_file,
@@ -1008,40 +1006,42 @@ def display_homepage():
     """)
 
 def display_navigation():
-    """Display navigation bar"""
-    st.markdown("---")
+    """Display navigation dropdown"""
+    # Navigation dropdown
+    nav_options = {
+        "⚖️ Clean NDA Review": "clean_review",
+        "🔬 AI Testing & Comparison": "testing", 
+        "📊 Saved Results": "results",
+        "📋 Policies Playbook": "policies",
+        "✏️ Edit Playbook": "edit_playbook"
+    }
     
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    # Find current page display name
+    current_display = "⚖️ Clean NDA Review"
+    for display_name, page_key in nav_options.items():
+        if page_key == st.session_state.current_page:
+            current_display = display_name
+            break
+    
+    col1, col2 = st.columns([3, 9])
     
     with col1:
-        if st.button("🏠 Home", key="nav_home", use_container_width=True):
-            st.session_state.current_page = "home"
+        selected_page = st.selectbox(
+            "Navigate to:",
+            options=list(nav_options.keys()),
+            index=list(nav_options.keys()).index(current_display),
+            key="navigation_dropdown"
+        )
+        
+        # Update page when selection changes
+        if nav_options[selected_page] != st.session_state.current_page:
+            st.session_state.current_page = nav_options[selected_page]
             st.rerun()
     
     with col2:
-        if st.button("🔬 Testing", key="nav_testing_top", use_container_width=True):
-            st.session_state.current_page = "testing"
-            st.rerun()
+        st.markdown(f"**Current Section:** {selected_page}")
     
-    with col3:
-        if st.button("📊 Results", key="nav_results_top", use_container_width=True):
-            st.session_state.current_page = "results"
-            st.rerun()
-    
-    with col4:
-        if st.button("📋 Policies", key="nav_policies_top", use_container_width=True):
-            st.session_state.current_page = "policies"
-            st.rerun()
-    
-    with col5:
-        if st.button("✏️ Edit", key="nav_edit_top", use_container_width=True):
-            st.session_state.current_page = "edit"
-            st.rerun()
-    
-    with col6:
-        if st.button("⚖️ Review", key="nav_clean_top", use_container_width=True):
-            st.session_state.current_page = "clean"
-            st.rerun()
+    st.markdown("---")
 
 def display_testing_page(model, temperature, analysis_mode):
     """Display the NDA testing page"""
@@ -1615,10 +1615,6 @@ def main():
     """Main application function"""
     initialize_session_state()
     
-    # Initialize current page if not set
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = "home"
-    
     # Check authentication
     if not st.session_state.authenticated:
         display_login_screen()
@@ -1633,19 +1629,17 @@ def main():
     display_navigation()
     
     # Page routing
-    if st.session_state.current_page == "home":
-        display_homepage()
+    if st.session_state.current_page == "clean_review":
+        display_single_nda_review(model, temperature)
     elif st.session_state.current_page == "testing":
         display_testing_page(model, temperature, analysis_mode)
     elif st.session_state.current_page == "results":
         display_testing_results_page()
     elif st.session_state.current_page == "policies":
         display_policies_playbook()
-    elif st.session_state.current_page == "edit":
+    elif st.session_state.current_page == "edit_playbook":
         from playbook_manager import display_editable_playbook
         display_editable_playbook()
-    elif st.session_state.current_page == "clean":
-        display_single_nda_review(model, temperature)
 
 if __name__ == "__main__":
     main()
