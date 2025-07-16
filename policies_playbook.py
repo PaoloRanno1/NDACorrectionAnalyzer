@@ -186,51 +186,7 @@ def display_policies_playbook():
         "Without the prior written consent of the Disclosing Party, the Recipient agrees not to contact any directors, officers, or employees of the Disclosing Party in connection with the Purpose. This restriction shall not be breached by contact made for another purpose than evaluating or negotiating the Proposed Transaction."
         """)
     
-    st.markdown("---")
-    
-    # LOW PRIORITY
-    st.subheader("🟢 LOW PRIORITY")
-    st.markdown("*These policies address preferences that can be addressed if time permits.*")
-    
-    with st.expander("POLICY 11: Governing Law & Jurisdiction"):
-        st.markdown("""
-        - Preference: **Belgian law**; exclusive courts of **Antwerp, Belgium**
-        - Acceptable fall-backs (in order):
-          1. Another European jurisdiction
-        - Non-European jurisdictions should be **flagged**
-        
-        **Approved Language:**
-        "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
-        """)
-    
-    with st.expander("POLICY 12: Confidentiality Term"):
-        st.markdown("""
-        - Preferred term: **2 years** (maximum **3 years**)
-        - Term must be explicit
-        
-        **Approved Language:**
-        "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Project; and (ii) the date that is two or three (2 or 3) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
-        """)
-    
-    with st.expander("POLICY 13: Liability for Representatives"):
-        st.markdown("""
-        - Aim to limit Strada's liability for Representatives using an **efforts-based standard** (not strict)
-        
-        **Approved Language:**
-        "The Recipient will use its best efforts to procure that each of its Representatives who receives any Confidential Information is aware of and adheres to the terms of this Agreement. The Recipient shall be responsible for any breach of the confidentiality obligations of this Agreement by its Representatives."
-        """)
-    
-    with st.expander("POLICY 14: Definition of Confidential Information"):
-        st.markdown("""
-        - Definition should include **standard market exceptions**
-        
-        **Approved Language:**
-        "Confidential Information does not include information that:
-        (a) is or becomes generally available to the public through no breach by Recipient of the confidentiality undertakings hereunder;
-        (b) was in Recipient's lawful possession before receipt from Discloser, without any obligation of confidentiality;
-        (c) was received in good faith by Recipient from a third party not under an obligation of confidentiality to Discloser; or
-        (d) was disclosed by Recipient with the written permission of an authorized representative of the Discloser."
-        """)
+
     
     st.markdown("---")
     
