@@ -1467,13 +1467,64 @@ def display_navigation():
     
     .content-wrapper {{
         background: linear-gradient(180deg, 
-            rgba(248, 249, 250, 0.7) 0%, 
-            rgba(248, 249, 250, 0.9) 30%, 
-            rgba(248, 249, 250, 1) 60%, 
-            white 100%);
+            rgba(20, 20, 20, 0.7) 0%, 
+            rgba(25, 25, 25, 0.9) 30%, 
+            rgba(30, 30, 30, 1) 60%, 
+            #1a1a1a 100%);
         padding: 2rem 1rem;
         margin: -1rem -1rem 0 -1rem;
         border-radius: 0;
+        color: white;
+        min-height: 100vh;
+    }}
+    
+    /* Override Streamlit's default styling for dark theme */
+    .content-wrapper .stTextInput > div > div > input,
+    .content-wrapper .stSelectbox > div > div > select,
+    .content-wrapper .stTextArea > div > div > textarea {{
+        background-color: #2d2d2d !important;
+        color: white !important;
+        border: 1px solid #444 !important;
+    }}
+    
+    .content-wrapper .stButton > button {{
+        background-color: #2d2d2d !important;
+        color: white !important;
+        border: 1px solid #444 !important;
+    }}
+    
+    .content-wrapper .stButton > button:hover {{
+        background-color: #3d3d3d !important;
+        border-color: #555 !important;
+    }}
+    
+    .content-wrapper .stExpander {{
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+    }}
+    
+    .content-wrapper .stAlert {{
+        background-color: #2d2d2d !important;
+        border: 1px solid #444 !important;
+        color: white !important;
+    }}
+    
+    .content-wrapper h1, .content-wrapper h2, .content-wrapper h3, 
+    .content-wrapper h4, .content-wrapper h5, .content-wrapper h6 {{
+        color: white !important;
+    }}
+    
+    .content-wrapper p, .content-wrapper div, .content-wrapper span {{
+        color: #e0e0e0 !important;
+    }}
+    
+    .content-wrapper .stDataFrame {{
+        background-color: #2d2d2d !important;
+    }}
+    
+    .content-wrapper .stTable {{
+        background-color: #2d2d2d !important;
+        color: white !important;
     }}
     </style>
     """
