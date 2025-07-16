@@ -305,8 +305,9 @@ def create_comparison_chart(metrics: Dict) -> go.Figure:
         y=[t + 0.3 for t in total_values],  # Slightly above the bars
         mode='text',
         text=[str(t) if t > 0 else '0' for t in total_values],
-        textfont=dict(color='black', size=12, family='Arial'),
-        showlegend=False
+        textfont=dict(color='black', size=14, family='Arial'),
+        showlegend=False,
+        hoverinfo='skip'
     ))
     
     fig.update_layout(
@@ -321,6 +322,19 @@ def create_comparison_chart(metrics: Dict) -> go.Figure:
             y=1.02,
             xanchor="right",
             x=1
+        ),
+        xaxis=dict(
+            tickangle=0,  # Keep labels horizontal
+            tickfont=dict(size=11, family='Arial'),
+            tickmode='linear'
+        ),
+        yaxis=dict(
+            tickfont=dict(size=11, family='Arial'),
+            tickmode='linear'
+        ),
+        font=dict(
+            family='Arial',
+            size=12
         )
     )
     
