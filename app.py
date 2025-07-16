@@ -1537,10 +1537,10 @@ def display_navigation():
         <div class="nav-buttons">
     '''
     
-    # Add navigation buttons with click handlers
+    # Add navigation buttons with data attributes for interaction
     for display_name, page_key in nav_options.items():
         active_class = "active" if st.session_state.current_page == page_key else ""
-        nav_html += f'<div class="nav-button {active_class}" onclick="clickButton(\'{page_key}\')">{display_name}</div>'
+        nav_html += f'<div class="nav-button {active_class}" data-page="{page_key}" onclick="handleNavClick(\'{page_key}\')">{display_name}</div>'
     
     nav_html += '''
         </div>
@@ -1548,21 +1548,23 @@ def display_navigation():
     <div class="nav-divider"></div>
     
     <script>
-    function clickButton(pageKey) {
-        // Find the corresponding Streamlit button using the key attribute
-        const buttonSelector = `button[data-testid*="nav_${pageKey}"]`;
-        const button = document.querySelector(buttonSelector);
-        if (button) {
-            button.click();
-        } else {
-            // Fallback: try to find by button text
+    function handleNavClick(pageKey) {
+        // Store the clicked page in session storage
+        sessionStorage.setItem('nav_clicked', pageKey);
+        
+        // Find and click the hidden Streamlit button
+        setTimeout(() => {
             const buttons = document.querySelectorAll('button');
-            buttons.forEach(btn => {
-                if (btn.innerText && btn.innerText.includes(pageKey.replace('_', ' ').toUpperCase())) {
+            for (let btn of buttons) {
+                if (btn.textContent && btn.textContent.trim() === pageKey.toUpperCase().replace('_', ' ')) {
                     btn.click();
+                    return;
+                } else if (btn.textContent && btn.textContent.includes(pageKey)) {
+                    btn.click();
+                    return;
                 }
-            });
-        }
+            }
+        }, 50);
     }
     </script>
     '''
@@ -1807,16 +1809,8 @@ def display_database_page():
     """Display the database management page for viewing and uploading NDAs"""
     st.title("🗄️ NDA Database")
     
-    # Header with navigation
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        st.write("View and manage your NDA test database. Upload new NDAs or view existing ones in markdown format.")
-    
-    with col2:
-        if st.button("📈 View Results", key="goto_results", use_container_width=True):
-            st.session_state.current_page = "results"
-            st.rerun()
+    # Header
+    st.write("View and manage your NDA test database. Upload new NDAs or view existing ones in markdown format.")
     
     # Two main sections: Upload and View
     tab1, tab2 = st.tabs(["📤 Upload NDAs", "📋 View Database"])
