@@ -2235,9 +2235,6 @@ def main():
     model = st.session_state.analysis_config['model']
     temperature = st.session_state.analysis_config['temperature']
     
-    # Navigation
-    display_navigation()
-    
     # Page routing
     if st.session_state.current_page == "clean_review":
         display_single_nda_review(model, temperature)
