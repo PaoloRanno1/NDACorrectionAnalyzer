@@ -2058,10 +2058,13 @@ def display_database_page():
             submitted = st.form_submit_button("💾 Upload to Database", use_container_width=True)
             
             if submitted:
+                st.write(f"DEBUG: Submit button pressed. Project name: '{project_name}', File: {uploaded_file}")
                 if project_name and uploaded_file:
+                    st.write(f"DEBUG: Starting upload process...")
                     try:
                         # Create test_data directory if it doesn't exist
                         import os
+                        import tempfile
                         os.makedirs("test_data", exist_ok=True)
                         
                         # Generate safe filename with project_ prefix
