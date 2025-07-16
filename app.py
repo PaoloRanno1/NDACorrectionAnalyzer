@@ -1582,6 +1582,112 @@ def display_testing_page(model, temperature, analysis_mode):
     if st.session_state.analysis_results:
         st.markdown("---")
         
+        # Save Results Button at the top
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col2:
+            # Get NDA name from file or test selection
+            nda_name = "Custom NDA"
+            if hasattr(st.session_state, 'selected_test_nda') and st.session_state.selected_test_nda:
+                nda_name = st.session_state.selected_test_nda
+            
+            # Save results button
+            if st.button("💾 Save Results", key="save_results_top", use_container_width=True):
+                st.session_state.show_save_modal = True
+                st.rerun()
+        
+        with col3:
+            # Quick export button
+            if st.button("📄 Export JSON", key="export_json_top", use_container_width=True):
+                export_data = {
+                    "nda_name": nda_name,
+                    "analysis_timestamp": datetime.now().isoformat(),
+                    "model_used": model,
+                    "temperature": temperature,
+                    "analysis_mode": analysis_mode,
+                    "comparison_analysis": st.session_state.analysis_results,
+                    "ai_review_data": st.session_state.ai_review_data,
+                    "hr_edits_data": st.session_state.hr_edits_data
+                }
+                
+                st.download_button(
+                    label="📥 Download Analysis",
+                    data=json.dumps(export_data, indent=2),
+                    file_name=f"nda_analysis_{nda_name.lower().replace(' ', '_')}.json",
+                    mime="application/json",
+                    key="download_json_top"
+                )
+        
+        # Save modal
+        if st.session_state.get('show_save_modal', False):
+            with st.form("save_results_form"):
+                st.subheader("💾 Save Analysis Results")
+                
+                # Default name based on test selection or custom
+                default_name = nda_name
+                if default_name == "Custom NDA":
+                    default_name = f"NDA Analysis {datetime.now().strftime('%Y%m%d_%H%M')}"
+                
+                result_name = st.text_input(
+                    "Result Name:",
+                    value=default_name,
+                    help="Enter a descriptive name for this analysis result"
+                )
+                
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    if st.form_submit_button("💾 Save", use_container_width=True):
+                        if result_name.strip():
+                            # Create executive summary chart
+                            try:
+                                import plotly.graph_objects as go
+                                from plotly.subplots import make_subplots
+                                
+                                # Create a simple chart for the executive summary
+                                fig = go.Figure()
+                                fig.add_trace(go.Bar(
+                                    x=['Accuracy', 'Precision', 'Recall'],
+                                    y=[
+                                        st.session_state.analysis_results.get('accuracy', 0),
+                                        st.session_state.analysis_results.get('precision', 0),
+                                        st.session_state.analysis_results.get('recall', 0)
+                                    ],
+                                    name='Performance Metrics'
+                                ))
+                                fig.update_layout(title="Analysis Performance")
+                                
+                                # Save the results
+                                from results_manager import save_testing_results
+                                result_id = save_testing_results(
+                                    nda_name=result_name.strip(),
+                                    comparison_analysis=st.session_state.analysis_results,
+                                    ai_review_data=st.session_state.ai_review_data,
+                                    hr_edits_data=st.session_state.hr_edits_data,
+                                    executive_summary_fig=fig,
+                                    model_used=model,
+                                    temperature=temperature,
+                                    analysis_mode=analysis_mode
+                                )
+                                
+                                if result_id:
+                                    st.success(f"✅ Results saved successfully! ID: {result_id}")
+                                    st.session_state.show_save_modal = False
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Failed to save results. Please try again.")
+                            except Exception as e:
+                                st.error(f"❌ Error saving results: {str(e)}")
+                        else:
+                            st.error("Please enter a valid result name.")
+                
+                with col2:
+                    if st.form_submit_button("❌ Cancel", use_container_width=True):
+                        st.session_state.show_save_modal = False
+                        st.rerun()
+        
+        st.markdown("---")
+        
         # Executive Summary
         display_executive_summary(
             st.session_state.analysis_results,
@@ -1618,55 +1724,6 @@ def display_testing_page(model, temperature, analysis_mode):
             st.session_state.ai_review_data,
             st.session_state.hr_edits_data
         )
-        
-        st.markdown("---")
-        
-        # Save Results Section
-        st.subheader("💾 Save Testing Results")
-        st.write("Save this analysis for future reference and comparison.")
-        
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            # Get NDA name from file or test selection
-            nda_name = "Custom NDA"
-            if hasattr(st.session_state, 'selected_test_nda') and st.session_state.selected_test_nda:
-                nda_name = st.session_state.selected_test_nda
-            elif clean_file and hasattr(clean_file, 'name'):
-                nda_name = clean_file.name.replace('.md', '').replace('.txt', '').replace('.pdf', '').replace('.docx', '')
-            
-            custom_name = st.text_input("Result Name:", value=nda_name, help="Enter a name for this test result")
-        
-        with col2:
-            if st.button("💾 Save Results", key="save_results", use_container_width=True):
-                if custom_name:
-                    from results_manager import save_testing_results
-                    from utils import create_comparison_chart, extract_detailed_metrics_from_analysis
-                    
-                    # Generate the executive summary chart
-                    metrics = extract_detailed_metrics_from_analysis(
-                        st.session_state.analysis_results,
-                        st.session_state.ai_review_data,
-                        st.session_state.hr_edits_data
-                    )
-                    executive_summary_fig = create_comparison_chart(metrics)
-                    
-                    # Save the results
-                    result_id = save_testing_results(
-                        nda_name=custom_name,
-                        comparison_analysis=st.session_state.analysis_results,
-                        ai_review_data=st.session_state.ai_review_data,
-                        hr_edits_data=st.session_state.hr_edits_data,
-                        executive_summary_fig=executive_summary_fig,
-                        model_used=model,
-                        temperature=temperature,
-                        analysis_mode=analysis_mode
-                    )
-                    
-                    st.success(f"✅ Results saved successfully! ID: {result_id}")
-                    st.info("You can view saved results in the 'Results' tab.")
-                else:
-                    st.error("Please enter a name for the results.")
         
         st.markdown("---")
         
