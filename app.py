@@ -596,12 +596,13 @@ def display_single_nda_review(model, temperature):
         st.title("⚖️ NDA Legal Compliance Review")
     
     with col2:
-        if st.button("⚙️ Settings", key="clean_review_settings", use_container_width=True):
+        if st.button("⚙️ AI Settings", key="clean_review_settings", use_container_width=True):
             st.session_state.show_settings = not st.session_state.get('show_settings', False)
             st.rerun()
     
     # Display settings modal if activated
-    display_settings_modal()
+    if st.session_state.get('show_settings', False):
+        display_settings_modal()
     
     st.markdown("Upload an NDA document to get AI-powered compliance analysis based on Strada's legal policies.")
     
@@ -1151,81 +1152,80 @@ def display_faq_page():
         - Contact support with specific error details
         """)
 
+@st.dialog("⚙️ AI Configuration")
 def display_settings_modal():
-    """Display the settings modal below the button when show_settings is True"""
-    if st.session_state.get('show_settings', False):
-        # Settings modal with border styling
-        with st.container():
-            st.markdown("""
-            <div style="
-                border: 2px solid #f0f2f6;
-                border-radius: 10px;
-                padding: 20px;
-                margin: 10px 0;
-                background-color: #fafafa;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            ">
-            """, unsafe_allow_html=True)
-            
-            # Header with close button
-            col1, col2 = st.columns([4, 1])
-            
-            with col1:
-                st.markdown("### ⚙️ AI Configuration")
-            
-            with col2:
-                if st.button("❌", key="close_settings", help="Close Settings", use_container_width=True):
-                    st.session_state.show_settings = False
-                    st.rerun()
-            
-            st.markdown("---")
-            
-            # Settings content
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                # Model selection
-                model_options = ["gemini-2.5-pro", "gemini-2.5-flash"]
-                selected_model = st.selectbox(
-                    "AI Model",
-                    model_options,
-                    index=model_options.index(st.session_state.analysis_config['model']),
-                    key="model_select"
-                )
-            
-            with col2:
-                # Temperature slider
-                temperature = st.slider(
-                    "Temperature",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=st.session_state.analysis_config['temperature'],
-                    step=0.1,
-                    help="Lower values make the AI more focused and deterministic",
-                    key="temperature_select"
-                )
-            
+    """Display the settings modal as a popup dialog"""
+    if not st.session_state.get('show_settings', False):
+        return
+    
+    st.markdown("Configure AI model and analysis settings")
+    
+    # Settings content
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Model selection
+        model_options = ["gemini-2.5-pro", "gemini-2.5-flash"]
+        selected_model = st.selectbox(
+            "AI Model",
+            model_options,
+            index=model_options.index(st.session_state.analysis_config['model']),
+            key="model_select",
+            help="Choose the AI model for analysis"
+        )
+    
+    with col2:
+        # Temperature slider
+        temperature = st.slider(
+            "Temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.analysis_config['temperature'],
+            step=0.1,
+            help="Lower values make the AI more focused and deterministic",
+            key="temperature_select"
+        )
+    
+    st.markdown("---")
+    
+    # Model descriptions
+    if selected_model == "gemini-2.5-pro":
+        st.info("💡 **Gemini Pro**: Higher accuracy, more detailed analysis, slower processing")
+    else:
+        st.info("⚡ **Gemini Flash**: Faster processing, good accuracy, recommended for quick analysis")
+    
+    # Temperature guide
+    st.markdown("**Temperature Guide:**")
+    st.markdown("- **0.0-0.3**: Most consistent, deterministic (recommended for legal analysis)")
+    st.markdown("- **0.4-0.7**: Balanced creativity and consistency")
+    st.markdown("- **0.8-1.0**: More creative but less predictable")
+    
+    st.markdown("---")
+    
+    # Action buttons
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("❌ Cancel", key="cancel_settings", use_container_width=True):
+            st.session_state.show_settings = False
+            st.rerun()
+    
+    with col3:
+        if st.button("✅ Apply Settings", key="apply_settings", use_container_width=True, type="primary"):
             # Update session state
             st.session_state.analysis_config.update({
                 'model': selected_model,
                 'temperature': temperature
             })
-            
-            # Action buttons
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
-                if st.button("✅ Apply Settings", key="apply_settings", use_container_width=True):
-                    st.session_state.show_settings = False
-                    st.success("Settings updated!")
-                    st.rerun()
-            
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.session_state.show_settings = False
+            st.success("Settings updated!")
+            st.rerun()
 
 def display_navigation():
     """Display horizontal navigation bar"""
     # Navigation options
     nav_options = {
-        "CLEAN REVIEW": "clean_review",
+        "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
         "FAQ": "faq",
         "POLICIES": "policies"
@@ -1262,7 +1262,7 @@ def display_testing_page(model, temperature, analysis_mode):
         st.header("🔬 NDA Testing")
     
     with col2:
-        if st.button("⚙️ Settings", key="testing_settings", use_container_width=True):
+        if st.button("⚙️ AI Settings", key="testing_settings", use_container_width=True):
             st.session_state.show_settings = not st.session_state.get('show_settings', False)
             st.rerun()
     
@@ -1272,7 +1272,8 @@ def display_testing_page(model, temperature, analysis_mode):
             st.rerun()
     
     # Display settings modal if activated
-    display_settings_modal()
+    if st.session_state.get('show_settings', False):
+        display_settings_modal()
     
     # File upload section
     clean_file, corrected_file = display_file_upload_section()
