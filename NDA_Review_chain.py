@@ -165,7 +165,7 @@ Analyze the above NDA and provide your compliance report in the required JSON fo
     )
 
 
-def setup_gemini_llm(model: str = "gemini-2.5-pro", temperature: float = 0.1) -> ChatGoogleGenerativeAI:
+def setup_gemini_llm(model: str = "gemini-2.5-pro", temperature: float = 0) -> ChatGoogleGenerativeAI:
     """
     Initialize the Gemini LLM with appropriate settings
 
@@ -228,7 +228,7 @@ class StradaComplianceChain:
     Main chain for NDA compliance analysis using Strada Legal AI
     """
 
-    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0.1, playbook_content: str = None):
+    def __init__(self, model: str = "gemini-2.5-pro", temperature: float = 0, playbook_content: str = None):
         """
         Initialize the compliance analysis chain
 
