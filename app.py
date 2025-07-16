@@ -1227,8 +1227,8 @@ def display_navigation():
     nav_options = {
         "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
-        "FAQ": "faq",
-        "POLICIES": "policies"
+        "POLICIES": "policies",
+        "FAQ": "faq"
     }
     
     # Special handling for results and edit_playbook pages
