@@ -1333,8 +1333,27 @@ def display_settings_modal():
 def display_navigation():
     """Display horizontal navigation bar with professional background"""
     
-    # Get background image as base64
-    background_b64 = get_base64_image('strada_background.jpg')
+    # Navigation options
+    nav_options = {
+        "NDA REVIEW": "clean_review",
+        "TESTING": "testing", 
+        "POLICIES": "policies",
+        "FAQ": "faq"
+    }
+    
+    # Special handling for results and edit_playbook pages
+    if st.session_state.current_page == "results":
+        nav_options["RESULTS"] = "results"
+    elif st.session_state.current_page == "edit_playbook":
+        nav_options["EDIT PLAYBOOK"] = "edit_playbook"
+    
+    # Get base64 images
+    try:
+        background_b64 = get_base64_image('strada_background.jpg')
+        logo_b64 = get_base64_image('strada_logo.png')
+    except:
+        background_b64 = ""
+        logo_b64 = ""
     
     # Custom CSS for professional navigation with background
     nav_css = f"""
@@ -1351,52 +1370,52 @@ def display_navigation():
         position: relative;
     }}
     
-    .nav-header {
+    .nav-header {{
         display: flex;
         align-items: center;
         justify-content: center;
         margin-bottom: 25px;
         padding: 0 2rem;
-    }
+    }}
     
-    .nav-logo {
+    .nav-logo {{
         display: flex;
         align-items: center;
         gap: 20px;
-    }
+    }}
     
-    .nav-logo img {
+    .nav-logo img {{
         height: 45px;
         width: auto;
         filter: brightness(0) invert(1);
-    }
+    }}
     
-    .nav-title {
+    .nav-title {{
         color: white;
         font-size: 28px;
         font-weight: 700;
         margin: 0;
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         letter-spacing: -0.5px;
-    }
+    }}
     
-    .nav-subtitle {
+    .nav-subtitle {{
         color: rgba(255, 255, 255, 0.9);
         font-size: 16px;
         margin: 5px 0 0 0;
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         font-weight: 300;
-    }
+    }}
     
-    .nav-buttons {
+    .nav-buttons {{
         display: flex;
         gap: 15px;
         padding: 0 2rem;
         justify-content: center;
         flex-wrap: wrap;
-    }
+    }}
     
-    .nav-button {
+    .nav-button {{
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: white;
@@ -1412,54 +1431,37 @@ def display_navigation():
         min-width: 130px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
+    }}
     
-    .nav-button:hover {
+    .nav-button:hover {{
         background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.5);
         transform: translateY(-3px);
         box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }
+    }}
     
-    .nav-button.active {
+    .nav-button.active {{
         background: rgba(46, 125, 184, 0.9);
         border-color: rgba(46, 125, 184, 1);
         box-shadow: 0 6px 20px rgba(46, 125, 184, 0.4);
-    }
+    }}
     
-    .nav-button.active:hover {
+    .nav-button.active:hover {{
         background: rgba(46, 125, 184, 1);
         transform: translateY(-3px);
         box-shadow: 0 8px 25px rgba(46, 125, 184, 0.5);
-    }
+    }}
     
-    .nav-divider {
+    .nav-divider {{
         height: 2px;
         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
         margin: 0 -1rem 2rem -1rem;
-    }
+    }}
     </style>
     """
     
-    # Navigation options
-    nav_options = {
-        "NDA REVIEW": "clean_review",
-        "TESTING": "testing", 
-        "POLICIES": "policies",
-        "FAQ": "faq"
-    }
-    
-    # Special handling for results and edit_playbook pages
-    if st.session_state.current_page == "results":
-        nav_options["RESULTS"] = "results"
-    elif st.session_state.current_page == "edit_playbook":
-        nav_options["EDIT PLAYBOOK"] = "edit_playbook"
-    
     # Inject custom CSS
     st.markdown(nav_css, unsafe_allow_html=True)
-    
-    # Get logo image as base64
-    logo_b64 = get_base64_image('strada_logo.png')
     
     # Create navigation HTML
     nav_html = f'''
