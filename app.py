@@ -909,24 +909,42 @@ def display_single_nda_review(model, temperature):
                 import tempfile
                 import os
                 
-                with tempfile.NamedTemporaryFile(mode='w', suffix=f'.{file_extension}', delete=False, encoding='utf-8') as temp_file:
-                    if isinstance(file_content, bytes):
-                        content_str = file_content.decode('utf-8')
-                    else:
-                        content_str = file_content
-                    temp_file.write(content_str)
-                    temp_file_path = temp_file.name
+                if file_extension == 'docx':
+                    # For DOCX files, write as binary
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix=f'.{file_extension}', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                else:
+                    # For text files, write as UTF-8
+                    with tempfile.NamedTemporaryFile(mode='w', suffix=f'.{file_extension}', delete=False, encoding='utf-8') as temp_file:
+                        if isinstance(file_content, bytes):
+                            content_str = file_content.decode('utf-8')
+                        else:
+                            content_str = file_content
+                        temp_file.write(content_str)
+                        temp_file_path = temp_file.name
                 
                 # Handle DOCX conversion if needed
                 if file_extension == 'docx':
                     try:
-                        import subprocess
-                        converted_path = temp_file_path.replace('.docx', '.md')
-                        subprocess.run(['docx2txt', temp_file_path, converted_path], check=True)
+                        # Use docx2txt to extract text from DOCX
+                        import docx2txt
+                        
+                        # Extract text from DOCX file
+                        text_content = docx2txt.process(temp_file_path)
+                        
+                        # Create a new text file with the extracted content
+                        converted_path = temp_file_path.replace('.docx', '.txt')
+                        with open(converted_path, 'w', encoding='utf-8') as f:
+                            f.write(text_content)
+                        
+                        # Clean up original DOCX file
                         os.unlink(temp_file_path)
                         temp_file_path = converted_path
-                    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                        
+                    except Exception as e:
                         st.error(f"Failed to convert DOCX file: {str(e)}")
+                        st.error("Please try uploading the file as PDF or TXT format instead.")
                         os.unlink(temp_file_path)
                         return
                 
