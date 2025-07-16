@@ -360,16 +360,26 @@ def get_detailed_analytics() -> Dict:
                         "section": fp.get("Section", "")
                     })
         
+        # Calculate project-level accuracy
+        ai_total = len(ai_review_data.get("High Priority", [])) + len(ai_review_data.get("Medium Priority", [])) + len(ai_review_data.get("Low Priority", []))
+        hr_total = len(hr_edits_data)
+        missed_total = len(comparison_analysis.get("Issues Missed by the AI", []))
+        false_positives_total = len(comparison_analysis.get("Issues Flagged by AI but Not Addressed by HR", []))
+        
+        # Calculate accuracy as percentage of HR issues correctly identified by AI
+        project_accuracy = 0
+        if hr_total > 0:
+            correctly_identified = hr_total - missed_total
+            project_accuracy = (correctly_identified / hr_total) * 100
+        
         # Project-level breakdown
         project_breakdown.append({
             "project": project_name,
-            "ai_total": len(ai_review_data.get("High Priority", [])) + 
-                       len(ai_review_data.get("Medium Priority", [])) + 
-                       len(ai_review_data.get("Low Priority", [])),
-            "hr_total": len(hr_edits_data),
-            "missed_total": len(comparison_analysis.get("Issues Missed by the AI", [])),
-            "false_positives_total": len(comparison_analysis.get("Issues Flagged by AI but Not Addressed by HR", [])),
-            "accuracy": comparison_analysis.get("accuracy_metrics", {}).get("overall_accuracy", 0),
+            "ai_total": ai_total,
+            "hr_total": hr_total,
+            "missed_total": missed_total,
+            "false_positives_total": false_positives_total,
+            "accuracy": round(project_accuracy, 1),
             "model_used": result_metadata.get("model_used", ""),
             "timestamp": result_metadata.get("timestamp", "")
         })

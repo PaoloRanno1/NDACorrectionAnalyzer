@@ -1,0 +1,10 @@
+{
+  "result_id": "Project_Octagon_20250716_110817",
+  "nda_name": "Project Octagon",
+  "timestamp": "2025-07-16T11:08:17.599923",
+  "model_used": "gemini-2.5-pro",
+  "temperature": 0.0,
+  "analysis_mode": "Full Analysis",
+  "ai_issues_count": 0,
+  "hr_edits_count": 10
+}
