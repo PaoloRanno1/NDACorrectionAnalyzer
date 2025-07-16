@@ -1139,6 +1139,8 @@ def display_faq_page():
         st.markdown("""
         **Purpose**: Customize and adapt AI analysis criteria to your specific needs
         
+        **Access location**: Navigate to Policies page and click on Edit Playbook button
+        
         **Editing capabilities**:
         - **Modify policy descriptions**: Update requirements and compliance criteria
         - **Add new compliance rules**: Introduce company-specific or industry-specific requirements
@@ -1329,7 +1331,113 @@ def display_settings_modal():
             st.rerun()
 
 def display_navigation():
-    """Display horizontal navigation bar"""
+    """Display horizontal navigation bar with professional background"""
+    
+    # Custom CSS for professional navigation with background
+    nav_css = """
+    <style>
+    .nav-container {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                    url('data:image/jpeg;base64,''' + get_base64_image('strada_background.jpg') + '''');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        padding: 25px 0;
+        margin: -1rem -1rem 2rem -1rem;
+        border-radius: 0;
+        position: relative;
+    }
+    
+    .nav-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        padding: 0 2rem;
+    }
+    
+    .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .nav-logo img {
+        height: 45px;
+        width: auto;
+        filter: brightness(0) invert(1);
+    }
+    
+    .nav-title {
+        color: white;
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        letter-spacing: -0.5px;
+    }
+    
+    .nav-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        margin: 5px 0 0 0;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        font-weight: 300;
+    }
+    
+    .nav-buttons {
+        display: flex;
+        gap: 15px;
+        padding: 0 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .nav-button {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        font-size: 14px;
+        text-align: center;
+        min-width: 130px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .nav-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    
+    .nav-button.active {
+        background: rgba(46, 125, 184, 0.9);
+        border-color: rgba(46, 125, 184, 1);
+        box-shadow: 0 6px 20px rgba(46, 125, 184, 0.4);
+    }
+    
+    .nav-button.active:hover {
+        background: rgba(46, 125, 184, 1);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(46, 125, 184, 0.5);
+    }
+    
+    .nav-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        margin: 0 -1rem 2rem -1rem;
+    }
+    </style>
+    """
+    
     # Navigation options
     nav_options = {
         "NDA REVIEW": "clean_review",
@@ -1344,21 +1452,58 @@ def display_navigation():
     elif st.session_state.current_page == "edit_playbook":
         nav_options["EDIT PLAYBOOK"] = "edit_playbook"
     
-    # Create horizontal navigation
+    # Inject custom CSS
+    st.markdown(nav_css, unsafe_allow_html=True)
+    
+    # Create navigation HTML
+    nav_html = f'''
+    <div class="nav-container">
+        <div class="nav-header">
+            <div class="nav-logo">
+                <img src="data:image/png;base64,{get_base64_image('strada_logo.png')}" alt="Strada Logo">
+                <div>
+                    <div class="nav-title">NDA Analysis Platform</div>
+                    <div class="nav-subtitle">AI-Powered Legal Compliance Review</div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+    '''
+    
+    # Add navigation buttons
+    for display_name, page_key in nav_options.items():
+        active_class = "active" if st.session_state.current_page == page_key else ""
+        nav_html += f'<div class="nav-button {active_class}">{display_name}</div>'
+    
+    nav_html += '''
+        </div>
+    </div>
+    <div class="nav-divider"></div>
+    '''
+    
+    st.markdown(nav_html, unsafe_allow_html=True)
+    
+    # Streamlit buttons for actual navigation (hidden with CSS)
+    st.markdown('<style>div[data-testid="column"] > div > div > button { display: none !important; }</style>', unsafe_allow_html=True)
+    
     cols = st.columns(len(nav_options))
     
     for i, (display_name, page_key) in enumerate(nav_options.items()):
         with cols[i]:
-            # Style active page differently
-            if st.session_state.current_page == page_key:
-                if st.button(display_name, key=f"nav_{page_key}", use_container_width=True, type="primary"):
-                    pass  # Already on this page
-            else:
-                if st.button(display_name, key=f"nav_{page_key}", use_container_width=True):
-                    st.session_state.current_page = page_key
-                    st.rerun()
-    
-    st.markdown("---")
+            if st.button(display_name, key=f"nav_{page_key}", use_container_width=True, 
+                        type="primary" if st.session_state.current_page == page_key else "secondary"):
+                st.session_state.current_page = page_key
+                st.rerun()
+
+
+def get_base64_image(image_path):
+    """Convert image to base64 string for embedding in HTML"""
+    import base64
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return ""
 
 def display_testing_page(model, temperature, analysis_mode):
     """Display the NDA testing page"""
