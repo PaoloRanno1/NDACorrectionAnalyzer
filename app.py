@@ -1183,7 +1183,16 @@ def display_navigation():
 
 def display_testing_page(model, temperature, analysis_mode):
     """Display the NDA testing page"""
-    st.header("🔬 NDA Testing")
+    # Header with quick access to results
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.header("🔬 NDA Testing")
+    
+    with col2:
+        if st.button("📊 View Saved Results", key="quick_results_access", use_container_width=True):
+            st.session_state.current_page = "results"
+            st.rerun()
     
     # File upload section
     clean_file, corrected_file = display_file_upload_section()
