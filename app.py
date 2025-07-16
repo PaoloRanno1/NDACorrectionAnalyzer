@@ -1333,12 +1333,15 @@ def display_settings_modal():
 def display_navigation():
     """Display horizontal navigation bar with professional background"""
     
+    # Get background image as base64
+    background_b64 = get_base64_image('strada_background.jpg')
+    
     # Custom CSS for professional navigation with background
-    nav_css = """
+    nav_css = f"""
     <style>
-    .nav-container {
+    .nav-container {{
         background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                    url('data:image/jpeg;base64,''' + get_base64_image('strada_background.jpg') + '''');
+                    url('data:image/jpeg;base64,{background_b64}');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -1346,7 +1349,7 @@ def display_navigation():
         margin: -1rem -1rem 2rem -1rem;
         border-radius: 0;
         position: relative;
-    }
+    }}
     
     .nav-header {
         display: flex;
@@ -1455,12 +1458,15 @@ def display_navigation():
     # Inject custom CSS
     st.markdown(nav_css, unsafe_allow_html=True)
     
+    # Get logo image as base64
+    logo_b64 = get_base64_image('strada_logo.png')
+    
     # Create navigation HTML
     nav_html = f'''
     <div class="nav-container">
         <div class="nav-header">
             <div class="nav-logo">
-                <img src="data:image/png;base64,{get_base64_image('strada_logo.png')}" alt="Strada Logo">
+                <img src="data:image/png;base64,{logo_b64}" alt="Strada Logo">
                 <div>
                     <div class="nav-title">NDA Analysis Platform</div>
                     <div class="nav-subtitle">AI-Powered Legal Compliance Review</div>
