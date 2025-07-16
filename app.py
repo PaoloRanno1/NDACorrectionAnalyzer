@@ -2064,13 +2064,13 @@ def display_database_page():
                         import os
                         os.makedirs("test_data", exist_ok=True)
                         
-                        # Generate safe filename
+                        # Generate safe filename with project_ prefix
                         safe_name = project_name.lower().replace(' ', '_').replace('-', '_')
                         safe_name = ''.join(c for c in safe_name if c.isalnum() or c == '_')
                         
                         # Determine file suffix based on upload type
                         suffix = "clean" if upload_type == "Clean NDA" else "corrected"
-                        file_path = f"test_data/{safe_name}_{suffix}.md"
+                        file_path = f"test_data/project_{safe_name}_{suffix}.md"
                         
                         # Process file content based on type
                         file_content = ""
@@ -2103,7 +2103,7 @@ def display_database_page():
                         
                         # Check if both files now exist
                         other_suffix = "corrected" if suffix == "clean" else "clean"
-                        other_path = f"test_data/{safe_name}_{other_suffix}.md"
+                        other_path = f"test_data/project_{safe_name}_{other_suffix}.md"
                         
                         if os.path.exists(other_path):
                             st.success(f"🎉 Both clean and corrected versions are now available for '{project_name}'!")
@@ -2131,7 +2131,13 @@ def display_database_page():
         if os.path.exists("test_data"):
             for filename in os.listdir("test_data"):
                 if filename.endswith("_clean.md") or filename.endswith("_corrected.md"):
-                    project_name = filename.replace("_clean.md", "").replace("_corrected.md", "")
+                    # Handle both project_ prefixed and non-prefixed files
+                    if filename.startswith("project_"):
+                        project_name = filename.replace("_clean.md", "").replace("_corrected.md", "")
+                    else:
+                        # Handle legacy files without project_ prefix
+                        project_name = "project_" + filename.replace("_clean.md", "").replace("_corrected.md", "")
+                    
                     if project_name not in all_projects:
                         all_projects[project_name] = {"clean": False, "corrected": False}
                     
@@ -2193,6 +2199,9 @@ def display_database_page():
             
             # Extract project name from the selected option
             selected_nda = selected_option.split(" (")[0].replace(" ", "_").lower()
+            # Ensure project_ prefix for file paths
+            if not selected_nda.startswith("project_"):
+                selected_nda = "project_" + selected_nda
         else:
             st.info("No NDA projects found. Upload some NDAs using the Upload tab.")
             selected_nda = None
