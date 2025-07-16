@@ -1409,7 +1409,7 @@ def display_navigation():
     }}
     
     .nav-buttons {{
-        display: flex;
+        display: none;
         gap: 15px;
         padding: 0 2rem;
         justify-content: center;
@@ -2234,6 +2234,9 @@ def main():
     # Get current settings
     model = st.session_state.analysis_config['model']
     temperature = st.session_state.analysis_config['temperature']
+    
+    # Navigation (hidden visual tabs but maintains functionality)
+    display_navigation()
     
     # Page routing
     if st.session_state.current_page == "clean_review":
