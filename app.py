@@ -458,124 +458,9 @@ def display_file_upload_section():
     
     return clean_file, corrected_file
 
-def run_analysis(clean_file, corrected_file, model, temperature, analysis_mode):
-    """Run the NDA analysis with background processing"""
-    try:
-        # Get file content
-        clean_content = clean_file.getvalue().decode('utf-8') if hasattr(clean_file, 'getvalue') else clean_file.read()
-        corrected_content = corrected_file.getvalue().decode('utf-8') if hasattr(corrected_file, 'getvalue') else corrected_file.read()
-        
-        # Start background analysis
-        analysis_id = start_background_analysis(clean_content, corrected_content, model, temperature, analysis_mode)
-        
-        return analysis_id
-        
-    except Exception as e:
-        st.error(f"❌ Failed to start analysis: {str(e)}")
-        st.error("Please check your files and try again.")
-        st.expander("Error Details").write(traceback.format_exc())
-        return None
+# Removed run_analysis function - using direct synchronous processing instead
 
-def display_background_analysis_progress():
-    """Display background analysis progress with status updates"""
-    bg_state = st.session_state.background_analysis
-    
-    if not bg_state['running'] and not bg_state['results'] and not bg_state['error']:
-        return False  # No background analysis active
-    
-    # Create a container for the progress display
-    progress_container = st.container()
-    
-    with progress_container:
-        if bg_state['running']:
-            st.info("🔄 **Analysis running in background** - You can switch tabs freely!")
-            
-            # Progress bar
-            progress_value = bg_state['progress'] / 100.0
-            st.progress(progress_value)
-            
-            # Status message
-            st.write(f"**Status:** {bg_state['status']}")
-            
-            # Elapsed time
-            if bg_state['start_time']:
-                elapsed = time.time() - bg_state['start_time']
-                minutes = int(elapsed // 60)
-                seconds = int(elapsed % 60)
-                if minutes > 0:
-                    time_str = f"{minutes}m {seconds}s"
-                else:
-                    time_str = f"{seconds}s"
-                st.write(f"**Elapsed time:** {time_str}")
-                
-                # Add auto-refresh hint
-                if elapsed > 5:  # Only show after 5 seconds
-                    st.caption("💡 Tip: Refresh the page manually to see time updates")
-            
-            # Action buttons
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🔄 Refresh Status", key="refresh_background"):
-                    st.rerun()
-            with col2:
-                if st.button("⏹️ Cancel Analysis", key="cancel_background"):
-                    st.session_state.background_analysis['running'] = False
-                    st.session_state.background_analysis['status'] = 'Cancelled by user'
-                    st.rerun()
-                
-        elif bg_state['results']:
-            st.success("✅ **Background analysis completed!**")
-            
-            # Load results button
-            if st.button("📊 Load Results", key="load_bg_results"):
-                results = bg_state['results']
-                
-                # Handle different result types
-                if 'comparison_analysis' in results:
-                    # Testing analysis results
-                    st.session_state.analysis_results = results['comparison_analysis']
-                    st.session_state.ai_review_data = results['ai_review_data']
-                    st.session_state.hr_edits_data = results['hr_edits_data']
-                elif 'compliance_report' in results:
-                    # Single NDA analysis results
-                    st.session_state.single_nda_results = results['compliance_report']
-                    st.session_state.single_nda_raw = results['raw_response']
-                
-                # Clear background analysis state
-                st.session_state.background_analysis = {
-                    'running': False,
-                    'progress': 0,
-                    'status': 'idle',
-                    'results': None,
-                    'error': None,
-                    'analysis_id': None,
-                    'start_time': None,
-                    'files': {'clean': None, 'corrected': None},
-                    'config': None
-                }
-                
-                st.success("🎉 Results loaded successfully!")
-                st.rerun()
-                
-        elif bg_state['error']:
-            st.error(f"❌ **Background analysis failed:** {bg_state['error']}")
-            
-            # Clear error button
-            if st.button("🔄 Clear Error", key="clear_bg_error"):
-                st.session_state.background_analysis = {
-                    'running': False,
-                    'progress': 0,
-                    'status': 'idle',
-                    'results': None,
-                    'error': None,
-                    'analysis_id': None,
-                    'start_time': None,
-                    'files': {'clean': None, 'corrected': None},
-                    'config': None
-                }
-                st.rerun()
-    
-    return True  # Background analysis is active
+# Removed display_background_analysis_progress function - using synchronous processing instead  # Background analysis is active
 
 def display_executive_summary(comparison_analysis, ai_review_data, hr_edits_data):
     """Display executive summary with metrics and charts"""
@@ -1005,74 +890,70 @@ def display_single_nda_review(model, temperature):
             st.error("❌ Invalid file format or size")
             return
     
-    # Display background analysis progress if active
-    has_background_analysis = display_background_analysis_progress()
-    
-    # Add manual refresh option when analysis is complete
-    if (st.session_state.background_analysis['status'] == 'Analysis complete!' and 
-        not st.session_state.background_analysis['running'] and
-        st.session_state.background_analysis['results']):
-        
-        st.info("✅ Analysis complete! Click the button below to view results.")
-        if st.button("🔄 Show Results", key="show_results_btn"):
-            st.rerun()
-    
     # Review button
-    is_disabled = not uploaded_file or st.session_state.background_analysis['running']
-    button_text = "🔄 Analysis Running..." if st.session_state.background_analysis['running'] else "🚀 Review NDA"
-    
     run_single_analysis = st.button(
-        button_text,
-        disabled=is_disabled,
+        "🚀 Review NDA",
+        disabled=not uploaded_file,
         use_container_width=False,
         key="run_single_analysis"
     )
     
-    # Run review with background processing
+    # Run review directly without background processing
     if run_single_analysis and uploaded_file:
         try:
-            file_extension = uploaded_file.name.split('.')[-1].lower()
-            file_content = uploaded_file.getvalue()
-            
-            # Start background analysis
-            analysis_id = start_background_single_nda_analysis(file_content, file_extension, model, temperature)
-            
-            if analysis_id:
-                st.success("🚀 Analysis started! You can switch tabs freely while it runs.")
+            with st.spinner("🔄 Analyzing NDA... This may take a few minutes."):
+                file_extension = uploaded_file.name.split('.')[-1].lower()
+                file_content = uploaded_file.getvalue()
+                
+                # Write content to temporary file
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix=f'.{file_extension}', delete=False, encoding='utf-8') as temp_file:
+                    if isinstance(file_content, bytes):
+                        content_str = file_content.decode('utf-8')
+                    else:
+                        content_str = file_content
+                    temp_file.write(content_str)
+                    temp_file_path = temp_file.name
+                
+                # Handle DOCX conversion if needed
+                if file_extension == 'docx':
+                    try:
+                        import subprocess
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        subprocess.run(['docx2txt', temp_file_path, converted_path], check=True)
+                        os.unlink(temp_file_path)
+                        temp_file_path = converted_path
+                    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                        st.error(f"Failed to convert DOCX file: {str(e)}")
+                        os.unlink(temp_file_path)
+                        return
+                
+                # Get current playbook content
+                from playbook_manager import get_current_playbook
+                playbook_content = get_current_playbook()
+                
+                # Initialize and run analysis
+                from NDA_Review_chain import StradaComplianceChain
+                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
+                
+                # Clean up temporary file
+                os.unlink(temp_file_path)
+                
+                # Store results
+                st.session_state.single_nda_results = compliance_report
+                st.session_state.single_nda_raw_response = raw_response
+                
+                st.success("✅ Analysis complete! Results are ready below.")
                 st.rerun()
                 
         except Exception as e:
-            st.error(f"❌ Failed to start analysis: {str(e)}")
+            st.error(f"❌ Failed to analyze NDA: {str(e)}")
             st.error("Please check your file and try again.")
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
-    
-    # Check if background analysis completed and transfer results
-    if (st.session_state.background_analysis['status'] == 'Analysis complete!' and 
-        st.session_state.background_analysis['results'] and 
-        not st.session_state.background_analysis['running']):
-        
-        # Transfer results from background analysis to display variable
-        results = st.session_state.background_analysis['results']
-        if 'compliance_report' in results:
-            st.session_state.single_nda_results = results['compliance_report']
-            st.session_state.single_nda_raw_response = results.get('raw_response', '')
-            
-            # Clear background analysis to prevent re-processing
-            st.session_state.background_analysis = {
-                'running': False,
-                'progress': 0,
-                'status': 'idle',
-                'results': None,
-                'error': None,
-                'analysis_id': None,
-                'start_time': None,
-                'files': {'clean': None, 'corrected': None},
-                'config': None
-            }
-            
-            st.success("✅ Analysis complete! Results are ready below.")
-            st.rerun()
     
     # Display results if available
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
@@ -1920,9 +1801,6 @@ def display_testing_page(model, temperature, analysis_mode):
     # File upload section
     clean_file, corrected_file = display_file_upload_section()
     
-    # Display background analysis progress if active
-    has_background_analysis = display_background_analysis_progress()
-    
     # Analysis section
     st.header("🔬 Testing Configuration")
     
@@ -1932,25 +1810,75 @@ def display_testing_page(model, temperature, analysis_mode):
         st.info(f"**Model:** {model} | **Temperature:** {temperature} | **Mode:** {analysis_mode}")
     
     with col2:
-        # Disable button if background analysis is running
-        is_disabled = not (clean_file and corrected_file) or st.session_state.background_analysis['running']
-        button_text = "🔄 Analysis Running..." if st.session_state.background_analysis['running'] else "🚀 Run Testing"
-        
         run_analysis_button = st.button(
-            button_text,
-            disabled=is_disabled,
+            "🚀 Run Testing",
+            disabled=not (clean_file and corrected_file),
             use_container_width=True
         )
     
     # Run testing when button is clicked
     if run_analysis_button and clean_file and corrected_file:
-        analysis_id = run_analysis(
-            clean_file, corrected_file, model, temperature, analysis_mode
-        )
-        
-        if analysis_id:
-            st.success("🚀 Analysis started! You can switch tabs freely while it runs.")
-            st.rerun()
+        try:
+            with st.spinner("🔄 Running comparative analysis... This may take several minutes."):
+                # Get file content
+                clean_content = clean_file.getvalue().decode('utf-8') if hasattr(clean_file, 'getvalue') else clean_file.read()
+                corrected_content = corrected_file.getvalue().decode('utf-8') if hasattr(corrected_file, 'getvalue') else corrected_file.read()
+                
+                # Get current playbook content
+                from playbook_manager import get_current_playbook
+                playbook_content = get_current_playbook()
+                
+                # Run analysis
+                from Clean_testing import TestingChain
+                testing_chain = TestingChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                
+                # Write temporary files
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as clean_temp:
+                    clean_temp.write(clean_content)
+                    clean_temp_path = clean_temp.name
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as corrected_temp:
+                    corrected_temp.write(corrected_content)
+                    corrected_temp_path = corrected_temp.name
+                
+                try:
+                    if analysis_mode == "Full Analysis":
+                        comparison_analysis, comparison_response, ai_review_json, hr_edits_json = testing_chain.analyze_testing(clean_temp_path, corrected_temp_path)
+                    else:  # Quick Testing
+                        # For quick testing, we need to first get AI and HR results separately
+                        from NDA_Review_chain import StradaComplianceChain
+                        from NDA_HR_review_chain import NDAComplianceChain
+                        
+                        review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                        ai_review_json, _ = review_chain.analyze_nda(clean_temp_path)
+                        
+                        hr_chain = NDAComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                        hr_edits_json, _ = hr_chain.analyze_nda(corrected_temp_path)
+                        
+                        comparison_analysis = testing_chain.quick_testing(ai_review_json, hr_edits_json)
+                        comparison_response = "Quick testing mode - no detailed response"
+                        
+                    # Store results
+                    st.session_state.analysis_results = comparison_analysis
+                    st.session_state.ai_review_data = ai_review_json
+                    st.session_state.hr_edits_data = hr_edits_json
+                    
+                    st.success("✅ Analysis complete! Results are ready below.")
+                    st.rerun()
+                    
+                finally:
+                    # Clean up temporary files
+                    os.unlink(clean_temp_path)
+                    os.unlink(corrected_temp_path)
+                    
+        except Exception as e:
+            st.error(f"❌ Failed to run analysis: {str(e)}")
+            st.error("Please check your files and try again.")
+            with st.expander("Error Details"):
+                st.code(traceback.format_exc())
     
     # Display results if available
     if st.session_state.analysis_results:
