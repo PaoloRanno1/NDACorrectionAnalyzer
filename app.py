@@ -1537,21 +1537,40 @@ def display_navigation():
         <div class="nav-buttons">
     '''
     
-    # Add navigation buttons
+    # Add navigation buttons with click handlers
     for display_name, page_key in nav_options.items():
         active_class = "active" if st.session_state.current_page == page_key else ""
-        nav_html += f'<div class="nav-button {active_class}">{display_name}</div>'
+        nav_html += f'<div class="nav-button {active_class}" onclick="clickButton(\'{page_key}\')">{display_name}</div>'
     
     nav_html += '''
         </div>
     </div>
     <div class="nav-divider"></div>
+    
+    <script>
+    function clickButton(pageKey) {
+        // Find the corresponding Streamlit button using the key attribute
+        const buttonSelector = `button[data-testid*="nav_${pageKey}"]`;
+        const button = document.querySelector(buttonSelector);
+        if (button) {
+            button.click();
+        } else {
+            // Fallback: try to find by button text
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (btn.innerText && btn.innerText.includes(pageKey.replace('_', ' ').toUpperCase())) {
+                    btn.click();
+                }
+            });
+        }
+    }
+    </script>
     '''
     
     st.markdown(nav_html, unsafe_allow_html=True)
     
-    # Streamlit buttons for actual navigation (hidden with CSS)
-    st.markdown('<style>div[data-testid="column"] > div > div > button { display: none !important; }</style>', unsafe_allow_html=True)
+    # Streamlit buttons for actual navigation (positioned off-screen but accessible to JavaScript)
+    st.markdown('<style>div[data-testid="column"] > div > div > button { position: absolute; left: -9999px; opacity: 0; }</style>', unsafe_allow_html=True)
     
     cols = st.columns(len(nav_options))
     
