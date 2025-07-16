@@ -646,35 +646,28 @@ def display_single_nda_review(model, temperature):
         key="single_nda_upload"
     )
     
-    col1, col2 = st.columns([5, 1])
+    if uploaded_file:
+        if validate_file(uploaded_file):
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
+            
+            # Preview option
+            if st.checkbox("Preview file content", key="preview_single"):
+                try:
+                    content = uploaded_file.getvalue().decode('utf-8')
+                    st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                except:
+                    st.warning("Cannot preview this file type")
+        else:
+            st.error("❌ Invalid file format or size")
+            return
     
-    with col1:
-        if uploaded_file:
-            if validate_file(uploaded_file):
-                st.success(f"✅ File uploaded: {uploaded_file.name}")
-                
-                # Preview option
-                if st.checkbox("Preview file content", key="preview_single"):
-                    try:
-                        content = uploaded_file.getvalue().decode('utf-8')
-                        st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-                    except:
-                        st.warning("Cannot preview this file type")
-            else:
-                st.error("❌ Invalid file format or size")
-                return
-    
-    with col2:
-        st.markdown("**Review Settings**")
-        st.caption(f"Model: {model}")
-        st.caption(f"Temperature: {temperature}")
-        
-        run_single_analysis = st.button(
-            "🚀 Review NDA",
-            disabled=not uploaded_file,
-            use_container_width=True,
-            key="run_single_analysis"
-        )
+    # Review button
+    run_single_analysis = st.button(
+        "🚀 Review NDA",
+        disabled=not uploaded_file,
+        use_container_width=False,
+        key="run_single_analysis"
+    )
     
     # Run review
     if run_single_analysis and uploaded_file:
