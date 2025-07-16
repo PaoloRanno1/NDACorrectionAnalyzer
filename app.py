@@ -1160,6 +1160,12 @@ def display_navigation():
             current_display = display_name
             break
     
+    # If current page is not in navigation (like results), don't show dropdown
+    if st.session_state.current_page == "results":
+        st.markdown("**Current Section:** 📊 Saved Results")
+        st.markdown("---")
+        return
+    
     col1, col2 = st.columns([3, 9])
     
     with col1:
@@ -1328,7 +1334,16 @@ def display_testing_page(model, temperature, analysis_mode):
 
 def display_testing_results_page():
     """Display the testing results page with saved results"""
-    st.title("📊 Testing Results")
+    # Header with back button
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.title("📊 Testing Results")
+    
+    with col2:
+        if st.button("⬅️ Back to Testing", key="back_to_testing", use_container_width=True):
+            st.session_state.current_page = "testing"
+            st.rerun()
     
     import json
     import os
