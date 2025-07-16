@@ -194,7 +194,16 @@ def reset_playbook():
 
 def display_editable_playbook():
     """Display the editable playbook interface"""
-    st.header("✏️ Edit Playbook")
+    # Header with back button
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.header("✏️ Edit Playbook")
+    
+    with col2:
+        if st.button("⬅️ Back to Policies", key="back_to_policies", use_container_width=True):
+            st.session_state.current_page = "policies"
+            st.rerun()
     
     st.markdown("""
     **Customize the NDA Analysis Playbook**

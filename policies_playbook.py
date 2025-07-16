@@ -8,7 +8,16 @@ import streamlit as st
 def display_policies_playbook():
     """Display the policies playbook with expandable sections"""
     
-    st.header("📋 Strada's NDA Playbook")
+    # Header with Edit Playbook button
+    col1, col2 = st.columns([4, 1])
+    
+    with col1:
+        st.header("📋 Strada's NDA Playbook")
+    
+    with col2:
+        if st.button("✏️ Edit Playbook", key="edit_playbook_access", use_container_width=True):
+            st.session_state.current_page = "edit_playbook"
+            st.rerun()
     
     st.markdown("""
     This comprehensive playbook outlines Strada's policies for NDA review and compliance.

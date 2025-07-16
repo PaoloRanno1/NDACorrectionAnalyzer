@@ -1155,13 +1155,14 @@ def display_navigation():
         "CLEAN REVIEW": "clean_review",
         "TESTING": "testing", 
         "FAQ": "faq",
-        "POLICIES": "policies",
-        "EDIT PLAYBOOK": "edit_playbook"
+        "POLICIES": "policies"
     }
     
-    # Special handling for results page
+    # Special handling for results and edit_playbook pages
     if st.session_state.current_page == "results":
         nav_options["RESULTS"] = "results"
+    elif st.session_state.current_page == "edit_playbook":
+        nav_options["EDIT PLAYBOOK"] = "edit_playbook"
     
     # Create horizontal navigation
     cols = st.columns(len(nav_options))
