@@ -113,19 +113,10 @@ def display_sidebar():
         help="Lower values make the AI more focused and deterministic"
     )
     
-    # Analysis mode
-    analysis_modes = ["Full Analysis", "Quick Testing"]
-    analysis_mode = st.sidebar.selectbox(
-        "Analysis Mode",
-        analysis_modes,
-        index=analysis_modes.index(st.session_state.analysis_config['analysis_mode'])
-    )
-    
     # Update session state
     st.session_state.analysis_config.update({
         'model': selected_model,
-        'temperature': temperature,
-        'analysis_mode': analysis_mode
+        'temperature': temperature
     })
     
     st.sidebar.markdown("---")
@@ -135,7 +126,7 @@ def display_sidebar():
     st.sidebar.markdown("- PDF (.pdf)")
     st.sidebar.markdown("- Word (.docx)")
     
-    return selected_model, temperature, analysis_mode
+    return selected_model, temperature
 
 def display_file_upload_section():
     """Display file upload section with test NDA selection"""
@@ -1616,7 +1607,7 @@ def main():
     display_header()
     
     # Sidebar configuration
-    model, temperature, analysis_mode = display_sidebar()
+    model, temperature = display_sidebar()
     
     # Navigation
     display_navigation()
@@ -1625,7 +1616,7 @@ def main():
     if st.session_state.current_page == "clean_review":
         display_single_nda_review(model, temperature)
     elif st.session_state.current_page == "testing":
-        display_testing_page(model, temperature, analysis_mode)
+        display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
         display_testing_results_page()
     elif st.session_state.current_page == "policies":
