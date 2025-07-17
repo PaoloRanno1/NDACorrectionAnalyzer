@@ -821,7 +821,9 @@ def display_single_nda_review(model, temperature):
     if st.session_state.get('show_settings', False):
         display_settings_modal()
     
-    st.markdown("Upload an NDA document or select from your database to get AI-powered compliance analysis based on Strada's legal policies.")
+    st.markdown("""- Upload an NDA document or select from your database to get AI-powered compliance analysis based on Strada's legal policies.
+- Please don't change page when reviewing an NDA, it will stop the review.
+""")
     
     # File source selection
     source_type = st.radio(
@@ -1264,7 +1266,7 @@ def display_faq_page():
     st.markdown("Complete guide to using the NDA Analysis Tool")
     
     # Overview
-    with st.expander("🎯 **About the App**", expanded=True):
+    with st.expander("🎯 **About the App**", expanded=False):
         st.markdown("""
         This is an AI-powered platform that evaluates NDA legal compliance according to Strada's requirements.
 
@@ -1286,7 +1288,7 @@ def display_faq_page():
         """)
     
     # Clean NDA Review
-    with st.expander("⚖️ **NDA Review (Main Homepage)**"):
+    with st.expander("⚖️ **NDA Review**"):
         st.markdown("""
         **Purpose**: Primary AI-powered compliance analysis for individual NDAs
         
@@ -1317,8 +1319,8 @@ def display_faq_page():
         - Cross-reference findings with the Policies tab for context
         """)
     
-    # AI Testing & Comparison
-    with st.expander("🔬 **AI Testing & Comparison**"):
+    # Testing
+    with st.expander("🔬 **Testing**"):
         st.markdown("""
         **Purpose**: Compare AI analysis accuracy against HR corrections
         
@@ -1816,6 +1818,10 @@ def display_testing_page(model, temperature, analysis_mode):
         st.markdown("""- Test Your NDAs 
         
 - View results of previous tests by clicking the button:📊 View Results
+- Please don't change page when reviewing an NDA, it will stop the review.
+- **Custom uploads info**: Corrected NDAs must have tracked changes marked as:
+  - **Additions**: `++text that was added++`
+  - **Removals**: `--text that was removed--`
                     """)
     
     with col2:
@@ -2075,7 +2081,10 @@ def display_database_page():
     st.title("🗄️ NDA Database")
     
     # Header
-    st.write("View and manage your NDA test database. Upload new NDAs or view existing ones in markdown format.")
+    st.markdown("""- Upload new NDAs (clean and corrected version).
+- View and manage your NDA test database. 
+"""
+               )
     
     # Two main sections: Upload and View
     tab1, tab2 = st.tabs(["📤 Upload NDAs", "📋 View Database"])

@@ -20,12 +20,15 @@ def display_policies_playbook():
             st.rerun()
     
     st.markdown("""
-    This comprehensive playbook outlines Strada's policies for NDA review and compliance.
+    - This comprehensive playbook outlines Strada's policies for NDA review and compliance.
     *Policies are grouped by **High**, **Medium**, or **Low** priority.*
+    - Click on "✏️ Edit Playbook" to edit the playbook for future analysis in this session.
+    ---
+    
     """)
     
     # Golden Rule
-    with st.expander("🌟 Golden Rule of NDA Review", expanded=True):
+    with st.expander("🌟 Golden Rule of NDA Review", expanded=False):
         st.markdown("""
         **As a guiding principle, Strada prefers concise and focused NDAs.**
         
@@ -195,4 +198,4 @@ def display_policies_playbook():
     **Note:** This playbook is designed to ensure consistency in NDA review processes. 
     Always consult with legal counsel for complex situations or when in doubt about specific provisions.
     """)
-    st.markdown("*Last updated: January 2025*")
+    st.markdown("*Last updated: July 2025*")
