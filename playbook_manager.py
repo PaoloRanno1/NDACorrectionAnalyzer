@@ -181,21 +181,10 @@ permissible **only if modified** as described:
   focused on its legitimate purpose without hampering normal business
   operations.
 
----
-
-### **POLICY 7: No Third-Party Beneficiaries**  
-- **Rule:** The agreement must **not grant enforceable rights** to any
-  entity that is not a signatory to the contract.
-
-- **Guidance:** Clauses stating that a party's "affiliates" are
-  "third-party beneficiaries" should be deleted. Similarly, any
-  reference to specific legislation granting such rights (e.g., the
-  UK's Contracts (Rights of Third Parties) Act 1999) must be removed to
-  clarify that only the parties to the agreement can enforce its terms.
 
 ---
 
-### **POLICY 8: "No Commitment to Invest" Clauses**  
+### **POLICY 7: "No Commitment to Invest" Clauses**  
 - **Guideline:** This clause is **optional**. If the NDA does not
   contain a 'No Commitment' clause, it is acceptable and no action is
   needed. **Do not add one**.
@@ -212,7 +201,7 @@ permissible **only if modified** as described:
 
 ---
 
-### **POLICY 9: Assignment of Agreement**  
+### **POLICY 8: Assignment of Agreement**  
 - **Rule:** The NDA must **not prohibit Strada from assigning its
   rights**. The preferred position is a mutual right for either party to
   assign the agreement to its affiliates. A silent clause is acceptable;
@@ -224,7 +213,7 @@ permissible **only if modified** as described:
 
 ---
 
-### **POLICY 10: Omission of Redundant Legal Acknowledgements**  
+### **POLICY 9: Omission of Redundant Legal Acknowledgements**  
 - **Rule:** The NDA should not contain clauses where a party formally
   acknowledges existing legal obligations (e.g., under market abuse or
   insider trading laws).
@@ -237,7 +226,7 @@ permissible **only if modified** as described:
 
 ## LOW PRIORITY  
 
-### **POLICY 11: Governing Law & Jurisdiction**  
+### **POLICY 10: Governing Law & Jurisdiction**  
 - Preference: **Belgian law**; exclusive courts of **Antwerp, Belgium**.  
 - Acceptable fall-backs (in order):  
   1. Another European jurisdiction.  
@@ -248,7 +237,7 @@ permissible **only if modified** as described:
 
 ---
 
-### **POLICY 12: Confidentiality Term**  
+### **POLICY 11: Confidentiality Term**  
 - **Rule:** The preferred confidentiality term is **two (2) years**. A
   term of three (3) years is the maximum acceptable length. The term
   must be explicitly stated.
@@ -262,7 +251,7 @@ permissible **only if modified** as described:
 
 ---
 
-### **POLICY 13: Liability for Representatives**  
+### **POLICY 12: Liability for Representatives**  
 - **Rule:** The NDA should, where possible, limit Strada's liability
   for breaches by its external Representatives by using an
   **efforts-based standard** rather than one of strict liability.
@@ -276,7 +265,7 @@ permissible **only if modified** as described:
 
 ---
 
-### **POLICY 14: Definition of Confidential Information**  
+### **POLICY 13: Definition of Confidential Information**  
 - **Rule:** The definition of "Confidential Information" should
   include **standard market exceptions** to clarify the scope of the
   obligations.

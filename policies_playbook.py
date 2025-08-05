@@ -118,14 +118,8 @@ def display_policies_playbook():
         - **Rationale:** Overly broad no-contact clauses create significant operational risk. This policy ensures the restriction is tightly focused on its legitimate purpose without hampering normal business operations.
         """)
     
-    with st.expander("POLICY 7: No Third-Party Beneficiaries"):
-        st.markdown("""
-        - **Rule:** The agreement must **not grant enforceable rights** to any entity that is not a signatory to the contract.
-
-        - **Guidance:** Clauses stating that a party's "affiliates" are "third-party beneficiaries" should be deleted. Similarly, any reference to specific legislation granting such rights (e.g., the UK's Contracts (Rights of Third Parties) Act 1999) must be removed to clarify that only the parties to the agreement can enforce its terms.
-        """)
     
-    with st.expander("POLICY 8: \"No Commitment to Invest\" Clauses"):
+    with st.expander("POLICY 7: \"No Commitment to Invest\" Clauses"):
         st.markdown("""
         - **Guideline:** This clause is **optional**. If the NDA does not contain a 'No Commitment' clause, it is acceptable and no action is needed. **Do not add one**.
 
@@ -134,14 +128,14 @@ def display_policies_playbook():
         - **Standard Language (Safe to Accept):** "The parties acknowledge that this Agreement and the exchange of Confidential Information do not create any obligation to enter into any further agreement or transaction, including but not limited to any investment, partnership, or joint venture."
         """)
     
-    with st.expander("POLICY 9: Assignment of Agreement"):
+    with st.expander("POLICY 8: Assignment of Agreement"):
         st.markdown("""
         - **Rule:** The NDA must **not prohibit Strada from assigning its rights**. The preferred position is a mutual right for either party to assign the agreement to its affiliates. A silent clause is acceptable; a one-sided restriction is not.
 
         - **Approved Language:** "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
         """)
     
-    with st.expander("POLICY 10: Omission of Redundant Legal Acknowledgements"):
+    with st.expander("POLICY 9: Omission of Redundant Legal Acknowledgements"):
         st.markdown("""
         - **Rule:** The NDA should not contain clauses where a party formally acknowledges existing legal obligations (e.g., under market abuse or insider trading laws).
 
@@ -154,7 +148,7 @@ def display_policies_playbook():
     st.subheader("🟢 LOW PRIORITY")
     st.markdown("*These policies address preferences that should be considered when feasible.*")
     
-    with st.expander("POLICY 11: Governing Law & Jurisdiction"):
+    with st.expander("POLICY 10: Governing Law & Jurisdiction"):
         st.markdown("""
         - **Preference:** **Belgian law**; exclusive courts of **Antwerp, Belgium**.
         - **Acceptable fall-backs (in order):**
@@ -165,21 +159,21 @@ def display_policies_playbook():
         "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
         """)
     
-    with st.expander("POLICY 12: Confidentiality Term"):
+    with st.expander("POLICY 11: Confidentiality Term"):
         st.markdown("""
         - **Rule:** The preferred confidentiality term is **two (2) years**. A term of three (3) years is the maximum acceptable length. The term must be explicitly stated.
 
         - **Approved Language:** "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Project; and (ii) the date that is two or three (2 or 3) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
         """)
     
-    with st.expander("POLICY 13: Liability for Representatives"):
+    with st.expander("POLICY 12: Liability for Representatives"):
         st.markdown("""
         - **Rule:** The NDA should, where possible, limit Strada's liability for breaches by its external Representatives by using an **efforts-based standard** rather than one of strict liability.
 
         - **Approved Language:** "The Recipient will use its best efforts to procure that each of its Representatives who receives any Confidential Information is aware of and adheres to the terms of this Agreement. The Recipient shall be responsible for any breach of the confidentiality obligations of this Agreement by its Representatives."
         """)
     
-    with st.expander("POLICY 14: Definition of Confidential Information"):
+    with st.expander("POLICY 13: Definition of Confidential Information"):
         st.markdown("""
         - **Rule:** The definition of "Confidential Information" should include **standard market exceptions** to clarify the scope of the obligations.
 

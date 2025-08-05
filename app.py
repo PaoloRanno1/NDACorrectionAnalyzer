@@ -1078,15 +1078,16 @@ SUMMARY:
 HIGH PRIORITY:
 """
             for idx, flag in enumerate(high_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nMEDIUM PRIORITY:\n"
             for idx, flag in enumerate(medium_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nLOW PRIORITY:\n"
             for idx, flag in enumerate(low_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+               
             
             st.download_button(
                 label="📄 Download Text Summary",
@@ -1121,19 +1122,7 @@ HIGH PRIORITY:
             else:
                 st.info("No raw response available")
         
-        with tab2:
-            st.subheader("Raw AI Response")
-            if hasattr(st.session_state, 'single_nda_raw') and st.session_state.single_nda_raw:
-                st.text_area(
-                    "Raw Response from AI Model",
-                    st.session_state.single_nda_raw,
-                    height=300,
-                    disabled=True
-                )
-            else:
-                st.info("No raw response available")
         
-        st.markdown("---")
         
         # Clear results
         if st.button("🗑️ Clear Results", key="clear_single_results"):
