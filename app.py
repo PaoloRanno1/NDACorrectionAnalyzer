@@ -813,9 +813,7 @@ def display_single_nda_review(model, temperature):
             st.rerun()
     
     with col3:
-        if st.button("🗄️ Database", key="goto_database_from_clean", use_container_width=True):
-            st.session_state.current_page = "database"
-            st.rerun()
+        pass  # Empty space
     
     # Display settings modal if activated
     if st.session_state.get('show_settings', False):
@@ -1666,6 +1664,7 @@ def display_navigation():
     nav_options = {
         "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
+        "DATABASE": "database",
         "POLICIES": "policies",
         "FAQ": "faq"
     }
@@ -1822,21 +1821,6 @@ def display_testing_page(model, temperature, analysis_mode):
             st.session_state.current_page = "results"
             st.rerun()
     
-    # Sub-navigation for Testing sections
-    st.markdown("---")
-    testing_tabs = st.tabs(["🧪 Run Testing", "📊 View Results", "🗄️ Database Management"])
-    
-    with testing_tabs[0]:
-        display_testing_run_section(model, temperature, analysis_mode)
-    
-    with testing_tabs[1]:
-        display_testing_results_section()
-    
-    with testing_tabs[2]:
-        display_database_section()
-
-def display_testing_run_section(model, temperature, analysis_mode):
-    """Display the testing run section"""
     # Display settings modal if activated
     if st.session_state.get('show_settings', False):
         display_settings_modal()
@@ -2083,12 +2067,12 @@ def display_testing_run_section(model, temperature, analysis_mode):
 
 def display_testing_results_section():
     """Display the testing results view section"""
-    from results_manager import list_saved_results, get_testing_result, delete_testing_result
+    from results_manager import get_saved_results, load_saved_result, delete_saved_result
     
     st.header("📊 Saved Testing Results")
     
     # Get saved results
-    saved_results = list_saved_results()
+    saved_results = get_saved_results()
     
     if not saved_results:
         st.info("No saved results found. Run some tests first!")
@@ -2126,7 +2110,7 @@ def display_testing_results_section():
                 selected_idx = result_options.index(selected_result_display)
                 result_to_delete = saved_results[selected_idx]
                 
-                if delete_testing_result(result_to_delete['id']):
+                if delete_saved_result(result_to_delete['result_id']):
                     st.success("Result deleted successfully!")
                     st.rerun()
                 else:
@@ -2138,43 +2122,44 @@ def display_testing_results_section():
         selected_result = saved_results[selected_idx]
         
         # Load full result data
-        result_data = get_testing_result(selected_result['id'])
+        result_tuple = load_saved_result(selected_result['result_id'])
         
-        if result_data:
+        if result_tuple:
+            comparison_analysis, ai_review_data, hr_edits_data, executive_summary_fig = result_tuple
+            
             st.markdown("---")
             st.subheader(f"📄 {selected_result['nda_name']}")
             
             # Metadata
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Model", result_data['metadata']['model_used'])
+                st.metric("Model", selected_result['model_used'])
             with col2:
-                st.metric("Temperature", result_data['metadata']['temperature'])
+                st.metric("Temperature", selected_result['temperature'])
             with col3:
-                st.metric("Mode", result_data['metadata']['analysis_mode'])
+                st.metric("Mode", selected_result['analysis_mode'])
             with col4:
-                timestamp = result_data['metadata']['timestamp'][:19].replace('T', ' ')
+                timestamp = selected_result['timestamp'][:19].replace('T', ' ')
                 st.metric("Date", timestamp)
             
             st.markdown("---")
             
             # Display results using existing functions
-            if 'comparison_analysis' in result_data:
-                display_executive_summary(
-                    result_data['comparison_analysis'],
-                    result_data.get('ai_review_data'),
-                    result_data.get('hr_edits_data')
-                )
-                
-                st.markdown("---")
-                
-                display_detailed_comparison_tables(
-                    result_data['comparison_analysis'],
-                    result_data.get('ai_review_data'),
-                    result_data.get('hr_edits_data')
-                )
-                
-                display_detailed_comparison(result_data['comparison_analysis'])
+            display_executive_summary(
+                comparison_analysis,
+                ai_review_data,
+                hr_edits_data
+            )
+            
+            st.markdown("---")
+            
+            display_detailed_comparison_tables(
+                comparison_analysis,
+                ai_review_data,
+                hr_edits_data
+            )
+            
+            display_detailed_comparison(comparison_analysis)
         else:
             st.error("Failed to load result data.")
 
@@ -2376,11 +2361,6 @@ def display_database_section():
                     st.info("No corrected NDA file")
     else:
         st.info("No projects in database. Upload some files to get started!")
-        if st.button("🗑️ Clear Results", key="clear_results"):
-            st.session_state.analysis_results = None
-            st.session_state.ai_review_data = None
-            st.session_state.hr_edits_data = None
-            st.rerun()
 
 def display_database_page():
     """Display the database management page for viewing and uploading NDAs"""
@@ -3278,6 +3258,8 @@ def main():
         display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
         display_testing_results_page()
+    elif st.session_state.current_page == "database":
+        display_database_page()
     elif st.session_state.current_page == "faq":
         display_faq_page()
     elif st.session_state.current_page == "policies":
