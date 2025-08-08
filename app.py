@@ -1664,7 +1664,6 @@ def display_navigation():
     nav_options = {
         "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
-        "DATABASE": "database",
         "POLICIES": "policies",
         "FAQ": "faq"
     }
@@ -2745,13 +2744,18 @@ def display_database_page():
 
 def display_testing_results_page():
     """Display the testing results page with saved results"""
-    # Header with back button
-    col1, col2 = st.columns([4, 1])
+    # Header with back button and database management
+    col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
         st.title("📊 Testing Results")
     
     with col2:
+        if st.button("🗄️ Database", key="goto_database_from_results", use_container_width=True):
+            st.session_state.current_page = "database"
+            st.rerun()
+    
+    with col3:
         if st.button("⬅️ Back to Testing", key="back_to_testing", use_container_width=True):
             st.session_state.current_page = "testing"
             st.rerun()
