@@ -1666,7 +1666,6 @@ def display_navigation():
     nav_options = {
         "NDA REVIEW": "clean_review",
         "TESTING": "testing", 
-        "DATABASE": "database",
         "POLICIES": "policies",
         "FAQ": "faq"
     }
@@ -1823,6 +1822,21 @@ def display_testing_page(model, temperature, analysis_mode):
             st.session_state.current_page = "results"
             st.rerun()
     
+    # Sub-navigation for Testing sections
+    st.markdown("---")
+    testing_tabs = st.tabs(["🧪 Run Testing", "📊 View Results", "🗄️ Database Management"])
+    
+    with testing_tabs[0]:
+        display_testing_run_section(model, temperature, analysis_mode)
+    
+    with testing_tabs[1]:
+        display_testing_results_section()
+    
+    with testing_tabs[2]:
+        display_database_section()
+
+def display_testing_run_section(model, temperature, analysis_mode):
+    """Display the testing run section"""
     # Display settings modal if activated
     if st.session_state.get('show_settings', False):
         display_settings_modal()
@@ -2059,6 +2073,309 @@ def display_testing_page(model, temperature, analysis_mode):
         st.markdown("---")
         
         # Clear results option
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col2:
+            if st.button("🗑️ Clear Results", key="clear_results", use_container_width=True):
+                st.session_state.analysis_results = None
+                st.session_state.ai_review_data = None
+                st.session_state.hr_edits_data = None
+                st.rerun()
+
+def display_testing_results_section():
+    """Display the testing results view section"""
+    from results_manager import list_saved_results, get_testing_result, delete_testing_result
+    
+    st.header("📊 Saved Testing Results")
+    
+    # Get saved results
+    saved_results = list_saved_results()
+    
+    if not saved_results:
+        st.info("No saved results found. Run some tests first!")
+        return
+    
+    # Results selection
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # Group results by project name for better organization
+        project_results = {}
+        for result in saved_results:
+            project_name = result['nda_name']
+            if project_name not in project_results:
+                project_results[project_name] = []
+            project_results[project_name].append(result)
+        
+        # Create options for selectbox
+        result_options = []
+        for project_name, results in project_results.items():
+            for result in results:
+                timestamp = result['timestamp'][:19].replace('T', ' ')
+                result_options.append(f"{project_name} - {timestamp}")
+        
+        selected_result_display = st.selectbox(
+            "Select a result to view:",
+            [""] + result_options,
+            help="Choose from your saved analysis results"
+        )
+    
+    with col2:
+        if st.button("🗑️ Delete Selected", disabled=not selected_result_display, use_container_width=True):
+            if selected_result_display:
+                # Find the corresponding result
+                selected_idx = result_options.index(selected_result_display)
+                result_to_delete = saved_results[selected_idx]
+                
+                if delete_testing_result(result_to_delete['id']):
+                    st.success("Result deleted successfully!")
+                    st.rerun()
+                else:
+                    st.error("Failed to delete result.")
+    
+    # Display selected result
+    if selected_result_display:
+        selected_idx = result_options.index(selected_result_display)
+        selected_result = saved_results[selected_idx]
+        
+        # Load full result data
+        result_data = get_testing_result(selected_result['id'])
+        
+        if result_data:
+            st.markdown("---")
+            st.subheader(f"📄 {selected_result['nda_name']}")
+            
+            # Metadata
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Model", result_data['metadata']['model_used'])
+            with col2:
+                st.metric("Temperature", result_data['metadata']['temperature'])
+            with col3:
+                st.metric("Mode", result_data['metadata']['analysis_mode'])
+            with col4:
+                timestamp = result_data['metadata']['timestamp'][:19].replace('T', ' ')
+                st.metric("Date", timestamp)
+            
+            st.markdown("---")
+            
+            # Display results using existing functions
+            if 'comparison_analysis' in result_data:
+                display_executive_summary(
+                    result_data['comparison_analysis'],
+                    result_data.get('ai_review_data'),
+                    result_data.get('hr_edits_data')
+                )
+                
+                st.markdown("---")
+                
+                display_detailed_comparison_tables(
+                    result_data['comparison_analysis'],
+                    result_data.get('ai_review_data'),
+                    result_data.get('hr_edits_data')
+                )
+                
+                display_detailed_comparison(result_data['comparison_analysis'])
+        else:
+            st.error("Failed to load result data.")
+
+def display_database_section():
+    """Display the database management section"""
+    st.header("🗄️ NDA Database Management")
+    
+    # Import database functions
+    from test_database import get_test_nda_list, get_test_nda_paths, create_file_objects_from_paths
+    import os
+    
+    # Database overview
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("""
+        **Manage your NDA test database:**
+        - Upload individual files (clean or corrected NDAs)
+        - View project completion status
+        - Download or delete existing files
+        - Files ready for testing will be highlighted
+        """)
+    
+    with col2:
+        st.info(f"**Location**: `test_data/` folder")
+    
+    # File upload section
+    st.subheader("📤 Upload New NDA")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        uploaded_file = st.file_uploader(
+            "Choose an NDA file",
+            type=["md", "txt", "pdf", "docx"],
+            help="Upload a clean NDA or corrected NDA with tracked changes"
+        )
+    
+    with col2:
+        file_type = st.selectbox(
+            "File Type",
+            ["clean", "corrected"],
+            help="Select whether this is a clean NDA or corrected version"
+        )
+    
+    if uploaded_file:
+        project_name = st.text_input(
+            "Project Name",
+            value=uploaded_file.name.replace('.md', '').replace('.txt', '').replace('.pdf', '').replace('.docx', ''),
+            help="Enter a name for this project (without file extension)"
+        )
+        
+        if st.button("💾 Save to Database", disabled=not project_name.strip()):
+            try:
+                # Create test_data directory if it doesn't exist
+                os.makedirs("test_data", exist_ok=True)
+                
+                # Get file content
+                file_content = uploaded_file.getvalue()
+                
+                # Handle different file types
+                if uploaded_file.name.endswith('.docx'):
+                    # Convert DOCX to markdown
+                    import tempfile
+                    import subprocess
+                    
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                    
+                    try:
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        subprocess.run([
+                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                        ], check=True)
+                        
+                        with open(converted_path, 'r', encoding='utf-8') as f:
+                            content_str = f.read()
+                        
+                        os.unlink(temp_file_path)
+                        os.unlink(converted_path)
+                        
+                    except Exception as e:
+                        st.error(f"Failed to convert DOCX: {str(e)}")
+                        return
+                        
+                elif uploaded_file.name.endswith('.pdf'):
+                    st.error("PDF conversion not yet supported. Please convert to markdown or text first.")
+                    return
+                else:
+                    # Text-based files
+                    if isinstance(file_content, bytes):
+                        content_str = file_content.decode('utf-8')
+                    else:
+                        content_str = file_content
+                
+                # Save to database
+                filename = f"project_{project_name.strip()}_{file_type}.md"
+                filepath = os.path.join("test_data", filename)
+                
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write(content_str)
+                
+                st.success(f"✅ File saved as `{filename}` in database!")
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Failed to save file: {str(e)}")
+    
+    st.markdown("---")
+    
+    # Database status table
+    st.subheader("📊 Project Status")
+    
+    # Get all projects and their status
+    test_nda_list = get_test_nda_list()
+    
+    if test_nda_list:
+        # Create status data
+        status_data = []
+        for nda_name in test_nda_list:
+            clean_path, corrected_path = get_test_nda_paths(nda_name)
+            
+            has_clean = clean_path and os.path.exists(clean_path)
+            has_corrected = corrected_path and os.path.exists(corrected_path)
+            ready_for_testing = has_clean and has_corrected
+            
+            status_data.append({
+                "Project": nda_name,
+                "Clean NDA": "✅" if has_clean else "❌",
+                "Corrected NDA": "✅" if has_corrected else "❌",
+                "Ready for Testing": "✅" if ready_for_testing else "❌",
+            })
+        
+        # Display as table
+        df = pd.DataFrame(status_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+        
+        # File management section
+        st.markdown("---")
+        st.subheader("🛠️ File Management")
+        
+        # Select project to manage
+        selected_project = st.selectbox(
+            "Select project to manage:",
+            [""] + test_nda_list,
+            help="Choose a project to download or delete files"
+        )
+        
+        if selected_project:
+            clean_path, corrected_path = get_test_nda_paths(selected_project)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Clean NDA**")
+                if clean_path and os.path.exists(clean_path):
+                    with open(clean_path, 'r', encoding='utf-8') as f:
+                        clean_content = f.read()
+                    
+                    download_col, delete_col = st.columns(2)
+                    with download_col:
+                        st.download_button(
+                            "📥 Download",
+                            data=clean_content,
+                            file_name=f"{selected_project}_clean.md",
+                            mime="text/markdown",
+                            key=f"download_clean_{selected_project}"
+                        )
+                    with delete_col:
+                        if st.button("🗑️ Delete", key=f"delete_clean_{selected_project}"):
+                            os.remove(clean_path)
+                            st.success("Clean NDA deleted!")
+                            st.rerun()
+                else:
+                    st.info("No clean NDA file")
+            
+            with col2:
+                st.markdown("**Corrected NDA**")
+                if corrected_path and os.path.exists(corrected_path):
+                    with open(corrected_path, 'r', encoding='utf-8') as f:
+                        corrected_content = f.read()
+                    
+                    download_col, delete_col = st.columns(2)
+                    with download_col:
+                        st.download_button(
+                            "📥 Download",
+                            data=corrected_content,
+                            file_name=f"{selected_project}_corrected.md",
+                            mime="text/markdown",
+                            key=f"download_corrected_{selected_project}"
+                        )
+                    with delete_col:
+                        if st.button("🗑️ Delete", key=f"delete_corrected_{selected_project}"):
+                            os.remove(corrected_path)
+                            st.success("Corrected NDA deleted!")
+                            st.rerun()
+                else:
+                    st.info("No corrected NDA file")
+    else:
+        st.info("No projects in database. Upload some files to get started!")
         if st.button("🗑️ Clear Results", key="clear_results"):
             st.session_state.analysis_results = None
             st.session_state.ai_review_data = None
@@ -2968,8 +3285,6 @@ def main():
     elif st.session_state.current_page == "edit_playbook":
         from playbook_manager import display_editable_playbook
         display_editable_playbook()
-    elif st.session_state.current_page == "database":
-        display_database_page()
 
 if __name__ == "__main__":
     main()
