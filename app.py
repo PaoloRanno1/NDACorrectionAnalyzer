@@ -2460,7 +2460,8 @@ def display_edit_mode_interface():
                             'output_prefix': output_prefix,
                             'changes_count': changes_count,
                             'replacements_count': replacements_count,
-                            'cleaned_findings': cleaned_findings
+                            'cleaned_findings': cleaned_findings,
+                            'original_findings': {f.id: f for f in selected_findings}
                         }
                         
                     except Exception as e:
@@ -2502,7 +2503,7 @@ def display_edit_mode_interface():
             st.subheader("🔍 AI-Processed Findings Details")
             
             # Get the original findings for comparison
-            original_findings = {f.id: f for f in flatten_findings}
+            original_findings = docs['original_findings']
             
             # Organize cleaned findings by priority using original findings
             cleaned_by_priority = {}
