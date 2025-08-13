@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-import re
+import regex as re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -156,24 +156,8 @@ def _call_gemini_json_prompt(prompt: str, model: str = "gemini-2.5-flash") -> Di
     text = resp.text.strip()
 
     # Extract the outermost JSON object, forgiving leading/trailing noise.
-    # Use a simpler approach to find JSON-like content
-    start_idx = text.find('{')
-    if start_idx == -1:
-        json_str = text
-    else:
-        # Find the matching closing brace
-        brace_count = 0
-        end_idx = start_idx
-        for i, char in enumerate(text[start_idx:], start_idx):
-            if char == '{':
-                brace_count += 1
-            elif char == '}':
-                brace_count -= 1
-                if brace_count == 0:
-                    end_idx = i
-                    break
-        json_str = text[start_idx:end_idx+1]
-    
+    m = re.search(r"\{(?:[^{}]|(?R))*\}", text, flags=re.DOTALL)
+    json_str = m.group(0) if m else text
     return json.loads(json_str)
 
 
