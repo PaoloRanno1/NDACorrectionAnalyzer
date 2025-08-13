@@ -2502,12 +2502,8 @@ def display_edit_mode_interface():
             st.markdown("---")
             st.subheader("🔍 AI-Processed Findings Details")
             
-            # Debug information
-            st.write(f"Debug: Found {len(docs['cleaned_findings'])} cleaned findings")
-            
             # Get the original findings for comparison
             original_findings = docs['original_findings']
-            st.write(f"Debug: Found {len(original_findings)} original findings")
             
             # Organize cleaned findings by priority using original findings
             cleaned_by_priority = {}
@@ -2519,17 +2515,14 @@ def display_edit_mode_interface():
                         cleaned_by_priority[priority] = []
                     cleaned_by_priority[priority].append((cleaned_finding, original_finding))
             
-            # Debug cleaned_by_priority
-            st.write(f"Debug: Cleaned by priority structure: {list(cleaned_by_priority.keys())}")
-            
             # Display findings by priority
-            for priority_name in ["High", "Medium", "Low"]:
+            for priority_name in ["High Priority", "Medium Priority", "Low Priority"]:
                 if priority_name in cleaned_by_priority:
                     priority_findings = cleaned_by_priority[priority_name]
-                    priority_color = "🔴" if priority_name == "High" else "🟡" if priority_name == "Medium" else "🟢"
-                    st.write(f"Debug: Processing {priority_name} with {len(priority_findings)} findings")
+                    priority_color = "🔴" if priority_name == "High Priority" else "🟡" if priority_name == "Medium Priority" else "🟢"
+                    display_name = priority_name.replace(" Priority", "")
                     
-                    with st.expander(f"{priority_color} {priority_name} Priority ({len(priority_findings)} findings)", expanded=(priority_name == "High")):
+                    with st.expander(f"{priority_color} {display_name} Priority ({len(priority_findings)} findings)", expanded=(priority_name == "High Priority")):
                         for i, (cleaned_finding, original_finding) in enumerate(priority_findings, 1):
                             st.markdown(f"**{i}. {original_finding.issue}**")
                             
