@@ -2531,20 +2531,20 @@ def display_edit_mode_interface():
                             with col1:
                                 st.markdown("**Original Citation:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{original_finding.citation}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #404040; color: #ffffff; padding: 10px; border-radius: 5px; margin: 5px 0; border: 1px solid #666;">{original_finding.citation}</div>', unsafe_allow_html=True)
                                 
                                 st.markdown("**AI-Cleaned Citation:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0;">{cleaned_finding.citation_clean}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #2d5016; color: #ffffff; padding: 10px; border-radius: 5px; margin: 5px 0; border: 1px solid #4a7c19;">{cleaned_finding.citation_clean}</div>', unsafe_allow_html=True)
                             
                             with col2:
                                 st.markdown("**Original Suggested Replacement:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{original_finding.suggested_replacement}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #404040; color: #ffffff; padding: 10px; border-radius: 5px; margin: 5px 0; border: 1px solid #666;">{original_finding.suggested_replacement}</div>', unsafe_allow_html=True)
                                 
                                 st.markdown("**AI-Cleaned Replacement:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0;">{cleaned_finding.suggested_replacement_clean}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #2d5016; color: #ffffff; padding: 10px; border-radius: 5px; margin: 5px 0; border: 1px solid #4a7c19;">{cleaned_finding.suggested_replacement_clean}</div>', unsafe_allow_html=True)
                             
                             if i < len(priority_findings):
                                 st.markdown("---")
