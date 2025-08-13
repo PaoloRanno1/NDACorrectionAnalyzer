@@ -1122,13 +1122,28 @@ HIGH PRIORITY:
         
         
         
-        # Clear results
-        if st.button("🗑️ Clear Results", key="clear_single_results"):
-            if hasattr(st.session_state, 'single_nda_results'):
-                delattr(st.session_state, 'single_nda_results')
-            if hasattr(st.session_state, 'single_nda_raw'):
-                delattr(st.session_state, 'single_nda_raw')
-            st.rerun()
+        # Action buttons
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            if st.button("📝 Edit Selected Issues", key="edit_selected_issues", use_container_width=True):
+                st.session_state.show_edit_mode = True
+                st.session_state.original_docx_file = uploaded_file  # Store the original file
+                st.rerun()
+        with col2:
+            if st.button("🗑️ Clear Results", key="clear_single_results", use_container_width=True):
+                if hasattr(st.session_state, 'single_nda_results'):
+                    delattr(st.session_state, 'single_nda_results')
+                if hasattr(st.session_state, 'single_nda_raw_response'):
+                    delattr(st.session_state, 'single_nda_raw_response')
+                st.session_state.show_edit_mode = False
+                st.rerun()
+        with col3:
+            pass  # Empty space
+    
+    # Show edit mode interface if activated
+    if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
+        st.markdown("---")
+        display_edit_mode_interface()
 
 def display_homepage():
     """Display the homepage with functionality descriptions"""
@@ -2056,14 +2071,21 @@ def display_testing_page(model, temperature, analysis_mode):
         
         st.markdown("---")
         
-        # Clear results option
-        col1, col2, col3 = st.columns([2, 1, 1])
+        # Clear results and post-processing options
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col1:
+            if st.button("📝 Edit Selected Issues", key="edit_selected_issues", use_container_width=True):
+                st.session_state.show_edit_mode = True
+                st.rerun()
         with col2:
-            if st.button("🗑️ Clear Results", key="clear_results", use_container_width=True):
+            if st.button("🔄 Clear Results", key="clear_results", use_container_width=True):
                 st.session_state.analysis_results = None
                 st.session_state.ai_review_data = None
                 st.session_state.hr_edits_data = None
+                st.session_state.show_edit_mode = False
                 st.rerun()
+        with col3:
+            pass  # Empty space
 
 def display_testing_results_section():
     """Display the testing results view section"""
@@ -2162,6 +2184,312 @@ def display_testing_results_section():
             display_detailed_comparison(comparison_analysis)
         else:
             st.error("Failed to load result data.")
+
+def display_edit_mode_interface():
+    """Display the post-review editing interface for selecting and processing findings"""
+    st.title("📝 Edit Selected Issues")
+    st.markdown("Select the issues you want to accept and add comments if needed. The system will process your selections and generate edited documents.")
+    
+    compliance_report = st.session_state.single_nda_results
+    
+    # Import the tracking changes tools
+    try:
+        import Tracked_changes_tools_clean as tr_tools
+    except ImportError:
+        st.error("Tracked changes tools not available. Please ensure Tracked_changes_tools_clean.py is in the project directory.")
+        return
+    
+    # Flatten findings
+    try:
+        flatten_findings = tr_tools.flatten_findings(compliance_report)
+    except Exception as e:
+        st.error(f"Error processing findings: {str(e)}")
+        return
+    
+    if not flatten_findings:
+        st.warning("No findings to process.")
+        return
+    
+    st.subheader("📋 Available Issues")
+    st.markdown(f"Found **{len(flatten_findings)}** issues across all priority levels.")
+    
+    # Initialize session state for selections and comments
+    if 'selected_findings' not in st.session_state:
+        st.session_state.selected_findings = set()
+    if 'finding_comments' not in st.session_state:
+        st.session_state.finding_comments = {}
+    
+    # Display findings by priority
+    high_findings = [f for f in flatten_findings if f.priority == "High Priority"]
+    medium_findings = [f for f in flatten_findings if f.priority == "Medium Priority"]
+    low_findings = [f for f in flatten_findings if f.priority == "Low Priority"]
+    
+    # High Priority
+    if high_findings:
+        st.subheader("🔴 High Priority Issues (Mandatory)")
+        for finding in high_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
+                    comment = st.text_area(
+                        "Additional Comments/Instructions:",
+                        value=st.session_state.finding_comments.get(finding.id, ""),
+                        key=f"comment_{finding.id}",
+                        help="Add any specific instructions or comments for this finding"
+                    )
+                    st.session_state.finding_comments[finding.id] = comment
+    
+    # Medium Priority
+    if medium_findings:
+        st.subheader("🟡 Medium Priority Issues (Preferential)")
+        for finding in medium_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
+                    comment = st.text_area(
+                        "Additional Comments/Instructions:",
+                        value=st.session_state.finding_comments.get(finding.id, ""),
+                        key=f"comment_{finding.id}",
+                        help="Add any specific instructions or comments for this finding"
+                    )
+                    st.session_state.finding_comments[finding.id] = comment
+    
+    # Low Priority
+    if low_findings:
+        st.subheader("🟢 Low Priority Issues (Optional)")
+        for finding in low_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
+                    comment = st.text_area(
+                        "Additional Comments/Instructions:",
+                        value=st.session_state.finding_comments.get(finding.id, ""),
+                        key=f"comment_{finding.id}",
+                        help="Add any specific instructions or comments for this finding"
+                    )
+                    st.session_state.finding_comments[finding.id] = comment
+    
+    st.markdown("---")
+    
+    # Selection summary
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.markdown(f"**Selected Issues:** {len(st.session_state.selected_findings)} out of {len(flatten_findings)}")
+        if st.session_state.selected_findings:
+            st.markdown("Selected IDs: " + ", ".join(map(str, sorted(st.session_state.selected_findings))))
+    
+    with col2:
+        if st.button("🔄 Clear Selections", use_container_width=True):
+            st.session_state.selected_findings.clear()
+            st.session_state.finding_comments.clear()
+            st.rerun()
+    
+    with col3:
+        if st.button("⬅️ Back to Review", use_container_width=True):
+            st.session_state.show_edit_mode = False
+            st.rerun()
+    
+    # Process button and file requirements
+    if st.session_state.selected_findings:
+        st.markdown("---")
+        st.subheader("📄 Generate Edited Documents")
+        
+        # Check if we have the original DOCX file
+        original_file = st.session_state.get('original_docx_file')
+        
+        if not original_file or not original_file.name.endswith('.docx'):
+            st.warning("⚠️ Document editing requires a DOCX file. Please upload the original NDA as a DOCX file to use this feature.")
+            
+            # Allow user to upload DOCX version
+            st.markdown("**Upload DOCX Version:**")
+            docx_file = st.file_uploader(
+                "Upload the same NDA as a DOCX file:",
+                type=['docx'],
+                help="Upload the same NDA document in DOCX format to enable document editing",
+                key="docx_for_editing"
+            )
+            
+            if docx_file:
+                st.session_state.original_docx_file = docx_file
+                st.success("✅ DOCX file uploaded! You can now generate edited documents.")
+                original_file = docx_file
+        
+        if original_file and original_file.name.endswith('.docx'):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                output_prefix = st.text_input(
+                    "Output File Prefix:",
+                    value="AI_Edited_NDA",
+                    help="Prefix for the generated files"
+                )
+            
+            with col2:
+                model_choice = st.selectbox(
+                    "LLM Model for Cleaning:",
+                    ["gemini-2.5-pro", "gemini-2.5-flash"],
+                    help="Choose the model for cleaning the findings"
+                )
+            
+            if st.button("🚀 Generate Edited Documents", use_container_width=True):
+                with st.spinner("Processing selected findings and generating documents..."):
+                    try:
+                        # Apply edit specification
+                        edit_spec = {
+                            "accept": list(st.session_state.selected_findings)
+                        }
+                        
+                        selected_findings = tr_tools.apply_edit_spec(flatten_findings, edit_spec)
+                        
+                        if not selected_findings:
+                            st.error("No valid findings selected for processing.")
+                            return
+                        
+                        # Save DOCX file temporarily
+                        import tempfile
+                        import os
+                        
+                        with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                            temp_file.write(original_file.getvalue())
+                            temp_docx_path = temp_file.name
+                        
+                        # Extract text for LLM processing
+                        nda_text = tr_tools.extract_text(temp_docx_path)
+                        
+                        # Prepare guidance from comments
+                        guidance = {}
+                        for finding_id in st.session_state.selected_findings:
+                            comment = st.session_state.finding_comments.get(finding_id, "").strip()
+                            if comment:
+                                guidance[finding_id] = comment
+                        
+                        # Clean findings with LLM
+                        st.info("🤖 Processing findings with AI...")
+                        cleaned_findings = tr_tools.clean_findings_with_llm(
+                            nda_text=nda_text,
+                            findings=selected_findings,
+                            additional_info_by_id=guidance,
+                            model=model_choice
+                        )
+                        
+                        # Generate output files
+                        from datetime import datetime
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        tracked_changes_file = f"{output_prefix}_TrackedChanges_{timestamp}.docx"
+                        clean_edit_file = f"{output_prefix}_CleanEdit_{timestamp}.docx"
+                        
+                        # Apply tracked changes
+                        st.info("📝 Generating tracked changes document...")
+                        changes_count = tr_tools.apply_cleaned_findings_to_docx(
+                            input_docx=temp_docx_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=tracked_changes_file
+                        )
+                        
+                        # Apply clean replacements
+                        st.info("✏️ Generating clean edited document...")
+                        replacements_count = tr_tools.replace_cleaned_findings_in_docx(
+                            input_docx=temp_docx_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=clean_edit_file
+                        )
+                        
+                        # Clean up temp file
+                        os.unlink(temp_docx_path)
+                        
+                        # Success message and download buttons
+                        st.success(f"✅ Documents generated successfully!")
+                        st.info(f"Applied {changes_count} tracked changes and {replacements_count} direct replacements")
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            with open(tracked_changes_file, 'rb') as f:
+                                st.download_button(
+                                    label="📄 Download Tracked Changes DOCX",
+                                    data=f.read(),
+                                    file_name=tracked_changes_file,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )
+                        
+                        with col2:
+                            with open(clean_edit_file, 'rb') as f:
+                                st.download_button(
+                                    label="📄 Download Clean Edited DOCX",
+                                    data=f.read(),
+                                    file_name=clean_edit_file,
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )
+                        
+                        # Clean up generated files after download
+                        if os.path.exists(tracked_changes_file):
+                            os.unlink(tracked_changes_file)
+                        if os.path.exists(clean_edit_file):
+                            os.unlink(clean_edit_file)
+                        
+                    except Exception as e:
+                        st.error(f"Error generating documents: {str(e)}")
+                        import traceback
+                        with st.expander("Error Details"):
+                            st.code(traceback.format_exc())
 
 def display_database_section():
     """Display the database management section"""
