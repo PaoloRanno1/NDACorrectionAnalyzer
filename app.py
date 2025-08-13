@@ -1096,31 +1096,6 @@ HIGH PRIORITY:
         
         st.markdown("---")
         
-        # JSON Data Viewer
-        st.subheader("📋 JSON Data Viewer")
-        
-        tab1, tab2 = st.tabs(["📊 Analysis Results", "🔍 Raw Response"])
-        
-        with tab1:
-            st.subheader("Analysis Results JSON")
-            if compliance_report:
-                st.json(compliance_report)
-            else:
-                st.info("No analysis results available")
-        
-        with tab2:
-            st.subheader("Raw AI Response")
-            if hasattr(st.session_state, 'single_nda_raw_response') and st.session_state.single_nda_raw_response:
-                st.text_area(
-                    "Raw Response from AI Model:",
-                    st.session_state.single_nda_raw_response,
-                    height=400,
-                    help="This is the raw, unprocessed response from the AI model before JSON parsing"
-                )
-            else:
-                st.info("No raw response available")
-        
-        
         
         # Action buttons
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -2193,10 +2168,16 @@ def display_edit_mode_interface():
     compliance_report = st.session_state.single_nda_results
     
     # Import the tracking changes tools
+    show_demo_mode = False
     try:
         import Tracked_changes_tools_clean as tr_tools
-    except ImportError:
-        st.error("Tracked changes tools not available. Please ensure Tracked_changes_tools_clean.py is in the project directory.")
+        if not hasattr(tr_tools, 'DOCX_AVAILABLE') or not tr_tools.DOCX_AVAILABLE:
+            st.warning("⚠️ Document editing requires python-docx library which is not currently available.")
+            st.info("The edit mode interface is shown for demonstration, but document generation is disabled until dependencies are resolved.")
+            # Continue to show the interface but disable document generation
+            show_demo_mode = True
+    except ImportError as e:
+        st.error(f"Tracked changes tools not available: {str(e)}")
         return
     
     # Flatten findings
@@ -2389,7 +2370,12 @@ def display_edit_mode_interface():
                     help="Choose the model for cleaning the findings"
                 )
             
-            if st.button("🚀 Generate Edited Documents", use_container_width=True):
+            generate_button = st.button("🚀 Generate Edited Documents", use_container_width=True, disabled=show_demo_mode)
+            
+            if show_demo_mode:
+                st.info("📋 Demo Mode: Document generation is disabled until python-docx library is available.")
+            
+            if generate_button and not show_demo_mode:
                 with st.spinner("Processing selected findings and generating documents..."):
                     try:
                         # Apply edit specification

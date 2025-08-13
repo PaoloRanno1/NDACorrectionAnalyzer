@@ -2,17 +2,26 @@ from __future__ import annotations
 
 import json
 import os
-import regex as re
+import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from google import genai
-from docx import Document
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
-from docx.table import Table
-from docx.text.paragraph import Paragraph
+try:
+    from docx import Document
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+    # Create dummy classes for type hints
+    class Document: pass
+    class OxmlElement: pass
+    class Table: pass
+    class Paragraph: pass
 from copy import deepcopy
 # =============================
 # Data Models
@@ -222,6 +231,8 @@ def clean_findings_with_llm(
 
 def extract_text(docx_path: str) -> str:
     """Extracts all paragraph text from a DOCX file, joined by newlines."""
+    if not DOCX_AVAILABLE:
+        raise ImportError("python-docx library is not available. Cannot process DOCX files.")
     doc = Document(docx_path)
     return "\n".join(p.text for p in doc.paragraphs)
 

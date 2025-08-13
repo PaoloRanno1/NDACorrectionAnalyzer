@@ -158,3 +158,14 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Enhanced Navigation**: Restored navigation tabs with Database as a permanent feature
 - **File Management**: Complete CRUD operations for database files with download and delete functionality
 - **Smart Project Detection**: Automatic detection when both clean and corrected versions become available for testing
+
+### Post-Review Editing Feature (January 2025)
+- **Edit Mode Interface**: Added "Edit Selected Issues" button after AI analysis completion in NDA Review tab
+- **Issue Selection System**: Comprehensive checkbox-based selection interface organized by priority levels (High, Medium, Low)
+- **Comment System**: Added text area inputs for each finding to allow user comments and additional instructions
+- **LLM Integration**: Integrated tracked changes tools for AI-powered finding cleanup and text processing
+- **Document Generation**: Dual output system generating both tracked changes DOCX and clean edited DOCX files
+- **DOCX Requirement**: System requires original NDA in DOCX format for document editing functionality
+- **Demo Mode**: Graceful fallback when python-docx dependencies are unavailable, showing interface in demo mode
+- **User Workflow**: Complete post-review editing workflow: AI analysis → issue selection → comment addition → LLM processing → document generation
+- **UI Cleanup**: Removed JSON Data Viewer section from NDA Review results as requested by user
