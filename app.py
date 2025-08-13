@@ -2163,7 +2163,7 @@ def display_testing_results_section():
 def display_edit_mode_interface():
     """Display the post-review editing interface for selecting and processing findings"""
     st.title("📝 Edit Selected Issues")
-    st.markdown("Select the issues you want to accept and add comments if needed. The system will process your selections and generate edited documents.")
+    st.markdown("Select the issues you want to accept and add comments if needed to guide the edit. The system will process your selections and generate edited documents.")
     
     compliance_report = st.session_state.single_nda_results
     
@@ -2431,7 +2431,7 @@ def display_edit_mode_interface():
                         )
                         
                         # Apply clean replacements
-                        st.info("✏️ Generating clean edited document...")
+                        #st.info("✏️ Generating clean edited document...")
                         replacements_count = tr_tools.replace_cleaned_findings_in_docx(
                             input_docx=temp_docx_path,
                             cleaned_findings=cleaned_findings,
@@ -2476,7 +2476,7 @@ def display_edit_mode_interface():
             
             # Success message and download buttons
             st.success(f"✅ Documents generated successfully!")
-            st.info(f"Applied {docs['changes_count']} tracked changes and {docs['replacements_count']} direct replacements")
+            #st.info(f"Applied {docs['changes_count']} tracked changes and {docs['replacements_count']} direct replacements")
             
             col1, col2 = st.columns(2)
             
