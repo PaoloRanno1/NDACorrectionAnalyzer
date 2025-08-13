@@ -2441,7 +2441,7 @@ def display_edit_mode_interface():
                         # Clean up temp file
                         os.unlink(temp_docx_path)
                         
-                        # Read file contents and store them for download
+                        # Read file contents and store them in session state for download
                         with open(tracked_changes_file, 'rb') as f:
                             tracked_changes_data = f.read()
                         with open(clean_edit_file, 'rb') as f:
@@ -2453,35 +2453,53 @@ def display_edit_mode_interface():
                         if os.path.exists(clean_edit_file):
                             os.unlink(clean_edit_file)
                         
-                        # Success message and download buttons
-                        st.success(f"✅ Documents generated successfully!")
-                        st.info(f"Applied {changes_count} tracked changes and {replacements_count} direct replacements")
-                        
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.download_button(
-                                label="📄 Download Tracked Changes DOCX",
-                                data=tracked_changes_data,
-                                file_name=f"{output_prefix}_tracked_changes.docx",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key="download_tracked_changes"
-                            )
-                        
-                        with col2:
-                            st.download_button(
-                                label="📄 Download Clean Edited DOCX",
-                                data=clean_edit_data,
-                                file_name=f"{output_prefix}_clean_edit.docx",
-                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                key="download_clean_edit"
-                            )
+                        # Store in session state to persist across reruns
+                        st.session_state.generated_docs = {
+                            'tracked_changes_data': tracked_changes_data,
+                            'clean_edit_data': clean_edit_data,
+                            'output_prefix': output_prefix,
+                            'changes_count': changes_count,
+                            'replacements_count': replacements_count
+                        }
                         
                     except Exception as e:
                         st.error(f"Error generating documents: {str(e)}")
                         import traceback
                         with st.expander("Error Details"):
                             st.code(traceback.format_exc())
+
+        # Display download buttons if documents are generated
+        if hasattr(st.session_state, 'generated_docs') and st.session_state.generated_docs:
+            docs = st.session_state.generated_docs
+            
+            # Success message and download buttons
+            st.success(f"✅ Documents generated successfully!")
+            st.info(f"Applied {docs['changes_count']} tracked changes and {docs['replacements_count']} direct replacements")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.download_button(
+                    label="📄 Download Tracked Changes DOCX",
+                    data=docs['tracked_changes_data'],
+                    file_name=f"{docs['output_prefix']}_tracked_changes.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_tracked_changes"
+                )
+            
+            with col2:
+                st.download_button(
+                    label="📄 Download Clean Edited DOCX",
+                    data=docs['clean_edit_data'],
+                    file_name=f"{docs['output_prefix']}_clean_edit.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_clean_edit"
+                )
+            
+            # Add button to clear generated documents and return to edit mode
+            if st.button("🔄 Generate New Documents", key="clear_generated_docs"):
+                del st.session_state.generated_docs
+                st.rerun()
 
 def display_database_section():
     """Display the database management section"""
