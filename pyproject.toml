@@ -16,4 +16,6 @@ dependencies = [
     "streamlit>=1.46.1",
     "google-genai>=1.25.0",
     "kaleido>=1.0.0",
+    "python-docx>=1.2.0",
+    "sift-stack-py>=0.8.3",
 ]
