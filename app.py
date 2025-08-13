@@ -2441,6 +2441,18 @@ def display_edit_mode_interface():
                         # Clean up temp file
                         os.unlink(temp_docx_path)
                         
+                        # Read file contents and store them for download
+                        with open(tracked_changes_file, 'rb') as f:
+                            tracked_changes_data = f.read()
+                        with open(clean_edit_file, 'rb') as f:
+                            clean_edit_data = f.read()
+                        
+                        # Clean up generated files immediately after reading
+                        if os.path.exists(tracked_changes_file):
+                            os.unlink(tracked_changes_file)
+                        if os.path.exists(clean_edit_file):
+                            os.unlink(clean_edit_file)
+                        
                         # Success message and download buttons
                         st.success(f"✅ Documents generated successfully!")
                         st.info(f"Applied {changes_count} tracked changes and {replacements_count} direct replacements")
@@ -2448,28 +2460,22 @@ def display_edit_mode_interface():
                         col1, col2 = st.columns(2)
                         
                         with col1:
-                            with open(tracked_changes_file, 'rb') as f:
-                                st.download_button(
-                                    label="📄 Download Tracked Changes DOCX",
-                                    data=f.read(),
-                                    file_name=tracked_changes_file,
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                )
+                            st.download_button(
+                                label="📄 Download Tracked Changes DOCX",
+                                data=tracked_changes_data,
+                                file_name=f"{prefix}_tracked_changes.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key="download_tracked_changes"
+                            )
                         
                         with col2:
-                            with open(clean_edit_file, 'rb') as f:
-                                st.download_button(
-                                    label="📄 Download Clean Edited DOCX",
-                                    data=f.read(),
-                                    file_name=clean_edit_file,
-                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                )
-                        
-                        # Clean up generated files after download
-                        if os.path.exists(tracked_changes_file):
-                            os.unlink(tracked_changes_file)
-                        if os.path.exists(clean_edit_file):
-                            os.unlink(clean_edit_file)
+                            st.download_button(
+                                label="📄 Download Clean Edited DOCX",
+                                data=clean_edit_data,
+                                file_name=f"{prefix}_clean_edit.docx",
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key="download_clean_edit"
+                            )
                         
                     except Exception as e:
                         st.error(f"Error generating documents: {str(e)}")
