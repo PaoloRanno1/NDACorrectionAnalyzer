@@ -2459,7 +2459,8 @@ def display_edit_mode_interface():
                             'clean_edit_data': clean_edit_data,
                             'output_prefix': output_prefix,
                             'changes_count': changes_count,
-                            'replacements_count': replacements_count
+                            'replacements_count': replacements_count,
+                            'cleaned_findings': cleaned_findings
                         }
                         
                     except Exception as e:
@@ -2496,7 +2497,50 @@ def display_edit_mode_interface():
                     key="download_clean_edit"
                 )
             
+            # Show cleaned findings details
+            st.markdown("---")
+            st.subheader("🔍 AI-Processed Findings Details")
+            
+            # Organize cleaned findings by priority
+            high_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "High"]
+            medium_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "Medium"]
+            low_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "Low"]
+            
+            for priority_name, priority_findings in [("High Priority", high_priority), ("Medium Priority", medium_priority), ("Low Priority", low_priority)]:
+                if priority_findings:
+                    priority_color = "🔴" if priority_name == "High Priority" else "🟡" if priority_name == "Medium Priority" else "🟢"
+                    
+                    with st.expander(f"{priority_color} {priority_name} ({len(priority_findings)} findings)", expanded=(priority_name == "High Priority")):
+                        for i, cleaned_finding in enumerate(priority_findings, 1):
+                            finding = cleaned_finding.finding
+                            
+                            st.markdown(f"**{i}. {finding.issue}**")
+                            
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                st.markdown("**Original Citation:**")
+                                with st.container():
+                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{finding.citation}</div>', unsafe_allow_html=True)
+                                
+                                st.markdown("**AI-Cleaned Citation:**")
+                                with st.container():
+                                    st.markdown(f'<div style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0;">{cleaned_finding.citation_clean}</div>', unsafe_allow_html=True)
+                            
+                            with col2:
+                                st.markdown("**Original Suggested Replacement:**")
+                                with st.container():
+                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{finding.suggested_replacement}</div>', unsafe_allow_html=True)
+                                
+                                st.markdown("**AI-Cleaned Replacement:**")
+                                with st.container():
+                                    st.markdown(f'<div style="background-color: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0;">{cleaned_finding.suggested_replacement_clean}</div>', unsafe_allow_html=True)
+                            
+                            if i < len(priority_findings):
+                                st.markdown("---")
+            
             # Add button to clear generated documents and return to edit mode
+            st.markdown("---")
             if st.button("🔄 Generate New Documents", key="clear_generated_docs"):
                 del st.session_state.generated_docs
                 st.rerun()
