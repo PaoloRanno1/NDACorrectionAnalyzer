@@ -17,11 +17,12 @@ try:
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
-    # Create dummy classes for type hints
+    # Create dummy classes and functions for type hints
     class Document: pass
     class OxmlElement: pass
     class Table: pass
     class Paragraph: pass
+    def qn(name): return name  # Dummy function
 from copy import deepcopy
 # =============================
 # Data Models
@@ -324,8 +325,10 @@ def apply_edit_spec(items: List[RawFinding], edit_spec: Dict[str, Any]) -> List[
 # =============================
 
 
-def _new_ins(author: str, dt_iso: str, text: str, change_id: str = "1") -> OxmlElement:
+def _new_ins(author: str, dt_iso: str, text: str, change_id: str = "1"):
     """Creates an insertion (w:ins) XML element for tracked changes."""
+    if not DOCX_AVAILABLE:
+        return None
     ins = OxmlElement("w:ins")
     ins.set(qn("w:author"), author)
     ins.set(qn("w:date"), dt_iso)
@@ -340,8 +343,10 @@ def _new_ins(author: str, dt_iso: str, text: str, change_id: str = "1") -> OxmlE
     return ins
 
 
-def _new_del(author: str, dt_iso: str, text: str, change_id: str = "1") -> OxmlElement:
+def _new_del(author: str, dt_iso: str, text: str, change_id: str = "1"):
     """Creates a deletion (w:del) XML element for tracked changes."""
+    if not DOCX_AVAILABLE:
+        return None
     wdel = OxmlElement("w:del")
     wdel.set(qn("w:author"), author)
     wdel.set(qn("w:date"), dt_iso)
@@ -359,10 +364,17 @@ def _new_del(author: str, dt_iso: str, text: str, change_id: str = "1") -> OxmlE
 # Character Map Utilities
 # =============================
 
-TAB_TAG = qn("w:tab")
-BR_TAGS = {qn("w:br"), qn("w:cr")}
-T_TEXT = qn("w:t")
-RPR_TAG = qn("w:rPr")
+# Only define these constants if DOCX is available
+if DOCX_AVAILABLE:
+    TAB_TAG = qn("w:tab")
+    BR_TAGS = {qn("w:br"), qn("w:cr")}
+    T_TEXT = qn("w:t")
+    RPR_TAG = qn("w:rPr")
+else:
+    TAB_TAG = "w:tab"
+    BR_TAGS = {"w:br", "w:cr"}
+    T_TEXT = "w:t"
+    RPR_TAG = "w:rPr"
 
 # Whitespace characters for boundary logic
 _WS_CHARS = {" ", "\t", "\xa0", "\u2009", "\u200a", "\u200b", "\u202f"}  # space, tab, NBSP, thins, ZWSP
@@ -801,13 +813,7 @@ def _get(obj: Any, key: str, default: str = "") -> str:
 # Character / XML Utilities
 # =============================
 
-TAB_TAG = qn("w:tab")
-BR_TAGS = {qn("w:br"), qn("w:cr")}
-T_TEXT = qn("w:t")
-RPR_TAG = qn("w:rPr")
-
-# Whitespace characters we treat as a visible space
-_WS_CHARS = {" ", "\t", "\xa0", "\u2009", "\u200a", "\u200b", "\u202f"}  # space, tab, NBSP, thins, ZWSP
+# Constants are already defined above
 
 def _is_space_char(ch: str) -> bool:
     return ch in _WS_CHARS
