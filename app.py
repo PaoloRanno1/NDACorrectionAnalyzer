@@ -1100,7 +1100,7 @@ HIGH PRIORITY:
         # Action buttons
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
-            if st.button("📝 Edit Selected Issues", key="edit_selected_issues", use_container_width=True):
+            if st.button("📄 Tracked Changes Document Generation", key="edit_selected_issues", use_container_width=True):
                 st.session_state.show_edit_mode = True
                 st.session_state.original_docx_file = uploaded_file  # Store the original file
                 st.rerun()
@@ -2049,7 +2049,7 @@ def display_testing_page(model, temperature, analysis_mode):
         # Clear results and post-processing options
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
-            if st.button("📝 Edit Selected Issues", key="edit_selected_issues", use_container_width=True):
+            if st.button("📄 Tracked Changes Document Generation", key="edit_selected_issues_testing", use_container_width=True):
                 st.session_state.show_edit_mode = True
                 st.rerun()
         with col2:
@@ -2162,7 +2162,7 @@ def display_testing_results_section():
 
 def display_edit_mode_interface():
     """Display the post-review editing interface for selecting and processing findings"""
-    st.title("📝 Edit Selected Issues")
+    st.title("📄 Tracked Changes Document Generation")
     st.markdown("Select the issues you want to accept and add comments if needed to guide the edit. The system will process your selections and generate edited documents.")
     
     compliance_report = st.session_state.single_nda_results
