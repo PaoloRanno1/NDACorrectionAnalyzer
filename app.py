@@ -2501,27 +2501,35 @@ def display_edit_mode_interface():
             st.markdown("---")
             st.subheader("🔍 AI-Processed Findings Details")
             
-            # Organize cleaned findings by priority
-            high_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "High"]
-            medium_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "Medium"]
-            low_priority = [f for f in docs['cleaned_findings'] if f.finding.priority == "Low"]
+            # Get the original findings for comparison
+            original_findings = {f.id: f for f in flatten_findings}
             
-            for priority_name, priority_findings in [("High Priority", high_priority), ("Medium Priority", medium_priority), ("Low Priority", low_priority)]:
-                if priority_findings:
-                    priority_color = "🔴" if priority_name == "High Priority" else "🟡" if priority_name == "Medium Priority" else "🟢"
+            # Organize cleaned findings by priority using original findings
+            cleaned_by_priority = {}
+            for cleaned_finding in docs['cleaned_findings']:
+                original_finding = original_findings.get(cleaned_finding.id)
+                if original_finding:
+                    priority = original_finding.priority
+                    if priority not in cleaned_by_priority:
+                        cleaned_by_priority[priority] = []
+                    cleaned_by_priority[priority].append((cleaned_finding, original_finding))
+            
+            # Display findings by priority
+            for priority_name in ["High", "Medium", "Low"]:
+                if priority_name in cleaned_by_priority:
+                    priority_findings = cleaned_by_priority[priority_name]
+                    priority_color = "🔴" if priority_name == "High" else "🟡" if priority_name == "Medium" else "🟢"
                     
-                    with st.expander(f"{priority_color} {priority_name} ({len(priority_findings)} findings)", expanded=(priority_name == "High Priority")):
-                        for i, cleaned_finding in enumerate(priority_findings, 1):
-                            finding = cleaned_finding.finding
-                            
-                            st.markdown(f"**{i}. {finding.issue}**")
+                    with st.expander(f"{priority_color} {priority_name} Priority ({len(priority_findings)} findings)", expanded=(priority_name == "High")):
+                        for i, (cleaned_finding, original_finding) in enumerate(priority_findings, 1):
+                            st.markdown(f"**{i}. {original_finding.issue}**")
                             
                             col1, col2 = st.columns(2)
                             
                             with col1:
                                 st.markdown("**Original Citation:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{finding.citation}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{original_finding.citation}</div>', unsafe_allow_html=True)
                                 
                                 st.markdown("**AI-Cleaned Citation:**")
                                 with st.container():
@@ -2530,7 +2538,7 @@ def display_edit_mode_interface():
                             with col2:
                                 st.markdown("**Original Suggested Replacement:**")
                                 with st.container():
-                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{finding.suggested_replacement}</div>', unsafe_allow_html=True)
+                                    st.markdown(f'<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;">{original_finding.suggested_replacement}</div>', unsafe_allow_html=True)
                                 
                                 st.markdown("**AI-Cleaned Replacement:**")
                                 with st.container():
