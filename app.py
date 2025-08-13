@@ -2463,7 +2463,7 @@ def display_edit_mode_interface():
                             st.download_button(
                                 label="📄 Download Tracked Changes DOCX",
                                 data=tracked_changes_data,
-                                file_name=f"{prefix}_tracked_changes.docx",
+                                file_name=f"{output_prefix}_tracked_changes.docx",
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key="download_tracked_changes"
                             )
@@ -2472,7 +2472,7 @@ def display_edit_mode_interface():
                             st.download_button(
                                 label="📄 Download Clean Edited DOCX",
                                 data=clean_edit_data,
-                                file_name=f"{prefix}_clean_edit.docx",
+                                file_name=f"{output_prefix}_clean_edit.docx",
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 key="download_clean_edit"
                             )
