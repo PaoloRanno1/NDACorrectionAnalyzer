@@ -909,8 +909,8 @@ def display_single_nda_review(model, temperature):
                 import tempfile
                 import os
                 
-                if file_extension == 'docx':
-                    # For DOCX files, write as binary
+                if file_extension in ['docx', 'pdf']:
+                    # For binary files (DOCX, PDF), write as binary
                     with tempfile.NamedTemporaryFile(mode='wb', suffix=f'.{file_extension}', delete=False) as temp_file:
                         temp_file.write(file_content)
                         temp_file_path = temp_file.name
