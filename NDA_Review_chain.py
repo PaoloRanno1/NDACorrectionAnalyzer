@@ -112,6 +112,7 @@ Your task is to act as Strada Legal AI. You will perform a compliance review of 
 
 ## 4. OUTPUT FORMAT
 You MUST respond with ONLY a valid JSON object in this exact format. Within each list (High Priority, Medium Priority, Low Priority), entries must be sorted in ascending order by the section field (e.g., "1)", "2)", "3)", ...). If a section is "N/A", list it after all numbered sections.
+Regarding the suggested_replacement field, always write it in the language of the NDA.
 
 {{
   "High Priority": [
@@ -120,7 +121,7 @@ You MUST respond with ONLY a valid JSON object in this exact format. Within each
       "citation": "Exact 10-30 word excerpt that is the direct source of the issue or 'Not Found'",
       "section": "[section of the NDA, usually a number like '1)', '2)', etc.] or 'N/A'",
       "problem": "Why it violates the playbook",
-      "suggested_replacement": "Approved Language, adapted"
+      "suggested_replacement": "Approved Language, adapted. Always write in the language of the NDA."
     }}
   ],
   "Medium Priority": [
@@ -129,7 +130,7 @@ You MUST respond with ONLY a valid JSON object in this exact format. Within each
       "citation": "Exact 10-30 word excerpt that is the direct source of the issue or 'Not Found'",
       "section": "[section of the NDA, usually a number like '1)', '2)', etc.] or 'N/A'",
       "problem": "Why it violates the playbook",
-      "suggested_replacement": "Approved Language, adapted"
+      "suggested_replacement": "Approved Language, adapted.Always write in the language of the NDA."
     }}
   ],
   "Low Priority": [
@@ -138,7 +139,7 @@ You MUST respond with ONLY a valid JSON object in this exact format. Within each
       "citation": "Exact 10-30 word excerpt that is the direct source of the issue or 'Not Found'",
       "section": "[section of the NDA, usually a number like '1)', '2)', etc.] or 'N/A'",
       "problem": "Why it violates the playbook",
-      "suggested_replacement": "Approved Language, adapted"
+      "suggested_replacement": "Approved Language, adapted.Always write in the language of the NDA."
     }}
   ]
 }}
