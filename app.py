@@ -1055,7 +1055,8 @@ def display_single_nda_review(model, temperature):
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     compliance_report, raw_response = review_chain.analyze_nda(converted_path)
                     
-                    os.unlink(converted_path)
+                    # Keep converted file for later use
+                    # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
                     
                     if not compliance_report:
                         st.error("Failed to get analysis results.")
@@ -1123,7 +1124,7 @@ def display_single_nda_review(model, temperature):
                             st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
                             
                             # Read the original NDA text for context
-                            with open(temp_file_path.replace('.docx', '.md'), 'r', encoding='utf-8') as f:
+                            with open(converted_path, 'r', encoding='utf-8') as f:
                                 nda_text = f.read()
                             
                             cleaned_findings = []
@@ -1186,6 +1187,7 @@ def display_single_nda_review(model, temperature):
                             # Cleanup temp files
                             os.unlink(tracked_temp_path)
                             os.unlink(clean_temp_path)
+                            os.unlink(converted_path)  # Clean up the converted markdown file
                             
                             os.unlink(temp_file_path)
                             
