@@ -1209,6 +1209,16 @@ def display_single_nda_review(model, temperature):
                                 st.markdown("---")
                                 st.subheader("Download Generated Documents")
                                 
+                                # Store documents in session state to persist after download
+                                st.session_state.direct_tracked_docx = tracked_docx
+                                st.session_state.direct_clean_docx = clean_docx
+                                st.session_state.direct_generation_results = {
+                                    'high_priority': high_priority,
+                                    'medium_priority': medium_priority,
+                                    'low_priority': low_priority,
+                                    'total_issues': total_issues
+                                }
+                                
                                 col1, col2 = st.columns(2)
                                 with col1:
                                     st.download_button(
@@ -1254,6 +1264,70 @@ def display_single_nda_review(model, temperature):
                 st.error(f"Failed to process direct tracked changes generation: {str(e)}")
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
+    
+    # Display persistent direct generation results if available
+    if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
+        st.markdown("---")
+        st.subheader("Direct Generation Summary")
+        
+        results = st.session_state.direct_generation_results
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("High Priority", len(results['high_priority']))
+        with col2:
+            st.metric("Medium Priority", len(results['medium_priority']))
+        with col3:
+            st.metric("Low Priority", len(results['low_priority']))
+        
+        st.markdown("---")
+        st.subheader("Download Generated Documents")
+        
+        if hasattr(st.session_state, 'direct_tracked_docx') and hasattr(st.session_state, 'direct_clean_docx'):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(
+                    label="Download Tracked Changes Document",
+                    data=st.session_state.direct_tracked_docx,
+                    file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_persistent_tracked"
+                )
+            
+            with col2:
+                st.download_button(
+                    label="Download Clean Edited Document",
+                    data=st.session_state.direct_clean_docx,
+                    file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_persistent_clean"
+                )
+        
+        # Show what was processed
+        with st.expander("Issues Processed (Click to expand)"):
+            if results['high_priority']:
+                st.write("**High Priority Issues:**")
+                for i, issue in enumerate(results['high_priority']):
+                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+            
+            if results['medium_priority']:
+                st.write("**Medium Priority Issues:**")
+                for i, issue in enumerate(results['medium_priority']):
+                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+            
+            if results['low_priority']:
+                st.write("**Low Priority Issues:**")
+                for i, issue in enumerate(results['low_priority']):
+                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+        
+        # Add button to clear results and start fresh
+        if st.button("Start New Analysis", key="clear_direct_results"):
+            if 'direct_generation_results' in st.session_state:
+                del st.session_state.direct_generation_results
+            if 'direct_tracked_docx' in st.session_state:
+                del st.session_state.direct_tracked_docx
+            if 'direct_clean_docx' in st.session_state:
+                del st.session_state.direct_clean_docx
+            st.rerun()
     
     # Display results if available
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
