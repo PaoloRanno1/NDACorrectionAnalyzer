@@ -6,6 +6,8 @@ import regex as re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+import tempfile
+from pathlib import Path
 
 from google import genai
 try:
@@ -24,6 +26,87 @@ except ImportError:
     class Paragraph: pass
     def qn(name): return name  # Dummy function
 from copy import deepcopy
+
+# =============================
+# Word Comparison Function
+# =============================
+
+def compare_docs_with_word(original_path, revised_path, output_path, author_tag="AI Reviewer"):
+    """
+    Create a tracked-changes .docx by comparing two Word documents using
+    Microsoft Word's built-in comparison engine.
+    
+    Note: This function requires Windows and Microsoft Word with COM automation.
+    In non-Windows environments, it will return False to indicate unavailability.
+    """
+    try:
+        import win32com.client as win32
+        from win32com.client import constants
+        
+        original = str(Path(original_path).resolve())
+        revised = str(Path(revised_path).resolve())
+        output = str(Path(output_path).resolve())
+
+        word = win32.gencache.EnsureDispatch("Word.Application")
+        word.Visible = False
+        word.DisplayAlerts = 0  # wdAlertsNone
+
+        doc1 = doc2 = result = None
+        try:
+            doc1 = word.Documents.Open(original, ReadOnly=True)
+            doc2 = word.Documents.Open(revised, ReadOnly=True)
+
+            # This calls the same engine as Review → Compare
+            result = word.CompareDocuments(
+                OriginalDocument=doc1,
+                RevisedDocument=doc2,
+                Destination=constants.wdCompareDestinationNew,
+                Granularity=constants.wdGranularityWordLevel,
+                CompareFormatting=True,
+                CompareCaseChanges=True,
+                CompareWhitespace=True,
+                CompareTables=True,
+                CompareHeaders=True,
+                CompareFootnotes=True,
+                CompareTextboxes=True,
+                CompareFields=True,
+                CompareComments=True,
+                RevisedAuthor=author_tag,
+                IgnoreAllComparisonWarnings=True,
+            )
+
+            # Ensure markup is visible when opened
+            result.TrackRevisions = True
+            result.ShowRevisions = True
+
+            # Save as .docx
+            result.SaveAs2(output, FileFormat=constants.wdFormatXMLDocument)
+            print(f"✅ Redline saved to: {output}")
+            return True
+
+        finally:
+            # Close comparison doc first (if created)
+            if result is not None:
+                try:
+                    result.Close(SaveChanges=False)
+                except Exception:
+                    pass
+            # Close originals without saving
+            for d in (doc1, doc2):
+                if d is not None:
+                    try:
+                        d.Close(SaveChanges=False)
+                    except Exception:
+                        pass
+            word.Quit()
+            
+    except ImportError:
+        # win32com not available (non-Windows or not installed)
+        return False
+    except Exception as e:
+        print(f"Error in Word comparison: {e}")
+        return False
+
 # =============================
 # Data Models
 # =============================

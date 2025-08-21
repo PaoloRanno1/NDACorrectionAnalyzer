@@ -1023,6 +1023,9 @@ def display_single_nda_review(model, temperature):
                     
                     file_content = uploaded_file.getvalue()
                     
+                    # Store original docx content for later Word comparison
+                    st.session_state['original_docx_content'] = file_content
+                    
                     # Write content to temporary file
                     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                         temp_file.write(file_content)
@@ -1286,13 +1289,63 @@ def display_single_nda_review(model, temperature):
         if hasattr(st.session_state, 'direct_tracked_docx') and hasattr(st.session_state, 'direct_clean_docx'):
             col1, col2 = st.columns(2)
             with col1:
-                st.download_button(
-                    label="Download Tracked Changes Document",
-                    data=st.session_state.direct_tracked_docx,
-                    file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_persistent_tracked"
-                )
+                # Use Word comparison if available, otherwise use original method
+                if st.button("Generate Word Comparison DOCX", key="generate_word_comparison", help="Uses Microsoft Word's comparison engine"):
+                    try:
+                        from Tracked_changes_tools_clean import compare_docs_with_word
+                        import tempfile
+                        
+                        # Save original and clean docs to temp files
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as original_temp:
+                            original_temp.write(st.session_state.get('original_docx_content', b''))
+                            original_path = original_temp.name
+                        
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as clean_temp:
+                            clean_temp.write(st.session_state.direct_clean_docx)
+                            clean_path = clean_temp.name
+                        
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as output_temp:
+                            output_path = output_temp.name
+                        
+                        # Try Word comparison
+                        if compare_docs_with_word(original_path, clean_path, output_path, "AI Reviewer"):
+                            with open(output_path, 'rb') as f:
+                                word_comparison_data = f.read()
+                            st.session_state['word_comparison_docx'] = word_comparison_data
+                            st.success("✅ Word comparison document generated successfully!")
+                        else:
+                            st.warning("⚠️ Microsoft Word comparison not available. Using fallback method.")
+                            st.session_state['word_comparison_docx'] = st.session_state.direct_tracked_docx
+                        
+                        # Cleanup temp files
+                        import os
+                        for temp_file in [original_path, clean_path, output_path]:
+                            try:
+                                os.unlink(temp_file)
+                            except:
+                                pass
+                                
+                    except Exception as e:
+                        st.error(f"Failed to generate Word comparison: {str(e)}")
+                        st.session_state['word_comparison_docx'] = st.session_state.direct_tracked_docx
+                
+                # Download button for Word comparison or fallback
+                if hasattr(st.session_state, 'word_comparison_docx'):
+                    st.download_button(
+                        label="Download Tracked Changes DOCX",
+                        data=st.session_state.word_comparison_docx,
+                        file_name=f"NDA_WordComparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_word_comparison"
+                    )
+                else:
+                    st.download_button(
+                        label="Download Tracked Changes Document",
+                        data=st.session_state.direct_tracked_docx,
+                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_persistent_tracked"
+                    )
             
             with col2:
                 st.download_button(
@@ -3137,13 +3190,66 @@ def display_edit_mode_interface():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.download_button(
-                    label="📄 Download Tracked Changes DOCX",
-                    data=docs['tracked_changes_data'],
-                    file_name=f"{docs['output_prefix']}_tracked_changes.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_tracked_changes"
-                )
+                # Use Word comparison if available, otherwise use original method
+                if st.button("Generate Word Comparison DOCX", key="generate_word_comparison_edit", help="Uses Microsoft Word's comparison engine"):
+                    try:
+                        from Tracked_changes_tools_clean import compare_docs_with_word
+                        import tempfile
+                        
+                        # Save original and clean docs to temp files
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as original_temp:
+                            if hasattr(st.session_state, 'original_docx_file'):
+                                original_temp.write(st.session_state.original_docx_file.getvalue())
+                            else:
+                                original_temp.write(st.session_state.get('original_docx_content', b''))
+                            original_path = original_temp.name
+                        
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as clean_temp:
+                            clean_temp.write(docs['clean_edit_data'])
+                            clean_path = clean_temp.name
+                        
+                        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as output_temp:
+                            output_path = output_temp.name
+                        
+                        # Try Word comparison
+                        if compare_docs_with_word(original_path, clean_path, output_path, "AI Reviewer"):
+                            with open(output_path, 'rb') as f:
+                                word_comparison_data = f.read()
+                            st.session_state['word_comparison_edit_docx'] = word_comparison_data
+                            st.success("✅ Word comparison document generated successfully!")
+                        else:
+                            st.warning("⚠️ Microsoft Word comparison not available. Using fallback method.")
+                            st.session_state['word_comparison_edit_docx'] = docs['tracked_changes_data']
+                        
+                        # Cleanup temp files
+                        import os
+                        for temp_file in [original_path, clean_path, output_path]:
+                            try:
+                                os.unlink(temp_file)
+                            except:
+                                pass
+                                
+                    except Exception as e:
+                        st.error(f"Failed to generate Word comparison: {str(e)}")
+                        st.session_state['word_comparison_edit_docx'] = docs['tracked_changes_data']
+                
+                # Download button for Word comparison or fallback
+                if hasattr(st.session_state, 'word_comparison_edit_docx'):
+                    st.download_button(
+                        label="📄 Download Tracked Changes DOCX",
+                        data=st.session_state.word_comparison_edit_docx,
+                        file_name=f"{docs['output_prefix']}_WordComparison.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_word_comparison_edit"
+                    )
+                else:
+                    st.download_button(
+                        label="📄 Download Tracked Changes DOCX",
+                        data=docs['tracked_changes_data'],
+                        file_name=f"{docs['output_prefix']}_tracked_changes.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_tracked_changes"
+                    )
             
             with col2:
                 st.download_button(
