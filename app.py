@@ -1289,8 +1289,13 @@ def display_single_nda_review(model, temperature):
         if hasattr(st.session_state, 'direct_tracked_docx') and hasattr(st.session_state, 'direct_clean_docx'):
             col1, col2 = st.columns(2)
             with col1:
-                # Use Word comparison if available, otherwise use original method
-                if st.button("Generate Word Comparison DOCX", key="generate_word_comparison", help="Uses Microsoft Word's comparison engine"):
+                # Check platform for Word availability
+                import platform
+                is_windows = platform.system() == "Windows"
+                button_label = "Generate Word Comparison DOCX" if is_windows else "Generate Word Comparison DOCX (Windows Only)"
+                button_help = "Uses Microsoft Word's comparison engine" if is_windows else "Microsoft Word comparison requires Windows. Will use built-in method."
+                
+                if st.button(button_label, key="generate_word_comparison", help=button_help):
                     try:
                         from Tracked_changes_tools_clean import compare_docs_with_word
                         import tempfile
@@ -1314,7 +1319,7 @@ def display_single_nda_review(model, temperature):
                             st.session_state['word_comparison_docx'] = word_comparison_data
                             st.success("✅ Word comparison document generated successfully!")
                         else:
-                            st.warning("⚠️ Microsoft Word comparison not available. Using fallback method.")
+                            st.info("ℹ️ Microsoft Word comparison requires Windows. Using built-in tracked changes method.")
                             st.session_state['word_comparison_docx'] = st.session_state.direct_tracked_docx
                         
                         # Cleanup temp files
@@ -3190,8 +3195,13 @@ def display_edit_mode_interface():
             col1, col2 = st.columns(2)
             
             with col1:
-                # Use Word comparison if available, otherwise use original method
-                if st.button("Generate Word Comparison DOCX", key="generate_word_comparison_edit", help="Uses Microsoft Word's comparison engine"):
+                # Check platform for Word availability
+                import platform
+                is_windows = platform.system() == "Windows"
+                button_label = "Generate Word Comparison DOCX" if is_windows else "Generate Word Comparison DOCX (Windows Only)"
+                button_help = "Uses Microsoft Word's comparison engine" if is_windows else "Microsoft Word comparison requires Windows. Will use built-in method."
+                
+                if st.button(button_label, key="generate_word_comparison_edit", help=button_help):
                     try:
                         from Tracked_changes_tools_clean import compare_docs_with_word
                         import tempfile
@@ -3218,7 +3228,7 @@ def display_edit_mode_interface():
                             st.session_state['word_comparison_edit_docx'] = word_comparison_data
                             st.success("✅ Word comparison document generated successfully!")
                         else:
-                            st.warning("⚠️ Microsoft Word comparison not available. Using fallback method.")
+                            st.info("ℹ️ Microsoft Word comparison requires Windows. Using built-in tracked changes method.")
                             st.session_state['word_comparison_edit_docx'] = docs['tracked_changes_data']
                         
                         # Cleanup temp files
