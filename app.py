@@ -1102,22 +1102,31 @@ def display_single_nda_review(model, temperature):
                             import tempfile
                             import shutil
                             
+                            from Tracked_changes_tools_clean import RawFinding
+                            
                             # Flatten all findings into a single list with proper structure
                             raw_findings = []
+                            additional_info_by_id = {}
                             finding_id = 1
                             
                             for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                                for finding in selected_findings[priority].values():
-                                    raw_finding = {
-                                        'id': finding_id,
-                                        'priority': priority,
-                                        'section': finding.get('section', ''),
-                                        'issue': finding.get('issue', ''),
-                                        'problem': finding.get('problem', ''),
-                                        'citation': finding.get('citation', ''),
-                                        'suggested_replacement': finding.get('suggested_replacement', '')
-                                    }
+                                for idx, finding in selected_findings[priority].items():
+                                    raw_finding = RawFinding(
+                                        id=finding_id,
+                                        priority=priority,
+                                        section=finding.get('section', ''),
+                                        issue=finding.get('issue', ''),
+                                        problem=finding.get('problem', ''),
+                                        citation=finding.get('citation', ''),
+                                        suggested_replacement=finding.get('suggested_replacement', '')
+                                    )
                                     raw_findings.append(raw_finding)
+                                    
+                                    # Store additional comment info by ID
+                                    comment = selected_comments.get(priority, {}).get(idx, "")
+                                    if comment:
+                                        additional_info_by_id[finding_id] = comment
+                                    
                                     finding_id += 1
                             
                             # Clean the findings using LLM
@@ -1127,30 +1136,23 @@ def display_single_nda_review(model, temperature):
                             with open(converted_path, 'r', encoding='utf-8') as f:
                                 nda_text = f.read()
                             
-                            cleaned_findings = []
-                            for raw_finding in raw_findings:
-                                try:
-                                    # Get user comment for this finding
-                                    comment = selected_comments.get(raw_finding['priority'], {}).get(str(raw_finding['id']-1), "")
-                                    
-                                    # Clean the finding
-                                    cleaned_result = clean_findings_with_llm(
-                                        nda_text=nda_text,
-                                        raw_findings=[raw_finding],
-                                        additional_info=comment,
-                                        model=model
-                                    )
-                                    
-                                    if cleaned_result:
-                                        cleaned_findings.extend(cleaned_result)
-                                    
-                                except Exception as e:
-                                    st.warning(f"Could not clean finding {raw_finding['id']}: {str(e)}")
-                                    # Create a basic cleaned finding as fallback
+                            # Clean all findings at once
+                            try:
+                                cleaned_findings = clean_findings_with_llm(
+                                    nda_text,
+                                    raw_findings,
+                                    additional_info_by_id,
+                                    model
+                                )
+                            except Exception as e:
+                                st.warning(f"Could not clean findings with LLM: {str(e)}")
+                                # Create basic cleaned findings as fallback
+                                cleaned_findings = []
+                                for raw_finding in raw_findings:
                                     cleaned_finding = CleanedFinding(
-                                        id=raw_finding['id'],
-                                        citation_clean=raw_finding['citation'],
-                                        suggested_replacement_clean=raw_finding['suggested_replacement']
+                                        id=raw_finding.id,
+                                        citation_clean=raw_finding.citation,
+                                        suggested_replacement_clean=raw_finding.suggested_replacement
                                     )
                                     cleaned_findings.append(cleaned_finding)
                             
