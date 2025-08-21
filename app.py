@@ -1090,14 +1090,102 @@ def display_single_nda_review(model, temperature):
                         st.info(f"Generating tracked changes document with {total_issues} identified issues...")
                         
                         try:
-                            from Tracked_changes_tools_clean import TrackedChangesProcessor
-                            
-                            processor = TrackedChangesProcessor(model_name=model, temperature=temperature)
-                            tracked_docx, clean_docx = processor.process_document_with_findings(
-                                docx_file_path=temp_file_path,
-                                selected_findings=selected_findings,
-                                selected_comments=selected_comments
+                            from Tracked_changes_tools_clean import (
+                                apply_cleaned_findings_to_docx, 
+                                clean_findings_with_llm, 
+                                flatten_findings, 
+                                select_findings,
+                                CleanedFinding,
+                                replace_cleaned_findings_in_docx
                             )
+                            import tempfile
+                            import shutil
+                            
+                            # Flatten all findings into a single list with proper structure
+                            raw_findings = []
+                            finding_id = 1
+                            
+                            for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                                for finding in selected_findings[priority].values():
+                                    raw_finding = {
+                                        'id': finding_id,
+                                        'priority': priority,
+                                        'section': finding.get('section', ''),
+                                        'issue': finding.get('issue', ''),
+                                        'problem': finding.get('problem', ''),
+                                        'citation': finding.get('citation', ''),
+                                        'suggested_replacement': finding.get('suggested_replacement', '')
+                                    }
+                                    raw_findings.append(raw_finding)
+                                    finding_id += 1
+                            
+                            # Clean the findings using LLM
+                            st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
+                            
+                            # Read the original NDA text for context
+                            with open(temp_file_path.replace('.docx', '.md'), 'r', encoding='utf-8') as f:
+                                nda_text = f.read()
+                            
+                            cleaned_findings = []
+                            for raw_finding in raw_findings:
+                                try:
+                                    # Get user comment for this finding
+                                    comment = selected_comments.get(raw_finding['priority'], {}).get(str(raw_finding['id']-1), "")
+                                    
+                                    # Clean the finding
+                                    cleaned_result = clean_findings_with_llm(
+                                        nda_text=nda_text,
+                                        raw_findings=[raw_finding],
+                                        additional_info=comment,
+                                        model=model
+                                    )
+                                    
+                                    if cleaned_result:
+                                        cleaned_findings.extend(cleaned_result)
+                                    
+                                except Exception as e:
+                                    st.warning(f"Could not clean finding {raw_finding['id']}: {str(e)}")
+                                    # Create a basic cleaned finding as fallback
+                                    cleaned_finding = CleanedFinding(
+                                        id=raw_finding['id'],
+                                        citation_clean=raw_finding['citation'],
+                                        suggested_replacement_clean=raw_finding['suggested_replacement']
+                                    )
+                                    cleaned_findings.append(cleaned_finding)
+                            
+                            st.info(f"Successfully cleaned {len(cleaned_findings)} findings. Generating documents...")
+                            
+                            # Generate tracked changes document
+                            tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                            shutil.copy2(temp_file_path, tracked_temp_path)
+                            
+                            changes_applied = apply_cleaned_findings_to_docx(
+                                input_docx=tracked_temp_path,
+                                cleaned_findings=cleaned_findings,
+                                output_docx=tracked_temp_path,
+                                author="AI Compliance Reviewer"
+                            )
+                            
+                            # Generate clean edited document  
+                            clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                            shutil.copy2(temp_file_path, clean_temp_path)
+                            
+                            clean_changes_applied = replace_cleaned_findings_in_docx(
+                                input_docx=clean_temp_path,
+                                cleaned_findings=cleaned_findings,
+                                output_docx=clean_temp_path
+                            )
+                            
+                            # Read the generated files for download
+                            with open(tracked_temp_path, 'rb') as f:
+                                tracked_docx = f.read()
+                            
+                            with open(clean_temp_path, 'rb') as f:
+                                clean_docx = f.read()
+                            
+                            # Cleanup temp files
+                            os.unlink(tracked_temp_path)
+                            os.unlink(clean_temp_path)
                             
                             os.unlink(temp_file_path)
                             
