@@ -805,7 +805,7 @@ def display_single_nda_review(model, temperature):
     col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
-        st.title("⚖️ NDA Legal Compliance Review")
+        st.title("⚖️ NDA Legal Compliance Review (Word Documents)")
     
     with col2:
         if st.button("⚙️ AI Settings", key="clean_review_settings", use_container_width=True):
@@ -819,7 +819,8 @@ def display_single_nda_review(model, temperature):
     if st.session_state.get('show_settings', False):
         display_settings_modal()
     
-    st.markdown("""- Upload an NDA document or select from your database to get AI-powered compliance analysis based on Strada's legal policies.
+    st.markdown("""- Upload a Word document (DOCX) or select from your database to get AI-powered compliance analysis with post-review editing capabilities.
+- This version supports tracked changes document generation after AI analysis.
 - Please don't change page when reviewing an NDA, it will stop the review.
 """)
     
@@ -836,8 +837,8 @@ def display_single_nda_review(model, temperature):
         # File upload section
         uploaded_file = st.file_uploader(
             "Choose an NDA file to analyze",
-            type=['pdf', 'docx', 'txt', 'md'],
-            help="Upload the NDA document you want to analyze for compliance issues",
+            type=['docx', 'pdf', 'txt', 'md'],
+            help="Upload the NDA document (DOCX preferred for post-review editing features)",
             key="single_nda_upload"
         )
     else:
@@ -1119,6 +1120,312 @@ HIGH PRIORITY:
     if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
         st.markdown("---")
         display_edit_mode_interface()
+
+def display_all_files_nda_review(model, temperature):
+    """Display NDA review section for all file types (PDF, TXT, MD, DOCX)"""
+    # Header with settings button
+    col1, col2, col3 = st.columns([3, 1, 1])
+    
+    with col1:
+        st.title("📄 NDA Legal Compliance Review (All Files)")
+    
+    with col2:
+        if st.button("⚙️ AI Settings", key="all_files_review_settings", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.get('show_settings', False)
+            st.rerun()
+    
+    with col3:
+        pass  # Empty space
+    
+    # Display settings modal if activated
+    if st.session_state.get('show_settings', False):
+        display_settings_modal()
+    
+    st.markdown("""- Upload an NDA document in any supported format (PDF, DOCX, TXT, MD) to get AI-powered compliance analysis.
+- This version supports all file types but does not include post-review editing features.
+- Please don't change page when reviewing an NDA, it will stop the review.
+""")
+    
+    # File source selection
+    source_type = st.radio(
+        "Select NDA source:",
+        ["Upload File", "Load from Database"],
+        help="Choose whether to upload a new file or select from your existing database",
+        key="all_files_source_type"
+    )
+    
+    uploaded_file = None
+    
+    if source_type == "Upload File":
+        # File upload section
+        uploaded_file = st.file_uploader(
+            "Choose an NDA file to analyze",
+            type=['pdf', 'docx', 'txt', 'md'],
+            help="Upload the NDA document you want to analyze for compliance issues",
+            key="all_files_nda_upload"
+        )
+    else:
+        # Database selection
+        from test_database import get_all_clean_ndas
+        clean_ndas = get_all_clean_ndas()
+        
+        if clean_ndas:
+            selected_nda = st.selectbox(
+                "Select NDA from database:",
+                list(clean_ndas.keys()),
+                help="Choose a clean NDA from your database to analyze",
+                key="all_files_db_select"
+            )
+            
+            if selected_nda:
+                # Create a file-like object from the database file
+                clean_file_path = clean_ndas[selected_nda]
+                
+                class DatabaseFile:
+                    def __init__(self, file_path, name):
+                        self.file_path = file_path
+                        self.name = name
+                    
+                    def getvalue(self):
+                        with open(self.file_path, 'r', encoding='utf-8') as f:
+                            return f.read().encode('utf-8')
+                    
+                    def read(self):
+                        with open(self.file_path, 'r', encoding='utf-8') as f:
+                            return f.read().encode('utf-8')
+                
+                uploaded_file = DatabaseFile(clean_file_path, f"{selected_nda}_clean.md")
+                st.success(f"✅ Loaded from database: {selected_nda}")
+        else:
+            st.info("No NDAs found in database. Upload some NDAs using the Database tab first.")
+            st.markdown("👆 Click the 'Database' button above to upload NDAs to your database.")
+    
+    if uploaded_file:
+        if validate_file(uploaded_file):
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
+            
+            # Preview option
+            if st.checkbox("Preview file content", key="preview_all_files"):
+                try:
+                    content = uploaded_file.getvalue().decode('utf-8')
+                    st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+                except:
+                    st.warning("Cannot preview this file type")
+        else:
+            st.error("❌ Invalid file format or size")
+            return
+    
+    # Review button
+    run_single_analysis = st.button(
+        "🚀 Review NDA",
+        disabled=not uploaded_file,
+        use_container_width=False,
+        key="run_all_files_analysis"
+    )
+    
+    # Run review directly without background processing
+    if run_single_analysis and uploaded_file:
+        try:
+            with st.spinner("🔄 Analyzing NDA... This may take a few minutes."):
+                file_extension = uploaded_file.name.split('.')[-1].lower()
+                file_content = uploaded_file.getvalue()
+                
+                # Write content to temporary file
+                import tempfile
+                import os
+                
+                if file_extension in ['docx', 'pdf']:
+                    # For binary files (DOCX, PDF), write as binary
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix=f'.{file_extension}', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                else:
+                    # For text files, write as UTF-8
+                    with tempfile.NamedTemporaryFile(mode='w', suffix=f'.{file_extension}', delete=False, encoding='utf-8') as temp_file:
+                        if isinstance(file_content, bytes):
+                            content_str = file_content.decode('utf-8')
+                        else:
+                            content_str = file_content
+                        temp_file.write(content_str)
+                        temp_file_path = temp_file.name
+                
+                # Handle DOCX conversion if needed
+                if file_extension == 'docx':
+                    try:
+                        # Use pandoc to convert DOCX to markdown
+                        import subprocess
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        
+                        # Run pandoc conversion
+                        result = subprocess.run([
+                            'pandoc', 
+                            temp_file_path, 
+                            '-o', converted_path,
+                            '--to=markdown'
+                        ], capture_output=True, text=True, check=True)
+                        
+                        # Clean up original DOCX file
+                        os.unlink(temp_file_path)
+                        temp_file_path = converted_path
+                        
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                        st.error("Please try uploading the file as PDF or TXT format instead.")
+                        os.unlink(temp_file_path)
+                        return
+                    except FileNotFoundError:
+                        st.error("Pandoc is not installed. Please try uploading the file as PDF or TXT format instead.")
+                        os.unlink(temp_file_path)
+                        return
+                    except Exception as e:
+                        st.error(f"Failed to convert DOCX file: {str(e)}")
+                        st.error("Please try uploading the file as PDF or TXT format instead.")
+                        os.unlink(temp_file_path)
+                        return
+                
+                # Get current playbook content
+                from playbook_manager import get_current_playbook
+                playbook_content = get_current_playbook()
+                
+                # Initialize and run analysis
+                from NDA_Review_chain import StradaComplianceChain
+                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                compliance_report, raw_response = review_chain.analyze_nda(temp_file_path)
+                
+                # Clean up temporary file
+                os.unlink(temp_file_path)
+                
+                # Store results with different session keys to avoid conflicts
+                st.session_state.all_files_nda_results = compliance_report
+                st.session_state.all_files_nda_raw_response = raw_response
+                
+                st.success("✅ Analysis complete! Results are ready below.")
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"❌ Failed to analyze NDA: {str(e)}")
+            st.error("Please check your file and try again.")
+            with st.expander("Error Details"):
+                st.code(traceback.format_exc())
+    
+    # Display results if available
+    if hasattr(st.session_state, 'all_files_nda_results') and st.session_state.all_files_nda_results:
+        st.markdown("---")
+        
+        # Results summary
+        st.subheader("📊 Review Summary")
+        compliance_report = st.session_state.all_files_nda_results
+        
+        if compliance_report:
+            high_priority = compliance_report.get('High Priority', [])
+            medium_priority = compliance_report.get('Medium Priority', [])
+            low_priority = compliance_report.get('Low Priority', [])
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("🔴 High Priority (Mandatory)", len(high_priority))
+            with col2:
+                st.metric("🟡 Medium Priority (Preferential)", len(medium_priority))
+            with col3:
+                st.metric("🟢 Low Priority (Optional)", len(low_priority))
+        
+        st.markdown("---")
+        
+        # Detailed results
+        st.subheader("🔍 Detailed Review Results")
+        
+        # High priority issues
+        if high_priority:
+            st.subheader("🔴 High Priority Issues (Mandatory Changes Required)")
+            for idx, flag in enumerate(high_priority):
+                with st.expander(f"High Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No high priority issues found!")
+        
+        # Medium priority issues
+        if medium_priority:
+            st.subheader("🟡 Medium Priority Issues (Preferential Changes)")
+            for idx, flag in enumerate(medium_priority):
+                with st.expander(f"Medium Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No medium priority issues found!")
+        
+        # Low priority issues
+        if low_priority:
+            st.subheader("🟢 Low Priority Issues (Optional Changes)")
+            for idx, flag in enumerate(low_priority):
+                with st.expander(f"Low Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                    if flag.get('suggested_replacement'):
+                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+        else:
+            st.success("✅ No low priority issues found!")
+        
+        st.markdown("---")
+        
+        # Download summary
+        st.subheader("📥 Export Results")
+        
+        # Create text summary
+        high_priority = compliance_report.get('High Priority', [])
+        medium_priority = compliance_report.get('Medium Priority', [])
+        low_priority = compliance_report.get('Low Priority', [])
+        
+        if high_priority or medium_priority or low_priority:
+            from datetime import datetime
+            summary_text = f"""NDA COMPLIANCE REVIEW SUMMARY
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+SUMMARY METRICS:
+- High Priority Issues: {len(high_priority)}
+- Medium Priority Issues: {len(medium_priority)}
+- Low Priority Issues: {len(low_priority)}
+- Total Issues: {len(high_priority) + len(medium_priority) + len(low_priority)}
+
+HIGH PRIORITY:
+"""
+            for idx, flag in enumerate(high_priority):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+            
+            summary_text += "\nMEDIUM PRIORITY:\n"
+            for idx, flag in enumerate(medium_priority):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+            
+            summary_text += "\nLOW PRIORITY:\n"
+            for idx, flag in enumerate(low_priority):
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+               
+            
+            st.download_button(
+                label="📄 Download Text Summary",
+                data=summary_text,
+                file_name=f"nda_review_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain"
+            )
+        
+        st.markdown("---")
+        
+        # Clear results button
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("🗑️ Clear Results", key="clear_all_files_results", use_container_width=True):
+                if hasattr(st.session_state, 'all_files_nda_results'):
+                    delattr(st.session_state, 'all_files_nda_results')
+                if hasattr(st.session_state, 'all_files_nda_raw_response'):
+                    delattr(st.session_state, 'all_files_nda_raw_response')
+                st.rerun()
 
 def display_homepage():
     """Display the homepage with functionality descriptions"""
@@ -1653,7 +1960,8 @@ def display_navigation():
     
     # Navigation options
     nav_options = {
-        "NDA REVIEW": "clean_review",
+        "NDA REVIEW (WORD)": "clean_review",
+        "NDA REVIEW (ALL FILES)": "all_files_review",
         "TESTING": "testing", 
         "POLICIES": "policies",
         "FAQ": "faq"
@@ -3651,6 +3959,8 @@ def main():
     # Page routing
     if st.session_state.current_page == "clean_review":
         display_single_nda_review(model, temperature)
+    elif st.session_state.current_page == "all_files_review":
+        display_all_files_nda_review(model, temperature)
     elif st.session_state.current_page == "testing":
         display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
