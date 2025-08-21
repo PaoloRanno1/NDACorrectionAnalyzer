@@ -1267,6 +1267,7 @@ def display_single_nda_review(model, temperature):
     
     # Display persistent direct generation results if available
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
+        from datetime import datetime
         st.markdown("---")
         st.subheader("Direct Generation Summary")
         
