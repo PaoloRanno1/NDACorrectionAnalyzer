@@ -891,13 +891,33 @@ def display_single_nda_review(model, temperature):
             st.error("❌ Invalid file format or size")
             return
     
-    # Review button
-    run_single_analysis = st.button(
-        "🚀 Review NDA",
-        disabled=not uploaded_file,
-        use_container_width=False,
-        key="run_single_analysis"
-    )
+    # Dual functionality buttons
+    if uploaded_file:
+        st.markdown("---")
+        st.subheader("🎯 Choose Your Workflow")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            run_single_analysis = st.button(
+                "🔍 Review NDA First",
+                disabled=not uploaded_file,
+                use_container_width=True,
+                key="run_single_analysis",
+                help="Get AI analysis first, then optionally generate tracked changes document"
+            )
+        
+        with col2:
+            run_direct_tracked_changes = st.button(
+                "📝 Direct Tracked Changes Generation",
+                disabled=not uploaded_file,
+                use_container_width=True,
+                key="run_direct_tracked_changes",
+                help="Skip review step and directly generate tracked changes document with all identified issues"
+            )
+    else:
+        run_single_analysis = False
+        run_direct_tracked_changes = False
     
     # Run review directly without background processing
     if run_single_analysis and uploaded_file:
@@ -983,6 +1003,165 @@ def display_single_nda_review(model, temperature):
             st.error("Please check your file and try again.")
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
+    
+    # Handle direct tracked changes generation
+    if run_direct_tracked_changes and uploaded_file:
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        if file_extension != 'docx':
+            st.error("Direct tracked changes generation requires a Word document (.docx file).")
+            st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
+        else:
+            try:
+                import tempfile
+                import os
+                import subprocess
+                import traceback
+                from datetime import datetime
+                
+                with st.spinner("Analyzing NDA and generating tracked changes document..."):
+                    st.info("Running AI analysis to identify all compliance issues...")
+                    
+                    file_content = uploaded_file.getvalue()
+                    
+                    # Write content to temporary file
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                    
+                    # Convert DOCX to markdown for analysis
+                    try:
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        result = subprocess.run([
+                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                        ], capture_output=True, text=True, check=True)
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except FileNotFoundError:
+                        st.error("Pandoc is not installed. Cannot process DOCX files.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except Exception as e:
+                        st.error(f"Failed to convert DOCX file: {str(e)}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    # Run analysis
+                    from playbook_manager import get_current_playbook
+                    from NDA_Review_chain import StradaComplianceChain
+                    
+                    playbook_content = get_current_playbook()
+                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    
+                    os.unlink(converted_path)
+                    
+                    if not compliance_report:
+                        st.error("Failed to get analysis results.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    st.info("Auto-selecting all identified compliance issues...")
+                    
+                    # Auto-select all findings
+                    high_priority = compliance_report.get('High Priority', [])
+                    medium_priority = compliance_report.get('Medium Priority', [])
+                    low_priority = compliance_report.get('Low Priority', [])
+                    
+                    selected_findings = {
+                        'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
+                        'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
+                        'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
+                    }
+                    
+                    selected_comments = {}
+                    for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                        selected_comments[priority] = {}
+                        for idx in selected_findings[priority].keys():
+                            selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
+                    
+                    total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                    
+                    if total_issues == 0:
+                        st.success("No compliance issues found! Your NDA appears to be fully compliant.")
+                        os.unlink(temp_file_path)
+                    else:
+                        st.info(f"Generating tracked changes document with {total_issues} identified issues...")
+                        
+                        try:
+                            from Tracked_changes_tools_clean import TrackedChangesProcessor
+                            
+                            processor = TrackedChangesProcessor(model_name=model, temperature=temperature)
+                            tracked_docx, clean_docx = processor.process_document_with_findings(
+                                docx_file_path=temp_file_path,
+                                selected_findings=selected_findings,
+                                selected_comments=selected_comments
+                            )
+                            
+                            os.unlink(temp_file_path)
+                            
+                            if tracked_docx and clean_docx:
+                                st.success("Tracked changes documents generated successfully!")
+                                
+                                # Display results
+                                st.subheader("Direct Generation Summary")
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("High Priority", len(high_priority))
+                                with col2:
+                                    st.metric("Medium Priority", len(medium_priority))
+                                with col3:
+                                    st.metric("Low Priority", len(low_priority))
+                                
+                                st.markdown("---")
+                                st.subheader("Download Generated Documents")
+                                
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.download_button(
+                                        label="Download Tracked Changes Document",
+                                        data=tracked_docx,
+                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_tracked"
+                                    )
+                                
+                                with col2:
+                                    st.download_button(
+                                        label="Download Clean Edited Document",
+                                        data=clean_docx,
+                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_clean"
+                                    )
+                                
+                                # Show what was processed
+                                with st.expander("Issues Processed (Click to expand)"):
+                                    if high_priority:
+                                        st.write("**High Priority Issues:**")
+                                        for i, issue in enumerate(high_priority):
+                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+                                    
+                                    if medium_priority:
+                                        st.write("**Medium Priority Issues:**")
+                                        for i, issue in enumerate(medium_priority):
+                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+                                    
+                                    if low_priority:
+                                        st.write("**Low Priority Issues:**")
+                                        for i, issue in enumerate(low_priority):
+                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+                            else:
+                                st.error("Failed to generate tracked changes documents.")
+                        except Exception as e:
+                            st.error(f"Failed to generate tracked changes: {str(e)}")
+                            with st.expander("Error Details"):
+                                st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
     
     # Display results if available
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
