@@ -1402,6 +1402,7 @@ def display_single_nda_review(model, temperature):
         col1, col2 = st.columns(2)
         
         with col1:
+            from datetime import datetime
             st.download_button(
                 label="📊 Download JSON Report",
                 data=json.dumps(compliance_report, indent=2),
@@ -1410,6 +1411,7 @@ def display_single_nda_review(model, temperature):
             )
         
         with col2:
+            from datetime import datetime
             # Create summary text
             summary_text = f"""NDA Compliance Review Report
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
