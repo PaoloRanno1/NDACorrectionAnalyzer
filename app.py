@@ -1483,15 +1483,15 @@ SUMMARY:
 HIGH PRIORITY:
 """
             for idx, flag in enumerate(high_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nMEDIUM PRIORITY:\n"
             for idx, flag in enumerate(medium_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nLOW PRIORITY:\n"
             for idx, flag in enumerate(low_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
                
             
             st.download_button(
@@ -1803,15 +1803,15 @@ SUMMARY METRICS:
 HIGH PRIORITY:
 """
             for idx, flag in enumerate(high_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nMEDIUM PRIORITY:\n"
             for idx, flag in enumerate(medium_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
             
             summary_text += "\nLOW PRIORITY:\n"
             for idx, flag in enumerate(low_priority):
-                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+                summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
                
             
             st.download_button(
