@@ -4574,22 +4574,37 @@ def display_word_interface_content(uploaded_file, model, temperature):
                                 st.info("Step 2/3: Generating tracked changes document...")
                                 
                                 tracked_changes_file = temp_file_path.replace('.docx', '_tracked_changes.docx')
-                                tracked_docx = apply_cleaned_findings_to_docx(
+                                changes_applied = apply_cleaned_findings_to_docx(
                                     temp_file_path,
                                     cleaned_findings,
                                     tracked_changes_file,
                                     "AI Reviewer"
                                 )
                                 
+                                # Read the tracked changes document as binary
+                                with open(tracked_changes_file, 'rb') as f:
+                                    tracked_docx = f.read()
+                                
                                 # Step 3: Generate clean edited document
                                 st.info("Step 3/3: Generating clean edited document...")
                                 
                                 clean_edit_file = temp_file_path.replace('.docx', '_clean_edit.docx')
-                                clean_docx = replace_cleaned_findings_in_docx(
+                                replacements_applied = replace_cleaned_findings_in_docx(
                                     temp_file_path,
                                     cleaned_findings,
                                     clean_edit_file
                                 )
+                                
+                                # Read the clean edited document as binary
+                                with open(clean_edit_file, 'rb') as f:
+                                    clean_docx = f.read()
+                                
+                                # Clean up temporary files
+                                try:
+                                    os.unlink(tracked_changes_file)
+                                    os.unlink(clean_edit_file)
+                                except:
+                                    pass  # Ignore cleanup errors
                                 
                                 # Store documents in session state to persist after download
                                 st.session_state.direct_tracked_docx = tracked_docx
