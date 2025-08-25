@@ -4664,6 +4664,80 @@ def display_word_interface_content(uploaded_file, model, temperature):
                 st.error(f"Failed to process direct tracked changes generation: {str(e)}")
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
+
+    # Display persistent direct tracked changes results if available
+    if (hasattr(st.session_state, 'direct_tracked_docx') and st.session_state.direct_tracked_docx and
+        hasattr(st.session_state, 'direct_clean_docx') and st.session_state.direct_clean_docx and
+        hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results):
+        
+        st.markdown("---")
+        st.subheader("📄 Generated Documents Ready for Download")
+        
+        # Display summary metrics
+        results = st.session_state.direct_generation_results
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("🔴 High Priority", len(results.get('high_priority', [])))
+        with col2:
+            st.metric("🟡 Medium Priority", len(results.get('medium_priority', [])))
+        with col3:
+            st.metric("🟢 Low Priority", len(results.get('low_priority', [])))
+        
+        # Download buttons
+        st.markdown("### 📥 Download Generated Documents")
+        col1, col2, col3 = st.columns([2, 2, 1])
+        
+        with col1:
+            from datetime import datetime
+            st.download_button(
+                label="📄 Download Tracked Changes Document",
+                data=st.session_state.direct_tracked_docx,
+                file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="download_persistent_tracked"
+            )
+        
+        with col2:
+            st.download_button(
+                label="📄 Download Clean Edited Document",
+                data=st.session_state.direct_clean_docx,
+                file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="download_persistent_clean"
+            )
+        
+        with col3:
+            # Clear results button
+            if st.button("🔄 New Generation", key="clear_direct_results"):
+                if hasattr(st.session_state, 'direct_tracked_docx'):
+                    delattr(st.session_state, 'direct_tracked_docx')
+                if hasattr(st.session_state, 'direct_clean_docx'):
+                    delattr(st.session_state, 'direct_clean_docx')
+                if hasattr(st.session_state, 'direct_generation_results'):
+                    delattr(st.session_state, 'direct_generation_results')
+                st.rerun()
+        
+        # Show what was processed
+        with st.expander("Issues Processed (Click to expand)"):
+            def display_issue_details(issues, priority_name):
+                if issues:
+                    st.write(f"**{priority_name} Issues:**")
+                    for i, issue in enumerate(issues):
+                        with st.container():
+                            st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                            if issue.get('section'):
+                                st.write(f"📍 **Section:** {issue.get('section')}")
+                            if issue.get('problem'):
+                                st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                            if issue.get('citation'):
+                                st.write(f"📄 **Citation:** {issue.get('citation')}")
+                            if issue.get('suggested_replacement'):
+                                st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                            st.markdown("---")
+            
+            display_issue_details(results.get('high_priority', []), "High Priority")
+            display_issue_details(results.get('medium_priority', []), "Medium Priority")
+            display_issue_details(results.get('low_priority', []), "Low Priority")
     
     # Display results if available - directly go to edit mode
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
