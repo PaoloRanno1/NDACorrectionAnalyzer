@@ -3086,6 +3086,7 @@ def display_edit_mode_interface():
                             
                         except Exception as e:
                             st.error(f"❌ Failed to generate comparison: {str(e)}")
+                            import traceback
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
                     else:
@@ -4306,9 +4307,16 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
     """Generate a Spire comparison document comparing original vs clean edited"""
     try:
         from spire.doc import Document
-        from spire.doc.common import FileFormat
         import tempfile
         import os
+        
+        # Try to import FileFormat, fall back to string if needed
+        try:
+            from spire.doc.common import FileFormat
+            docx_format = FileFormat.Docx2016
+        except ImportError:
+            # Fallback if FileFormat import fails
+            docx_format = 1  # Docx format code
         
         # Create temporary files
         original_temp = tempfile.mktemp(suffix='_original.docx')
@@ -4327,14 +4335,14 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
         firstDoc = Document(original_temp)
         firstDoc.AcceptChanges()
         cleaned_original = tempfile.mktemp(suffix='_cleaned_original.docx')
-        firstDoc.SaveToFile(cleaned_original, FileFormat.Docx2016)
+        firstDoc.SaveToFile(cleaned_original, docx_format)
         firstDoc.Close()
         
         # Load and clean the edited document
         secondDoc = Document(clean_temp)
         secondDoc.AcceptChanges()
         cleaned_edited = tempfile.mktemp(suffix='_cleaned_edited.docx')
-        secondDoc.SaveToFile(cleaned_edited, FileFormat.Docx2016)
+        secondDoc.SaveToFile(cleaned_edited, docx_format)
         secondDoc.Close()
         
         # Now load the cleaned documents for comparison
@@ -4345,7 +4353,7 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
             # Compare the cleaned documents
             firstDoc.Compare(secondDoc, "AI")
             # Save the result
-            firstDoc.SaveToFile(output_temp, FileFormat.Docx2016)
+            firstDoc.SaveToFile(output_temp, docx_format)
             
             # Read the comparison result
             with open(output_temp, 'rb') as f:
