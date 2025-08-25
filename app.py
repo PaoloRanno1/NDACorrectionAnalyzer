@@ -4693,21 +4693,12 @@ def display_all_files_interface_content(uploaded_file, model, temperature):
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     analysis_result, raw_response = review_chain.analyze_nda(tmp_file_path)
                     if analysis_result:
-                        # Display results immediately
-                        display_analysis_results(analysis_result, uploaded_file.name)
-                        
-                        # Generate text summary for download
-                        text_summary = generate_text_summary(analysis_result, uploaded_file.name)
-                        
-                        # Download button for text summary
-                        from datetime import datetime
-                        st.download_button(
-                            label="📄 Download Analysis Summary (TXT)",
-                            data=text_summary,
-                            file_name=f"NDA_Analysis_{uploaded_file.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain",
-                            key="download_all_files_summary"
-                        )
+                        # Store results in session state for persistence
+                        st.session_state.all_files_analysis_result = analysis_result
+                        st.session_state.all_files_filename = uploaded_file.name
+                        st.session_state.all_files_raw_response = raw_response
+                        st.success("✅ Analysis completed!")
+                        st.rerun()
                     else:
                         st.error("❌ Analysis failed - no results returned")
                 finally:
@@ -4721,6 +4712,41 @@ def display_all_files_interface_content(uploaded_file, model, temperature):
                 import traceback
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
+    
+    # Display persistent results if available
+    if hasattr(st.session_state, 'all_files_analysis_result') and st.session_state.all_files_analysis_result:
+        # Display the analysis results
+        display_analysis_results(st.session_state.all_files_analysis_result, st.session_state.all_files_filename)
+        
+        # Add download section
+        st.markdown("---")
+        st.subheader("📥 Export Results")
+        
+        # Generate text summary for download
+        text_summary = generate_text_summary(st.session_state.all_files_analysis_result, st.session_state.all_files_filename)
+        
+        # Download button for text summary
+        from datetime import datetime
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.download_button(
+                label="📄 Download Analysis Summary (TXT)",
+                data=text_summary,
+                file_name=f"NDA_Analysis_{st.session_state.all_files_filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain",
+                key="download_all_files_summary_persistent"
+            )
+        
+        with col2:
+            # Clear results button
+            if st.button("🔄 New Analysis", key="clear_all_files_results"):
+                if hasattr(st.session_state, 'all_files_analysis_result'):
+                    delattr(st.session_state, 'all_files_analysis_result')
+                if hasattr(st.session_state, 'all_files_filename'):
+                    delattr(st.session_state, 'all_files_filename')
+                if hasattr(st.session_state, 'all_files_raw_response'):
+                    delattr(st.session_state, 'all_files_raw_response')
+                st.rerun()
 
 def main():
     """Main application function"""
