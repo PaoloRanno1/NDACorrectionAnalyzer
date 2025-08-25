@@ -1343,13 +1343,12 @@ def display_single_nda_review(model, temperature):
                 del st.session_state.direct_clean_docx
             st.rerun()
     
-    # Display results if available - show issue review first
+    # Display results if available - go directly to edit mode
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
+        st.session_state.show_edit_mode = True
         st.session_state.original_docx_file = uploaded_file  # Store the original file
-        st.markdown("---")
-        display_issue_review_interface()
     
-    # Show edit mode interface if activated from issue review
+    # Show edit mode interface if activated
     if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
         st.markdown("---")
         display_edit_mode_interface()
@@ -2923,15 +2922,28 @@ def display_edit_mode_interface():
     medium_findings = [f for f in flatten_findings if f.priority == "Medium Priority"]
     low_findings = [f for f in flatten_findings if f.priority == "Low Priority"]
     
-    # High Priority
+    # High Priority Issues
     if high_findings:
-        st.subheader("🔴 High Priority Issues (Mandatory)")
-        for finding in high_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
+        st.markdown("### 🔴 High Priority Issues")
+        for i, finding in enumerate(high_findings, 1):
+            with st.container():
+                st.markdown(f"**High Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                # Accept checkbox below suggested replacement
                 selected = st.checkbox(
-                    f"Issue {finding.id}",
+                    f"✅ Accept Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -2939,16 +2951,9 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
+                
+                # Add comment section if selected
+                if finding.id in st.session_state.selected_findings:
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2956,16 +2961,31 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                
+                st.markdown("---")
     
-    # Medium Priority
+    # Medium Priority Issues  
     if medium_findings:
-        st.subheader("🟡 Medium Priority Issues (Preferential)")
-        for finding in medium_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
+        st.markdown("### 🟡 Medium Priority Issues")
+        for i, finding in enumerate(medium_findings, 1):
+            with st.container():
+                st.markdown(f"**Medium Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                # Accept checkbox below suggested replacement
                 selected = st.checkbox(
-                    f"Issue {finding.id}",
+                    f"✅ Accept Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -2973,16 +2993,9 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
+                
+                # Add comment section if selected
+                if finding.id in st.session_state.selected_findings:
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2990,16 +3003,31 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                
+                st.markdown("---")
     
-    # Low Priority
+    # Low Priority Issues
     if low_findings:
-        st.subheader("🟢 Low Priority Issues (Optional)")
-        for finding in low_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
+        st.markdown("### 🟢 Low Priority Issues")
+        for i, finding in enumerate(low_findings, 1):
+            with st.container():
+                st.markdown(f"**Low Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                # Accept checkbox below suggested replacement
                 selected = st.checkbox(
-                    f"Issue {finding.id}",
+                    f"✅ Accept Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -3007,16 +3035,9 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
+                
+                # Add comment section if selected
+                if finding.id in st.session_state.selected_findings:
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -3024,6 +3045,8 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                
+                st.markdown("---")
     
     st.markdown("---")
     
