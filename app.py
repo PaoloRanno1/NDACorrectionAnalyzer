@@ -4163,6 +4163,105 @@ def display_testing_results_page():
                 st.success("All results cleared!")
                 st.rerun()
 
+def display_analysis_results(analysis_result, filename):
+    """Display the analysis results for all file types"""
+    st.markdown("---")
+    
+    # Results summary
+    st.subheader("📊 Review Summary")
+    compliance_report = analysis_result
+    
+    if compliance_report:
+        high_priority = compliance_report.get('High Priority', [])
+        medium_priority = compliance_report.get('Medium Priority', [])
+        low_priority = compliance_report.get('Low Priority', [])
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("🔴 High Priority (Mandatory)", len(high_priority))
+        with col2:
+            st.metric("🟡 Medium Priority (Preferential)", len(medium_priority))
+        with col3:
+            st.metric("🟢 Low Priority (Optional)", len(low_priority))
+    
+    st.markdown("---")
+    
+    # Detailed results
+    st.subheader("🔍 Detailed Review Results")
+    
+    # High priority issues
+    if high_priority:
+        st.subheader("🔴 High Priority Issues (Mandatory Changes Required)")
+        for idx, flag in enumerate(high_priority):
+            with st.expander(f"High Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+    else:
+        st.success("✅ No high priority issues found!")
+    
+    # Medium priority issues
+    if medium_priority:
+        st.subheader("🟡 Medium Priority Issues (Preferential Changes)")
+        for idx, flag in enumerate(medium_priority):
+            with st.expander(f"Medium Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+    else:
+        st.success("✅ No medium priority issues found!")
+    
+    # Low priority issues
+    if low_priority:
+        st.subheader("🟢 Low Priority Issues (Optional Changes)")
+        for idx, flag in enumerate(low_priority):
+            with st.expander(f"Low Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
+                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
+                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
+                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
+    else:
+        st.success("✅ No low priority issues found!")
+
+def generate_text_summary(analysis_result, filename):
+    """Generate a text summary of the analysis results"""
+    from datetime import datetime
+    
+    compliance_report = analysis_result
+    high_priority = compliance_report.get('High Priority', [])
+    medium_priority = compliance_report.get('Medium Priority', [])
+    low_priority = compliance_report.get('Low Priority', [])
+    
+    summary_text = f"""NDA COMPLIANCE REVIEW SUMMARY
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+File: {filename}
+
+SUMMARY METRICS:
+- High Priority Issues: {len(high_priority)}
+- Medium Priority Issues: {len(medium_priority)}
+- Low Priority Issues: {len(low_priority)}
+- Total Issues: {len(high_priority) + len(medium_priority) + len(low_priority)}
+
+HIGH PRIORITY:
+"""
+    for idx, flag in enumerate(high_priority):
+        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+    
+    summary_text += "\nMEDIUM PRIORITY:\n"
+    for idx, flag in enumerate(medium_priority):
+        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+    
+    summary_text += "\nLOW PRIORITY:\n"
+    for idx, flag in enumerate(low_priority):
+        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
+    
+    return summary_text
+
 def display_unified_nda_review(model, temperature):
     """Display unified NDA review section that switches interface based on file type"""
     # Header with settings button
