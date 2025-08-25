@@ -284,38 +284,18 @@ def clean_findings_with_llm(
 
         # Validation: citation_clean MUST be a direct substring of nda_text
         if citation_clean not in nda_text:
-            # More robust normalization function
-            def _normalize_text(s: str) -> str:
-                # Remove quotes, normalize whitespace, handle common punctuation
-                s = re.sub(r'[""''`´]', '"', s)  # Normalize quotes
-                s = re.sub(r'\s+', ' ', s)  # Normalize whitespace
-                s = s.strip()
-                return s
+            # Fallback: normalize whitespace and check again
+            def _norm(s: str) -> str:
+                return re.sub(r"\s+", " ", s).strip()
 
-            # Try case-insensitive match first
-            if citation_clean.lower() in nda_text.lower():
-                pass  # Accept case-insensitive match
-            # Try normalized match
-            elif _normalize_text(citation_clean) and _normalize_text(citation_clean) in _normalize_text(nda_text):
-                pass  # Accept normalized match
-            # Try case-insensitive normalized match
-            elif _normalize_text(citation_clean).lower() in _normalize_text(nda_text).lower():
-                pass  # Accept case-insensitive normalized match
-            # Try finding a partial match with fuzzy logic
-            elif len(citation_clean) > 20:
-                # For longer citations, try to find the core text without quotes/punctuation
-                core_citation = re.sub(r'[^\w\s]', ' ', citation_clean)
-                core_citation = re.sub(r'\s+', ' ', core_citation).strip()
-                if core_citation and core_citation.lower() in nda_text.lower():
-                    pass  # Accept core match
-                else:
-                    # Log warning but continue - don't fail the entire process
-                    print(f"Warning: Could not validate citation for id={cid}, proceeding anyway")
-                    print(f"Citation: {citation_clean[:100]}...")
+            if _norm(citation_clean) and _norm(citation_clean) in _norm(nda_text):
+                pass  # Accept normalized match but retain original citation_clean
             else:
-                # Log warning but continue - don't fail the entire process
-                print(f"Warning: Could not validate citation for id={cid}, proceeding anyway")
-                print(f"Citation: {citation_clean[:100]}...")
+                raise ValueError(
+                    f"[id={cid}] citation_clean is not an exact substring of NDA text.\n"
+                    f"citation_clean: {citation_clean[:200]}...\n"
+                    "Tip: Re-run with stronger guidance or shorten the expected span."
+                )
 
         results.append(
             CleanedFinding(

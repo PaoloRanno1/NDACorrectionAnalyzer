@@ -1374,15 +1374,6 @@ wheels = [
 ]
 
 [[package]]
-name = "plum-dispatch"
-version = "1.7.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/39/4e/f4d6b2bd80a9880989d37773f0f2e3a91a2d5352732e4ebb68b5606bca83/plum-dispatch-1.7.4.tar.gz", hash = "sha256:1c1d15b2842b5fa98405fd3dff6fad4887bdc77b60bd200e209d76ebfe9990fe", size = 56429 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/b6/3aaa985591c63da64c7bd8c5f470442a4c00b37ad3ed057f21de14174f83/plum_dispatch-1.7.4-py3-none-any.whl", hash = "sha256:c40dbeab269bbbf972ce0dbc078380da19ebaee1a370a2c564e1814a11bde216", size = 24238 },
-]
-
-[[package]]
 name = "propcache"
 version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1846,7 +1837,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "regex" },
     { name = "sift-stack-py" },
-    { name = "spire-doc" },
     { name = "streamlit" },
 ]
 
@@ -1866,7 +1856,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "regex", specifier = ">=2025.7.34" },
     { name = "sift-stack-py", specifier = ">=0.8.3" },
-    { name = "spire-doc", specifier = ">=13.8.0" },
     { name = "streamlit", specifier = ">=1.46.1" },
 ]
 
@@ -2109,20 +2098,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235 },
-]
-
-[[package]]
-name = "spire-doc"
-version = "13.8.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "plum-dispatch" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/dc/d0c606bfe94553f2373cfa6b86bb615d2e5f36300db629122562eeb76eaf/spire_doc-13.8.0-py3-none-macosx_10_7_universal.whl", hash = "sha256:c7a807083b0a7598d7360829cb4f0c41d99bd2a546f671c97830a71c6abd18cc", size = 53201379 },
-    { url = "https://files.pythonhosted.org/packages/c8/d1/eb7fc0c63a598106d07be09f56a5db36e54db0b1880c30d38221d125f647/spire_doc-13.8.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:63078418f9eec60fe0c028a7eefc33f2632ac17e8e6ab141f6b2e9943c48311c", size = 25335570 },
-    { url = "https://files.pythonhosted.org/packages/fc/1d/dff7a9185a91e69bf8709117d861a5d02e1cd0c1d7ebc7d7a7a749b9fa77/spire_doc-13.8.0-py3-none-manylinux_2_31_x86_64.whl", hash = "sha256:a9f66a56012b717694666452689ddd6dc2995a5f999e4a034dd97248b75b7fce", size = 45114443 },
-    { url = "https://files.pythonhosted.org/packages/df/40/c8422fafa3acd7cdb00ab9c77f40183797ed214c53aca274df1a8c7c1b23/spire_doc-13.8.0-py3-none-win_amd64.whl", hash = "sha256:ef8bda2647b98c3153158cf60724529f80446bd6f77a540f791e176639fc9751", size = 28940166 },
 ]
 
 [[package]]

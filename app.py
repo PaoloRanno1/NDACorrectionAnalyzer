@@ -68,7 +68,7 @@ def initialize_session_state():
             'analysis_mode': 'Full Analysis'
         }
     if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'unified_review'
+        st.session_state.current_page = 'clean_review'
     
     # Background processing states
     if 'background_analysis' not in st.session_state:
@@ -420,6 +420,7 @@ def display_file_upload_section():
             
             if clean_file:
                 if validate_file(clean_file):
+                    st.success(f"✅ File uploaded: {clean_file.name}")
                     
                     # Preview option
                     if st.checkbox("Preview clean file content", key="preview_clean"):
@@ -443,6 +444,7 @@ def display_file_upload_section():
             
             if corrected_file:
                 if validate_file(corrected_file):
+                    st.success(f"✅ File uploaded: {corrected_file.name}")
                     
                     # Preview option
                     if st.checkbox("Preview corrected file content", key="preview_corrected"):
@@ -876,14 +878,7 @@ def display_single_nda_review(model, temperature):
     
     if uploaded_file:
         if validate_file(uploaded_file):
-
-            
-            # Store the original uploaded file in session state for Spire comparison
-            if uploaded_file.name.lower().endswith('.docx'):
-                # Store the file content as bytes to preserve it across sessions
-                st.session_state.single_nda_uploaded_file = uploaded_file
-                st.session_state.single_nda_uploaded_content = uploaded_file.getvalue()
-                st.session_state.single_nda_uploaded_name = uploaded_file.name
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):
@@ -930,11 +925,6 @@ def display_single_nda_review(model, temperature):
             with st.spinner("🔄 Analyzing NDA... This may take a few minutes."):
                 file_extension = uploaded_file.name.split('.')[-1].lower()
                 file_content = uploaded_file.getvalue()
-                
-                # Store original DOCX content for Spire comparison BEFORE processing
-                if file_extension == 'docx':
-                    st.session_state.single_nda_uploaded_content = file_content
-                    st.session_state.single_nda_uploaded_name = uploaded_file.name
                 
                 # Write content to temporary file
                 import tempfile
@@ -1028,46 +1018,25 @@ def display_single_nda_review(model, temperature):
                 import traceback
                 from datetime import datetime
                 
-                # Debug: Dependency check
-                st.write("🐛 DEBUG: Checking dependencies...")
-                try:
-                    from docx import Document
-                    st.write("✅ DEBUG: python-docx available")
-                except ImportError as e:
-                    st.error(f"❌ DEBUG: python-docx missing: {e}")
-                    return
-                
-                try:
-                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings_with_llm
-                    st.write("✅ DEBUG: Tracked changes tools available")
-                except ImportError as e:
-                    st.error(f"❌ DEBUG: Tracked changes tools missing: {e}")
-                    return
-                
                 with st.spinner("Analyzing NDA and generating tracked changes document..."):
-                    st.write("🐛 DEBUG: Starting file processing...")
+                    st.info("Running AI analysis to identify all compliance issues...")
                     
                     file_content = uploaded_file.getvalue()
-                    st.write(f"🐛 DEBUG: File content loaded, size: {len(file_content)} bytes")
                     
                     # Store original docx content for later Word comparison
                     st.session_state['original_docx_content'] = file_content
                     
                     # Write content to temporary file
-                    st.write("🐛 DEBUG: Creating temporary file...")
                     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                         temp_file.write(file_content)
                         temp_file_path = temp_file.name
-                    st.write(f"🐛 DEBUG: Temporary file created: {temp_file_path}")
                     
                     # Convert DOCX to markdown for analysis
-                    st.write("🐛 DEBUG: Converting DOCX to markdown with pandoc...")
                     try:
                         converted_path = temp_file_path.replace('.docx', '.md')
                         result = subprocess.run([
                             'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
                         ], capture_output=True, text=True, check=True)
-                        st.write(f"✅ DEBUG: Pandoc conversion successful: {converted_path}")
                     except subprocess.CalledProcessError as e:
                         st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
                         os.unlink(temp_file_path)
@@ -1082,14 +1051,12 @@ def display_single_nda_review(model, temperature):
                         st.stop()
                     
                     # Run analysis
-                    st.write("🐛 DEBUG: Starting AI analysis...")
                     from playbook_manager import get_current_playbook
                     from NDA_Review_chain import StradaComplianceChain
                     
                     playbook_content = get_current_playbook()
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     compliance_report, raw_response = review_chain.analyze_nda(converted_path)
-                    st.write(f"✅ DEBUG: AI analysis completed, found {len(compliance_report.get('High Priority', []))} high priority issues")
                     
                     # Keep converted file for later use
                     # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
@@ -1230,7 +1197,7 @@ def display_single_nda_review(model, temperature):
                             os.unlink(temp_file_path)
                             
                             if tracked_docx and clean_docx:
-                                st.write(f"✅ DEBUG: Documents generated! Tracked: {len(tracked_docx)} bytes, Clean: {len(clean_docx)} bytes")
+                                st.success("Tracked changes documents generated successfully!")
                                 
                                 # Display results
                                 st.subheader("Direct Generation Summary")
@@ -1248,7 +1215,6 @@ def display_single_nda_review(model, temperature):
                                 # Store documents in session state to persist after download
                                 st.session_state.direct_tracked_docx = tracked_docx
                                 st.session_state.direct_clean_docx = clean_docx
-                                st.session_state.original_docx_file = uploaded_file  # Store original file for Spire comparison
                                 st.session_state.direct_generation_results = {
                                     'high_priority': high_priority,
                                     'medium_priority': medium_priority,
@@ -1303,15 +1269,11 @@ def display_single_nda_review(model, temperature):
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
             except Exception as e:
-                st.error(f"❌ DEBUG: Failed to process direct tracked changes generation: {str(e)}")
-                st.error(f"❌ DEBUG: Error type: {type(e).__name__}")
-                with st.expander("Debug: Full Error Details"):
+                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                with st.expander("Error Details"):
                     st.code(traceback.format_exc())
     
     # Display persistent direct generation results if available
-    st.write(f"🐛 DEBUG: Checking for persistent results... Has results: {hasattr(st.session_state, 'direct_generation_results')}")
-    if hasattr(st.session_state, 'direct_generation_results'):
-        st.write(f"🐛 DEBUG: Results found: {bool(st.session_state.direct_generation_results)}")
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
         from datetime import datetime
         st.markdown("---")
@@ -1472,7 +1434,7 @@ def display_all_files_nda_review(model, temperature):
     
     if uploaded_file:
         if validate_file(uploaded_file):
-
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_all_files"):
@@ -2230,7 +2192,8 @@ def display_navigation():
     
     # Navigation options
     nav_options = {
-        "NDA REVIEW": "unified_review",
+        "NDA REVIEW (WORD)": "clean_review",
+        "NDA REVIEW (ALL FILES)": "all_files_review",
         "TESTING": "testing", 
         "POLICIES": "policies",
         "FAQ": "faq"
@@ -2786,18 +2749,28 @@ def display_edit_mode_interface():
     if high_findings:
         st.subheader("🔴 High Priority Issues (Mandatory)")
         for finding in high_findings:
-            # Create unified container for each issue
-            with st.container():
-                st.markdown(f"**High Priority {finding.id}: {finding.issue[:80]}...**")
-                
-                # Issue details in one container
-                with st.container():
-                    st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**❌ Problem:** {finding.problem}")
-                    st.markdown(f"**📄 Citation:** {finding.citation}")
-                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2805,36 +2778,33 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                    
-                    # Accept issue checkbox at the bottom
-                    selected = st.checkbox(
-                        f"✅ Accept Issue {finding.id}",
-                        value=finding.id in st.session_state.selected_findings,
-                        key=f"select_{finding.id}"
-                    )
-                    if selected:
-                        st.session_state.selected_findings.add(finding.id)
-                    else:
-                        st.session_state.selected_findings.discard(finding.id)
-                
-                st.markdown("---")  # Separator between issues
     
     # Medium Priority
     if medium_findings:
         st.subheader("🟡 Medium Priority Issues (Preferential)")
         for finding in medium_findings:
-            # Create unified container for each issue
-            with st.container():
-                st.markdown(f"**Medium Priority {finding.id}: {finding.issue[:80]}...**")
-                
-                # Issue details in one container
-                with st.container():
-                    st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**❌ Problem:** {finding.problem}")
-                    st.markdown(f"**📄 Citation:** {finding.citation}")
-                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2842,36 +2812,33 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                    
-                    # Accept issue checkbox at the bottom
-                    selected = st.checkbox(
-                        f"✅ Accept Issue {finding.id}",
-                        value=finding.id in st.session_state.selected_findings,
-                        key=f"select_{finding.id}"
-                    )
-                    if selected:
-                        st.session_state.selected_findings.add(finding.id)
-                    else:
-                        st.session_state.selected_findings.discard(finding.id)
-                
-                st.markdown("---")  # Separator between issues
     
     # Low Priority
     if low_findings:
         st.subheader("🟢 Low Priority Issues (Optional)")
         for finding in low_findings:
-            # Create unified container for each issue
-            with st.container():
-                st.markdown(f"**Low Priority {finding.id}: {finding.issue[:80]}...**")
-                
-                # Issue details in one container
-                with st.container():
-                    st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**❌ Problem:** {finding.problem}")
-                    st.markdown(f"**📄 Citation:** {finding.citation}")
-                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
+                selected = st.checkbox(
+                    f"Issue {finding.id}",
+                    value=finding.id in st.session_state.selected_findings,
+                    key=f"select_{finding.id}"
+                )
+                if selected:
+                    st.session_state.selected_findings.add(finding.id)
+                else:
+                    st.session_state.selected_findings.discard(finding.id)
+            
+            with col2:
+                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2879,19 +2846,6 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                    
-                    # Accept issue checkbox at the bottom
-                    selected = st.checkbox(
-                        f"✅ Accept Issue {finding.id}",
-                        value=finding.id in st.session_state.selected_findings,
-                        key=f"select_{finding.id}"
-                    )
-                    if selected:
-                        st.session_state.selected_findings.add(finding.id)
-                    else:
-                        st.session_state.selected_findings.discard(finding.id)
-                
-                st.markdown("---")  # Separator between issues
     
     st.markdown("---")
     
@@ -3083,17 +3037,6 @@ def display_edit_mode_interface():
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key="download_clean_edit"
                 )
-            
-            # Clear results button
-            st.markdown("---")
-            if st.button("🔄 New Generation", key="clear_immediate_results"):
-                if hasattr(st.session_state, 'generated_docs'):
-                    delattr(st.session_state, 'generated_docs')
-                if hasattr(st.session_state, 'single_nda_uploaded_content'):
-                    delattr(st.session_state, 'single_nda_uploaded_content')
-                if hasattr(st.session_state, 'single_nda_uploaded_name'):
-                    delattr(st.session_state, 'single_nda_uploaded_name')
-                st.rerun()
             
             # Show cleaned findings details
             st.markdown("---")
@@ -4221,702 +4164,6 @@ def display_testing_results_page():
                 st.success("All results cleared!")
                 st.rerun()
 
-def display_analysis_results(analysis_result, filename):
-    """Display the analysis results for all file types"""
-    st.markdown("---")
-    
-    # Results summary
-    st.subheader("📊 Review Summary")
-    compliance_report = analysis_result
-    
-    if compliance_report:
-        high_priority = compliance_report.get('High Priority', [])
-        medium_priority = compliance_report.get('Medium Priority', [])
-        low_priority = compliance_report.get('Low Priority', [])
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("🔴 High Priority (Mandatory)", len(high_priority))
-        with col2:
-            st.metric("🟡 Medium Priority (Preferential)", len(medium_priority))
-        with col3:
-            st.metric("🟢 Low Priority (Optional)", len(low_priority))
-    
-    st.markdown("---")
-    
-    # Detailed results
-    st.subheader("🔍 Detailed Review Results")
-    
-    # High priority issues
-    if high_priority:
-        st.subheader("🔴 High Priority Issues (Mandatory Changes Required)")
-        for idx, flag in enumerate(high_priority):
-            with st.expander(f"High Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
-                if flag.get('suggested_replacement'):
-                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-    else:
-        st.success("✅ No high priority issues found!")
-    
-    # Medium priority issues
-    if medium_priority:
-        st.subheader("🟡 Medium Priority Issues (Preferential Changes)")
-        for idx, flag in enumerate(medium_priority):
-            with st.expander(f"Medium Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
-                if flag.get('suggested_replacement'):
-                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-    else:
-        st.success("✅ No medium priority issues found!")
-    
-    # Low priority issues
-    if low_priority:
-        st.subheader("🟢 Low Priority Issues (Optional Changes)")
-        for idx, flag in enumerate(low_priority):
-            with st.expander(f"Low Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
-                if flag.get('suggested_replacement'):
-                    st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-    else:
-        st.success("✅ No low priority issues found!")
-
-
-def generate_text_summary(analysis_result, filename):
-    """Generate a text summary of the analysis results"""
-    from datetime import datetime
-    
-    compliance_report = analysis_result
-    high_priority = compliance_report.get('High Priority', [])
-    medium_priority = compliance_report.get('Medium Priority', [])
-    low_priority = compliance_report.get('Low Priority', [])
-    
-    summary_text = f"""NDA COMPLIANCE REVIEW SUMMARY
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-File: {filename}
-
-SUMMARY METRICS:
-- High Priority Issues: {len(high_priority)}
-- Medium Priority Issues: {len(medium_priority)}
-- Low Priority Issues: {len(low_priority)}
-- Total Issues: {len(high_priority) + len(medium_priority) + len(low_priority)}
-
-HIGH PRIORITY:
-"""
-    for idx, flag in enumerate(high_priority):
-        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
-    
-    summary_text += "\nMEDIUM PRIORITY:\n"
-    for idx, flag in enumerate(medium_priority):
-        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
-    
-    summary_text += "\nLOW PRIORITY:\n"
-    for idx, flag in enumerate(low_priority):
-        summary_text += f"\n{idx + 1}. {flag.get('issue', 'Issue')}\n   Section: {flag.get('section', 'N/A')}\n   Citation: {flag.get('citation', 'N/A')}\n   Problem: {flag.get('problem', 'N/A')}\n   Suggested Replacement: {flag.get('suggested_replacement', 'N/A')}"
-    
-    return summary_text
-
-def display_unified_nda_review(model, temperature):
-    """Display unified NDA review section that switches interface based on file type"""
-    # Header with settings button
-    col1, col2, col3 = st.columns([3, 1, 1])
-    
-    with col1:
-        st.title("⚖️ NDA Legal Compliance Review")
-    
-    with col2:
-        if st.button("⚙️ AI Settings", key="unified_review_settings", use_container_width=True):
-            st.session_state.show_settings = not st.session_state.get('show_settings', False)
-            st.rerun()
-    
-    with col3:
-        pass  # Empty space
-    
-    # Display settings modal if activated
-    if st.session_state.get('show_settings', False):
-        display_settings_modal()
-    
-    st.markdown("""- Upload an NDA document in any supported format (PDF, DOCX, TXT, MD) to get AI-powered compliance analysis.
-- **DOCX files**: Include post-review editing capabilities with tracked changes document generation.
-- **Other formats**: Provide comprehensive analysis without editing features.
-- Please don't change page when reviewing an NDA, it will stop the review.
-""")
-    
-    # File source selection
-    source_type = st.radio(
-        "Select NDA source:",
-        ["Upload File", "Load from Database"],
-        help="Choose whether to upload a new file or select from your existing database",
-        key="unified_source_type"
-    )
-    
-    uploaded_file = None
-    
-    if source_type == "Upload File":
-        # File upload section
-        uploaded_file = st.file_uploader(
-            "Choose an NDA file to analyze",
-            type=['pdf', 'docx', 'txt', 'md'],
-            help="Upload the NDA document you want to analyze for compliance issues",
-            key="unified_nda_upload"
-        )
-    
-    else:
-        # Database selection
-        from test_database import get_all_clean_ndas
-        clean_ndas = get_all_clean_ndas()
-        
-        if clean_ndas:
-            selected_nda = st.selectbox(
-                "Select NDA from database:",
-                list(clean_ndas.keys()),
-                help="Choose a clean NDA from your database to analyze",
-                key="unified_db_select"
-            )
-            
-            if selected_nda:
-                # Create a file-like object from the database file
-                clean_file_path = clean_ndas[selected_nda]
-                
-                class DatabaseFile:
-                    def __init__(self, file_path, name):
-                        self.file_path = file_path
-                        self.name = name
-                    
-                    def getvalue(self):
-                        with open(self.file_path, 'r', encoding='utf-8') as f:
-                            return f.read().encode('utf-8')
-                    
-                    def read(self):
-                        with open(self.file_path, 'r', encoding='utf-8') as f:
-                            return f.read().encode('utf-8')
-                
-                uploaded_file = DatabaseFile(clean_file_path, f"{selected_nda}_clean.md")
-        else:
-            st.info("No NDAs found in database. Upload some NDAs using the Database tab first.")
-    
-    # Process the uploaded file and route to appropriate interface
-    if uploaded_file:
-        if validate_file(uploaded_file):
-
-            
-            # Detect file type and route accordingly
-            file_extension = uploaded_file.name.split('.')[-1].lower()
-            
-            if file_extension == 'docx':
-                # Route to Word interface functionality
-                display_word_interface_content(uploaded_file, model, temperature)
-            else:
-                # Route to All Files interface functionality  
-                display_all_files_interface_content(uploaded_file, model, temperature)
-
-def display_word_interface_content(uploaded_file, model, temperature):
-    """Display the Word interface content (extracted from display_single_nda_review)"""
-    # Preview option
-    if st.checkbox("Preview file content", key="preview_word"):
-        try:
-            content = uploaded_file.getvalue().decode('utf-8')
-            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-        except:
-            # For actual DOCX files, show a different message
-            st.info("DOCX file content preview not available. Proceed with analysis to view content.")
-    
-    # Analysis controls
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        # Analysis button
-        if st.button("🔍 Analyze NDA", key="analyze_word_nda", type="primary"):
-            with st.spinner("Analyzing NDA for compliance issues..."):
-                try:
-                    from NDA_Review_chain import StradaComplianceChain
-                    from playbook_manager import get_current_playbook
-                    
-                    # Create temporary file
-                    import tempfile
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
-                        tmp_file.write(uploaded_file.getvalue())
-                        tmp_file_path = tmp_file.name
-                    
-                    try:
-                        playbook_content = get_current_playbook()
-                        review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                        analysis_result, raw_response = review_chain.analyze_nda(tmp_file_path)
-                        if analysis_result:
-                            st.session_state.single_nda_results = analysis_result
-                            st.session_state.single_nda_raw_response = raw_response
-    
-                        else:
-                            st.error("❌ Analysis failed - no results returned")
-                    finally:
-                        # Clean up temp file
-                        import os
-                        if os.path.exists(tmp_file_path):
-                            os.unlink(tmp_file_path)
-                            
-                except Exception as e:
-                    st.error(f"Analysis failed: {str(e)}")
-                    import traceback
-                    with st.expander("Error Details"):
-                        st.code(traceback.format_exc())
-    
-    with col2:
-        # Direct tracked changes generation
-        run_direct_tracked_changes = st.button("⚡ Direct Tracked Changes", key="direct_word_changes", help="Generate tracked changes directly without review")
-    
-    # Handle direct tracked changes generation
-    if run_direct_tracked_changes and uploaded_file:
-        file_extension = uploaded_file.name.split('.')[-1].lower()
-        if file_extension != 'docx':
-            st.error("Direct tracked changes generation requires a Word document (.docx file).")
-            st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
-        else:
-            try:
-                import tempfile
-                import os
-                import subprocess
-                import traceback
-                from datetime import datetime
-                
-                # Debug: Dependency check
-                st.write("🐛 DEBUG: Checking dependencies...")
-                try:
-                    from docx import Document
-                    st.write("✅ DEBUG: python-docx available")
-                except ImportError as e:
-                    st.error(f"❌ DEBUG: python-docx missing: {e}")
-                    return
-                
-                try:
-                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings_with_llm
-                    st.write("✅ DEBUG: Tracked changes tools available")
-                except ImportError as e:
-                    st.error(f"❌ DEBUG: Tracked changes tools missing: {e}")
-                    return
-                
-                with st.spinner("Analyzing NDA and generating tracked changes document..."):
-                    st.write("🐛 DEBUG: Starting file processing...")
-                    
-                    file_content = uploaded_file.getvalue()
-                    st.write(f"🐛 DEBUG: File content loaded, size: {len(file_content)} bytes")
-                    
-                    # Store original docx content for later Word comparison
-                    st.session_state['original_docx_content'] = file_content
-                    
-                    # Write content to temporary file
-                    st.write("🐛 DEBUG: Creating temporary file...")
-                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
-                        temp_file.write(file_content)
-                        temp_file_path = temp_file.name
-                    st.write(f"🐛 DEBUG: Temporary file created: {temp_file_path}")
-                    
-                    # Convert DOCX to markdown for analysis
-                    st.write("🐛 DEBUG: Converting DOCX to markdown with pandoc...")
-                    try:
-                        converted_path = temp_file_path.replace('.docx', '.md')
-                        result = subprocess.run([
-                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
-                        ], capture_output=True, text=True, check=True)
-                        st.write(f"✅ DEBUG: Pandoc conversion successful: {converted_path}")
-                    except subprocess.CalledProcessError as e:
-                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    except FileNotFoundError:
-                        st.error("Pandoc is not installed. Cannot process DOCX files.")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    except Exception as e:
-                        st.error(f"Failed to convert DOCX file: {str(e)}")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    
-                    # Run analysis
-                    st.write("🐛 DEBUG: Starting AI analysis...")
-                    from playbook_manager import get_current_playbook
-                    from NDA_Review_chain import StradaComplianceChain
-                    
-                    playbook_content = get_current_playbook()
-                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
-                    st.write(f"✅ DEBUG: AI analysis completed, found {len(compliance_report.get('High Priority', []))} high priority issues")
-                    
-                    # Keep converted file for later use
-                    # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
-                    
-                    if not compliance_report:
-                        st.error("Failed to get analysis results.")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    
-                    st.info("Auto-selecting all identified compliance issues...")
-                    
-                    # Auto-select all findings
-                    high_priority = compliance_report.get('High Priority', [])
-                    medium_priority = compliance_report.get('Medium Priority', [])
-                    low_priority = compliance_report.get('Low Priority', [])
-                    
-                    selected_findings = {
-                        'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
-                        'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
-                        'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
-                    }
-                    
-                    selected_comments = {}
-                    for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                        selected_comments[priority] = {}
-                        for idx in selected_findings[priority].keys():
-                            selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
-                    
-                    total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
-                    
-                    if total_issues == 0:
-                        st.success("No compliance issues found! Your NDA appears to be fully compliant.")
-                        os.unlink(temp_file_path)
-                    else:
-                        st.info(f"Generating tracked changes document with {total_issues} identified issues...")
-                        
-                        try:
-                            from Tracked_changes_tools_clean import (
-                                apply_cleaned_findings_to_docx, 
-                                clean_findings_with_llm, 
-                                flatten_findings, 
-                                select_findings,
-                                CleanedFinding,
-                                replace_cleaned_findings_in_docx,
-                                RawFinding
-                            )
-                            import shutil
-                            
-                            # Flatten all findings into a single list with proper structure
-                            raw_findings = []
-                            additional_info_by_id = {}
-                            finding_id = 1
-                            
-                            for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                                for idx, finding in selected_findings[priority].items():
-                                    raw_finding = RawFinding(
-                                        id=finding_id,
-                                        priority=priority,
-                                        section=finding.get('section', ''),
-                                        issue=finding.get('issue', ''),
-                                        problem=finding.get('problem', ''),
-                                        citation=finding.get('citation', ''),
-                                        suggested_replacement=finding.get('suggested_replacement', '')
-                                    )
-                                    raw_findings.append(raw_finding)
-                                    
-                                    # Store additional comment info by ID
-                                    comment = selected_comments.get(priority, {}).get(idx, "")
-                                    if comment:
-                                        additional_info_by_id[finding_id] = comment
-                                    
-                                    finding_id += 1
-                            
-                            # Step 1: Clean findings with LLM
-                            st.info("Step 1/3: Cleaning findings with AI...")
-                            
-                            # Read the converted document content
-                            with open(converted_path, 'r', encoding='utf-8') as f:
-                                nda_text_content = f.read()
-                            
-                            cleaned_findings = clean_findings_with_llm(
-                                nda_text_content, 
-                                raw_findings, 
-                                additional_info_by_id, 
-                                model
-                            )
-                            
-                            changes_count = len([f for f in cleaned_findings if f.citation_clean and f.suggested_replacement_clean])
-                            replacements_count = len([f for f in cleaned_findings if f.citation_clean and f.suggested_replacement_clean and f.citation_clean != f.suggested_replacement_clean])
-                            
-                            if changes_count == 0:
-                                st.warning("No valid changes could be generated from the findings.")
-                                os.unlink(temp_file_path)
-                                if os.path.exists(converted_path):
-                                    os.unlink(converted_path)
-                            else:
-                                # Step 2: Generate tracked changes document
-                                st.info("Step 2/3: Generating tracked changes document...")
-                                
-                                tracked_changes_file = temp_file_path.replace('.docx', '_tracked_changes.docx')
-                                changes_applied = apply_cleaned_findings_to_docx(
-                                    temp_file_path,
-                                    cleaned_findings,
-                                    tracked_changes_file,
-                                    "AI Reviewer"
-                                )
-                                
-                                # Read the tracked changes document as binary
-                                with open(tracked_changes_file, 'rb') as f:
-                                    tracked_docx = f.read()
-                                
-                                # Step 3: Generate clean edited document
-                                st.info("Step 3/3: Generating clean edited document...")
-                                
-                                clean_edit_file = temp_file_path.replace('.docx', '_clean_edit.docx')
-                                replacements_applied = replace_cleaned_findings_in_docx(
-                                    temp_file_path,
-                                    cleaned_findings,
-                                    clean_edit_file
-                                )
-                                
-                                # Read the clean edited document as binary
-                                with open(clean_edit_file, 'rb') as f:
-                                    clean_docx = f.read()
-                                
-                                # Clean up temporary files
-                                try:
-                                    os.unlink(tracked_changes_file)
-                                    os.unlink(clean_edit_file)
-                                except:
-                                    pass  # Ignore cleanup errors
-                                
-                                # Store documents in session state to persist after download
-                                st.session_state.direct_tracked_docx = tracked_docx
-                                st.session_state.direct_clean_docx = clean_docx
-                                st.session_state.original_docx_file = uploaded_file  # Store original file for Spire comparison
-                                st.session_state.direct_generation_results = {
-                                    'high_priority': high_priority,
-                                    'medium_priority': medium_priority,
-                                    'low_priority': low_priority,
-                                    'total_issues': total_issues
-                                }
-                                
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    st.download_button(
-                                        label="Download Tracked Changes Document",
-                                        data=tracked_docx,
-                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key="download_direct_tracked"
-                                    )
-                                
-                                with col2:
-                                    st.download_button(
-                                        label="Download Clean Edited Document",
-                                        data=clean_docx,
-                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key="download_direct_clean"
-                                    )
-                                
-                                # Show what was processed
-                                with st.expander("Issues Processed (Click to expand)"):
-                                    def display_issue_details(issues, priority_name):
-                                        if issues:
-                                            st.write(f"**{priority_name} Issues:**")
-                                            for i, issue in enumerate(issues):
-                                                with st.container():
-                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
-                                                    if issue.get('section'):
-                                                        st.write(f"📍 **Section:** {issue.get('section')}")
-                                                    if issue.get('problem'):
-                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
-                                                    if issue.get('citation'):
-                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
-                                                    if issue.get('suggested_replacement'):
-                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
-                                                    st.markdown("---")
-                                    
-                                    display_issue_details(high_priority, "High Priority")
-                                    display_issue_details(medium_priority, "Medium Priority")
-                                    display_issue_details(low_priority, "Low Priority")
-                        except Exception as e:
-                            st.error(f"Failed to generate tracked changes: {str(e)}")
-                            with st.expander("Error Details"):
-                                st.code(traceback.format_exc())
-            except Exception as e:
-                st.error(f"❌ DEBUG: Failed to process direct tracked changes generation: {str(e)}")
-                st.error(f"❌ DEBUG: Error type: {type(e).__name__}")
-                with st.expander("Debug: Full Error Details"):
-                    st.code(traceback.format_exc())
-
-    # Display persistent direct tracked changes results if available
-    if (hasattr(st.session_state, 'direct_tracked_docx') and st.session_state.direct_tracked_docx and
-        hasattr(st.session_state, 'direct_clean_docx') and st.session_state.direct_clean_docx and
-        hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results):
-        
-        st.markdown("---")
-        st.subheader("📄 Generated Documents Ready for Download")
-        
-        # Display summary metrics
-        results = st.session_state.direct_generation_results
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("🔴 High Priority", len(results.get('high_priority', [])))
-        with col2:
-            st.metric("🟡 Medium Priority", len(results.get('medium_priority', [])))
-        with col3:
-            st.metric("🟢 Low Priority", len(results.get('low_priority', [])))
-        
-        # Download buttons
-        st.markdown("### 📥 Download Generated Documents")
-        col1, col2, col3 = st.columns([3, 3, 2])
-        
-        with col1:
-            from datetime import datetime
-            st.download_button(
-                label="📄 Download Tracked Changes Document",
-                data=st.session_state.direct_tracked_docx,
-                file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_persistent_tracked"
-            )
-        
-        with col2:
-            st.download_button(
-                label="📄 Download Clean Edited Document",
-                data=st.session_state.direct_clean_docx,
-                file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_persistent_clean"
-            )
-        
-        with col3:
-            # Clear results button
-            if st.button("🔄 New Generation", key="clear_direct_results"):
-                if hasattr(st.session_state, 'direct_tracked_docx'):
-                    delattr(st.session_state, 'direct_tracked_docx')
-                if hasattr(st.session_state, 'direct_clean_docx'):
-                    delattr(st.session_state, 'direct_clean_docx')
-                if hasattr(st.session_state, 'direct_generation_results'):
-                    delattr(st.session_state, 'direct_generation_results')
-                if hasattr(st.session_state, 'original_docx_file'):
-                    delattr(st.session_state, 'original_docx_file')
-                st.rerun()
-        
-        
-        # Show what was processed
-        with st.expander("Issues Processed (Click to expand)"):
-            def display_issue_details(issues, priority_name):
-                if issues:
-                    st.write(f"**{priority_name} Issues:**")
-                    for i, issue in enumerate(issues):
-                        with st.container():
-                            st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
-                            if issue.get('section'):
-                                st.write(f"📍 **Section:** {issue.get('section')}")
-                            if issue.get('problem'):
-                                st.write(f"⚠️ **Problem:** {issue.get('problem')}")
-                            if issue.get('citation'):
-                                st.write(f"📄 **Citation:** {issue.get('citation')}")
-                            if issue.get('suggested_replacement'):
-                                st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
-                            st.markdown("---")
-            
-            display_issue_details(results.get('high_priority', []), "High Priority")
-            display_issue_details(results.get('medium_priority', []), "Medium Priority")
-            display_issue_details(results.get('low_priority', []), "Low Priority")
-    
-    # Display results if available - directly go to edit mode
-    if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
-        st.session_state.show_edit_mode = True
-        st.session_state.original_docx_file = uploaded_file  # Store the original file
-    
-    # Show edit mode interface if activated
-    if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
-        st.markdown("---")
-        display_edit_mode_interface()
-
-def display_all_files_interface_content(uploaded_file, model, temperature):
-    """Display the All Files interface content (extracted from display_all_files_nda_review)"""
-    # Preview option
-    if st.checkbox("Preview file content", key="preview_all_files"):
-        try:
-            content = uploaded_file.getvalue().decode('utf-8')
-            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
-        except:
-            st.error("Unable to preview file content")
-    
-    # Analysis section
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown("### 🔍 Analysis Options")
-    
-    with col2:
-        pass
-    
-    # Analysis button
-    if st.button("🔍 Analyze NDA", key="analyze_all_files_nda", type="primary"):
-        with st.spinner("Analyzing NDA for compliance issues..."):
-            try:
-                from NDA_Review_chain import StradaComplianceChain
-                from playbook_manager import get_current_playbook
-                
-                # Create temporary file
-                import tempfile
-                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
-                    tmp_file.write(uploaded_file.getvalue())
-                    tmp_file_path = tmp_file.name
-                
-                try:
-                    playbook_content = get_current_playbook()
-                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                    analysis_result, raw_response = review_chain.analyze_nda(tmp_file_path)
-                    if analysis_result:
-                        # Store results in session state for persistence
-                        st.session_state.all_files_analysis_result = analysis_result
-                        st.session_state.all_files_filename = uploaded_file.name
-                        st.session_state.all_files_raw_response = raw_response
-
-                        st.rerun()
-                    else:
-                        st.error("❌ Analysis failed - no results returned")
-                finally:
-                    # Clean up temp file
-                    import os
-                    if os.path.exists(tmp_file_path):
-                        os.unlink(tmp_file_path)
-                        
-            except Exception as e:
-                st.error(f"Analysis failed: {str(e)}")
-                import traceback
-                with st.expander("Error Details"):
-                    st.code(traceback.format_exc())
-    
-    # Display persistent results if available
-    if hasattr(st.session_state, 'all_files_analysis_result') and st.session_state.all_files_analysis_result:
-        # Display the analysis results
-        display_analysis_results(st.session_state.all_files_analysis_result, st.session_state.all_files_filename)
-        
-        # Add download section
-        st.markdown("---")
-        st.subheader("📥 Export Results")
-        
-        # Generate text summary for download
-        text_summary = generate_text_summary(st.session_state.all_files_analysis_result, st.session_state.all_files_filename)
-        
-        # Download button for text summary
-        from datetime import datetime
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            st.download_button(
-                label="📄 Download Analysis Summary (TXT)",
-                data=text_summary,
-                file_name=f"NDA_Analysis_{st.session_state.all_files_filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain",
-                key="download_all_files_summary_persistent"
-            )
-        
-        with col2:
-            # Clear results button
-            if st.button("🔄 New Analysis", key="clear_all_files_results"):
-                if hasattr(st.session_state, 'all_files_analysis_result'):
-                    delattr(st.session_state, 'all_files_analysis_result')
-                if hasattr(st.session_state, 'all_files_filename'):
-                    delattr(st.session_state, 'all_files_filename')
-                if hasattr(st.session_state, 'all_files_raw_response'):
-                    delattr(st.session_state, 'all_files_raw_response')
-                st.rerun()
-
 def main():
     """Main application function"""
     initialize_session_state()
@@ -4942,8 +4189,10 @@ def main():
     display_navigation()
     
     # Page routing
-    if st.session_state.current_page == "unified_review":
-        display_unified_nda_review(model, temperature)
+    if st.session_state.current_page == "clean_review":
+        display_single_nda_review(model, temperature)
+    elif st.session_state.current_page == "all_files_review":
+        display_all_files_nda_review(model, temperature)
     elif st.session_state.current_page == "testing":
         display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
