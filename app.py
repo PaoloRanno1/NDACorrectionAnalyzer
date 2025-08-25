@@ -420,7 +420,6 @@ def display_file_upload_section():
             
             if clean_file:
                 if validate_file(clean_file):
-                    st.success(f"✅ File uploaded: {clean_file.name}")
                     
                     # Preview option
                     if st.checkbox("Preview clean file content", key="preview_clean"):
@@ -444,7 +443,6 @@ def display_file_upload_section():
             
             if corrected_file:
                 if validate_file(corrected_file):
-                    st.success(f"✅ File uploaded: {corrected_file.name}")
                     
                     # Preview option
                     if st.checkbox("Preview corrected file content", key="preview_corrected"):
@@ -878,7 +876,7 @@ def display_single_nda_review(model, temperature):
     
     if uploaded_file:
         if validate_file(uploaded_file):
-            st.success(f"✅ File uploaded: {uploaded_file.name}")
+
             
             # Store the original uploaded file in session state for Spire comparison
             if uploaded_file.name.lower().endswith('.docx'):
@@ -1447,7 +1445,7 @@ def display_all_files_nda_review(model, temperature):
     
     if uploaded_file:
         if validate_file(uploaded_file):
-            st.success(f"✅ File uploaded: {uploaded_file.name}")
+
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_all_files"):
@@ -4340,14 +4338,6 @@ def display_unified_nda_review(model, temperature):
             help="Upload the NDA document you want to analyze for compliance issues",
             key="unified_nda_upload"
         )
-        
-        # Show file type information
-        if uploaded_file:
-            file_extension = uploaded_file.name.split('.')[-1].lower()
-            if file_extension == 'docx':
-                st.info("📝 **DOCX detected**: Full editing capabilities will be available after analysis.")
-            else:
-                st.info(f"📄 **{file_extension.upper()} detected**: Analysis only (no editing features).")
     
     else:
         # Database selection
@@ -4380,16 +4370,13 @@ def display_unified_nda_review(model, temperature):
                             return f.read().encode('utf-8')
                 
                 uploaded_file = DatabaseFile(clean_file_path, f"{selected_nda}_clean.md")
-                st.success(f"✅ Loaded from database: {selected_nda}")
-                st.info("📄 **MD format**: Analysis only (no editing features).")
         else:
             st.info("No NDAs found in database. Upload some NDAs using the Database tab first.")
-            st.markdown("👆 Click the 'Database' button above to upload NDAs to your database.")
     
     # Process the uploaded file and route to appropriate interface
     if uploaded_file:
         if validate_file(uploaded_file):
-            st.success(f"✅ File uploaded: {uploaded_file.name}")
+
             
             # Detect file type and route accordingly
             file_extension = uploaded_file.name.split('.')[-1].lower()
