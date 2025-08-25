@@ -2761,28 +2761,19 @@ def display_edit_mode_interface():
     if high_findings:
         st.subheader("🔴 High Priority Issues (Mandatory)")
         for finding in high_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+            # Create unified container for each issue
+            with st.container():
+                st.markdown(f"**High Priority {finding.id}: {finding.issue[:80]}...**")
+                
+                # Issue details in one container
+                with st.container():
+                    st.markdown(f"**📍 Section:** {finding.section}")
+                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
+                    st.markdown(f"**❌ Problem:** {finding.problem}")
+                    st.markdown(f"**📄 Citation:** {finding.citation}")
+                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input for this finding
+                    # Comment input
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2790,33 +2781,37 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                    
+                    # Accept issue checkbox at the bottom
+                    selected = st.checkbox(
+                        f"✅ Accept Issue {finding.id}",
+                        value=finding.id in st.session_state.selected_findings,
+                        key=f"select_{finding.id}"
+                    )
+                    if selected:
+                        st.session_state.selected_findings.add(finding.id)
+                    else:
+                        st.session_state.selected_findings.discard(finding.id)
+                
+                st.markdown("---")  # Separator between issues
     
     # Medium Priority
     if medium_findings:
         st.subheader("🟡 Medium Priority Issues (Preferential)")
         for finding in medium_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+            # Create unified container for each issue
+            with st.container():
+                st.markdown(f"**Medium Priority {finding.id}: {finding.issue[:80]}...**")
+                
+                # Issue details in one container
+                with st.container():
+                    st.markdown(f"**📍 Section:** {finding.section}")
+                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
+                    st.markdown(f"**❌ Problem:** {finding.problem}")
+                    st.markdown(f"**📄 Citation:** {finding.citation}")
+                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input for this finding
+                    # Comment input
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2824,33 +2819,37 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                    
+                    # Accept issue checkbox at the bottom
+                    selected = st.checkbox(
+                        f"✅ Accept Issue {finding.id}",
+                        value=finding.id in st.session_state.selected_findings,
+                        key=f"select_{finding.id}"
+                    )
+                    if selected:
+                        st.session_state.selected_findings.add(finding.id)
+                    else:
+                        st.session_state.selected_findings.discard(finding.id)
+                
+                st.markdown("---")  # Separator between issues
     
     # Low Priority
     if low_findings:
         st.subheader("🟢 Low Priority Issues (Optional)")
         for finding in low_findings:
-            col1, col2 = st.columns([1, 4])
-            
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
-            
-            with col2:
-                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+            # Create unified container for each issue
+            with st.container():
+                st.markdown(f"**Low Priority {finding.id}: {finding.issue[:80]}...**")
+                
+                # Issue details in one container
+                with st.container():
+                    st.markdown(f"**📍 Section:** {finding.section}")
+                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
+                    st.markdown(f"**❌ Problem:** {finding.problem}")
+                    st.markdown(f"**📄 Citation:** {finding.citation}")
+                    st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
                     
-                    # Comment input for this finding
+                    # Comment input
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2858,6 +2857,19 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
+                    
+                    # Accept issue checkbox at the bottom
+                    selected = st.checkbox(
+                        f"✅ Accept Issue {finding.id}",
+                        value=finding.id in st.session_state.selected_findings,
+                        key=f"select_{finding.id}"
+                    )
+                    if selected:
+                        st.session_state.selected_findings.add(finding.id)
+                    else:
+                        st.session_state.selected_findings.discard(finding.id)
+                
+                st.markdown("---")  # Separator between issues
     
     st.markdown("---")
     
