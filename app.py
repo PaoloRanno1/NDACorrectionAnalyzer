@@ -4423,7 +4423,7 @@ def display_word_interface_content(uploaded_file, model, temperature):
                         if analysis_result:
                             st.session_state.single_nda_results = analysis_result
                             st.session_state.single_nda_raw_response = raw_response
-                            st.success("✅ Analysis completed!")
+    
                         else:
                             st.error("❌ Analysis failed - no results returned")
                     finally:
@@ -4815,7 +4815,7 @@ def display_all_files_interface_content(uploaded_file, model, temperature):
                         st.session_state.all_files_analysis_result = analysis_result
                         st.session_state.all_files_filename = uploaded_file.name
                         st.session_state.all_files_raw_response = raw_response
-                        st.success("✅ Analysis completed!")
+
                         st.rerun()
                     else:
                         st.error("❌ Analysis failed - no results returned")
