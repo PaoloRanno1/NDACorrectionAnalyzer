@@ -2768,7 +2768,6 @@ def display_edit_mode_interface():
                 # Issue details in one container
                 with st.container():
                     st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
                     st.markdown(f"**❌ Problem:** {finding.problem}")
                     st.markdown(f"**📄 Citation:** {finding.citation}")
                     st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
@@ -2806,7 +2805,6 @@ def display_edit_mode_interface():
                 # Issue details in one container
                 with st.container():
                     st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
                     st.markdown(f"**❌ Problem:** {finding.problem}")
                     st.markdown(f"**📄 Citation:** {finding.citation}")
                     st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
@@ -2844,7 +2842,6 @@ def display_edit_mode_interface():
                 # Issue details in one container
                 with st.container():
                     st.markdown(f"**📍 Section:** {finding.section}")
-                    st.markdown(f"**⚠️ Issue:** {finding.issue}")
                     st.markdown(f"**❌ Problem:** {finding.problem}")
                     st.markdown(f"**📄 Citation:** {finding.citation}")
                     st.markdown(f"**✏️ Suggested Replacement:** {finding.suggested_replacement}")
