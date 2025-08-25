@@ -4287,7 +4287,8 @@ def display_word_interface_content(uploaded_file, model, temperature):
         if st.button("🔍 Analyze NDA", key="analyze_word_nda", type="primary"):
             with st.spinner("Analyzing NDA for compliance issues..."):
                 try:
-                    from NDA_Review_chain import load_and_analyze_nda
+                    from NDA_Review_chain import StradaComplianceChain
+                    from playbook_manager import get_current_playbook
                     
                     # Create temporary file
                     import tempfile
@@ -4296,9 +4297,12 @@ def display_word_interface_content(uploaded_file, model, temperature):
                         tmp_file_path = tmp_file.name
                     
                     try:
-                        analysis_result = load_and_analyze_nda(tmp_file_path, model, temperature)
+                        playbook_content = get_current_playbook()
+                        review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                        analysis_result, raw_response = review_chain.analyze_nda(tmp_file_path)
                         if analysis_result:
                             st.session_state.single_nda_results = analysis_result
+                            st.session_state.single_nda_raw_response = raw_response
                             st.success("✅ Analysis completed!")
                         else:
                             st.error("❌ Analysis failed - no results returned")
@@ -4576,7 +4580,8 @@ def display_all_files_interface_content(uploaded_file, model, temperature):
     if st.button("🔍 Analyze NDA", key="analyze_all_files_nda", type="primary"):
         with st.spinner("Analyzing NDA for compliance issues..."):
             try:
-                from NDA_Review_chain import load_and_analyze_nda
+                from NDA_Review_chain import StradaComplianceChain
+                from playbook_manager import get_current_playbook
                 
                 # Create temporary file
                 import tempfile
@@ -4585,7 +4590,9 @@ def display_all_files_interface_content(uploaded_file, model, temperature):
                     tmp_file_path = tmp_file.name
                 
                 try:
-                    analysis_result = load_and_analyze_nda(tmp_file_path, model, temperature)
+                    playbook_content = get_current_playbook()
+                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                    analysis_result, raw_response = review_chain.analyze_nda(tmp_file_path)
                     if analysis_result:
                         # Display results immediately
                         display_analysis_results(analysis_result, uploaded_file.name)
