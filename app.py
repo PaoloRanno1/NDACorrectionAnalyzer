@@ -881,12 +881,17 @@ def display_single_nda_review(model, temperature):
             st.success(f"✅ File uploaded: {uploaded_file.name}")
             
             # Store the original uploaded file in session state for Spire comparison
+            st.info(f"DEBUG: File name = '{uploaded_file.name}', extension = '{uploaded_file.name.split('.')[-1].lower()}'")
             if uploaded_file.name.lower().endswith('.docx'):
                 # Store the file content as bytes to preserve it across sessions
+                file_content = uploaded_file.getvalue()
                 st.session_state.single_nda_uploaded_file = uploaded_file
-                st.session_state.single_nda_uploaded_content = uploaded_file.getvalue()
+                st.session_state.single_nda_uploaded_content = file_content
                 st.session_state.single_nda_uploaded_name = uploaded_file.name
-                st.success(f"✅ DOCX file stored for Spire comparison: {len(uploaded_file.getvalue())} bytes")
+                st.success(f"✅ DOCX file stored for Spire comparison: {len(file_content)} bytes")
+                st.info(f"DEBUG: Session state set - Content length: {len(file_content)}, Name: {uploaded_file.name}")
+            else:
+                st.warning(f"DEBUG: File is not DOCX - no session state set for '{uploaded_file.name}'")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):
@@ -935,10 +940,14 @@ def display_single_nda_review(model, temperature):
                 file_content = uploaded_file.getvalue()
                 
                 # Store original DOCX content for Spire comparison BEFORE processing
+                st.info(f"DEBUG ANALYSIS: File extension = '{file_extension}', name = '{uploaded_file.name}'")
                 if file_extension == 'docx':
                     st.session_state.single_nda_uploaded_content = file_content
                     st.session_state.single_nda_uploaded_name = uploaded_file.name
                     st.info(f"📁 Preserved original DOCX ({len(file_content)} bytes) for Spire comparison")
+                    st.success(f"DEBUG ANALYSIS: Session state set - Content: {len(file_content)} bytes, Name: {uploaded_file.name}")
+                else:
+                    st.warning(f"DEBUG ANALYSIS: Not DOCX file, no session state preserved")
                 
                 # Write content to temporary file
                 import tempfile
