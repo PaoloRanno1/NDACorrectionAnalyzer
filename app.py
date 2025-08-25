@@ -3053,6 +3053,15 @@ def display_edit_mode_interface():
             with col3:
                 # Generate and download Spire comparison document
                 if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
+                    # Debug: Check what's in session state
+                    st.write("DEBUG - Session State Check:")
+                    st.write(f"Has single_nda_uploaded_content: {hasattr(st.session_state, 'single_nda_uploaded_content')}")
+                    st.write(f"Has single_nda_uploaded_name: {hasattr(st.session_state, 'single_nda_uploaded_name')}")
+                    if hasattr(st.session_state, 'single_nda_uploaded_content'):
+                        st.write(f"Content length: {len(st.session_state.single_nda_uploaded_content) if st.session_state.single_nda_uploaded_content else 0}")
+                    if hasattr(st.session_state, 'single_nda_uploaded_name'):
+                        st.write(f"File name: {st.session_state.single_nda_uploaded_name}")
+                    
                     if (hasattr(st.session_state, 'single_nda_uploaded_content') and 
                         hasattr(st.session_state, 'single_nda_uploaded_name') and 
                         st.session_state.single_nda_uploaded_content and
@@ -3090,6 +3099,7 @@ def display_edit_mode_interface():
                                 st.code(traceback.format_exc())
                     else:
                         st.error("❌ Original DOCX file not available for comparison")
+                        st.write("💡 Make sure you uploaded a DOCX file and completed the analysis first.")
             
             # Show Spire comparison download if available
             if hasattr(st.session_state, 'spire_comparison_immediate_docx') and st.session_state.spire_comparison_immediate_docx:
