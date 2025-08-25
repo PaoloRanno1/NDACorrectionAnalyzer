@@ -4553,8 +4553,7 @@ def display_word_interface_content(uploaded_file, model, temperature):
                                 converted_path, 
                                 raw_findings, 
                                 additional_info_by_id, 
-                                model, 
-                                temperature
+                                model
                             )
                             
                             changes_count = len([f for f in cleaned_findings if f.citation_clean and f.suggested_replacement_clean])
