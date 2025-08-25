@@ -1174,27 +1174,15 @@ def display_single_nda_review(model, temperature):
                             
                             # Clean all findings at once
                             try:
-                                st.write(f"🐛 DEBUG: About to call clean_findings_with_llm with {len(raw_findings)} findings using model {model}")
-                                st.write(f"🐛 DEBUG: NDA text length: {len(nda_text)} characters")
-                                st.write(f"🐛 DEBUG: Additional info entries: {len(additional_info_by_id)}")
-                                
                                 cleaned_findings = clean_findings_with_llm(
                                     nda_text,
                                     raw_findings,
                                     additional_info_by_id,
                                     model
                                 )
-                                st.write(f"✅ DEBUG: LLM cleaning completed successfully! Got {len(cleaned_findings)} cleaned findings")
-                                st.write(f"🐛 DEBUG: Sample cleaned finding keys: {list(cleaned_findings[0].__dict__.keys()) if cleaned_findings else 'None'}")
                             except Exception as e:
-                                st.error(f"❌ DEBUG: LLM cleaning failed: {str(e)}")
-                                st.error(f"❌ DEBUG: Error type: {type(e).__name__}")
-                                st.error(f"❌ DEBUG: This is likely where the page revert happens!")
-                                with st.expander("DEBUG: LLM Cleaning Error Details"):
-                                    st.code(traceback.format_exc())
-                                
+                                st.warning(f"Could not clean findings with LLM: {str(e)}")
                                 # Create basic cleaned findings as fallback
-                                st.write("🔄 DEBUG: Falling back to original findings...")
                                 cleaned_findings = []
                                 for raw_finding in raw_findings:
                                     cleaned_finding = CleanedFinding(
@@ -1204,13 +1192,11 @@ def display_single_nda_review(model, temperature):
                                     )
                                     cleaned_findings.append(cleaned_finding)
                             
-                            st.write(f"🐛 DEBUG: Successfully cleaned {len(cleaned_findings)} findings. Starting document generation...")
+                            st.info(f"Successfully cleaned {len(cleaned_findings)} findings. Generating documents...")
                             
                             # Generate tracked changes document
-                            st.write("🐛 DEBUG: Step 2/3: Generating tracked changes document...")
                             tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
                             shutil.copy2(temp_file_path, tracked_temp_path)
-                            st.write(f"🐛 DEBUG: Copied to tracked temp path: {tracked_temp_path}")
                             
                             changes_applied = apply_cleaned_findings_to_docx(
                                 input_docx=tracked_temp_path,
@@ -1218,30 +1204,23 @@ def display_single_nda_review(model, temperature):
                                 output_docx=tracked_temp_path,
                                 author="AI Compliance Reviewer"
                             )
-                            st.write(f"✅ DEBUG: Tracked changes applied: {changes_applied}")
                             
                             # Generate clean edited document  
-                            st.write("🐛 DEBUG: Step 3/3: Generating clean edited document...")
                             clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
                             shutil.copy2(temp_file_path, clean_temp_path)
-                            st.write(f"🐛 DEBUG: Copied to clean temp path: {clean_temp_path}")
                             
                             clean_changes_applied = replace_cleaned_findings_in_docx(
                                 input_docx=clean_temp_path,
                                 cleaned_findings=cleaned_findings,
                                 output_docx=clean_temp_path
                             )
-                            st.write(f"✅ DEBUG: Clean changes applied: {clean_changes_applied}")
                             
                             # Read the generated files for download
-                            st.write("🐛 DEBUG: Reading generated files...")
                             with open(tracked_temp_path, 'rb') as f:
                                 tracked_docx = f.read()
-                            st.write(f"✅ DEBUG: Tracked file read: {len(tracked_docx)} bytes")
                             
                             with open(clean_temp_path, 'rb') as f:
                                 clean_docx = f.read()
-                            st.write(f"✅ DEBUG: Clean file read: {len(clean_docx)} bytes")
                             
                             # Cleanup temp files
                             os.unlink(tracked_temp_path)
@@ -1267,10 +1246,8 @@ def display_single_nda_review(model, temperature):
                                 st.subheader("Download Generated Documents")
                                 
                                 # Store documents in session state to persist after download
-                                st.write("🐛 DEBUG: Storing results in session state...")
                                 st.session_state.direct_tracked_docx = tracked_docx
                                 st.session_state.direct_clean_docx = clean_docx
-                                st.write(f"✅ DEBUG: Session state stored! Tracked: {len(st.session_state.direct_tracked_docx)} bytes, Clean: {len(st.session_state.direct_clean_docx)} bytes")
                                 st.session_state.original_docx_file = uploaded_file  # Store original file for Spire comparison
                                 st.session_state.direct_generation_results = {
                                     'high_priority': high_priority,
@@ -4701,10 +4678,8 @@ def display_word_interface_content(uploaded_file, model, temperature):
                                     pass  # Ignore cleanup errors
                                 
                                 # Store documents in session state to persist after download
-                                st.write("🐛 DEBUG: Storing results in session state...")
                                 st.session_state.direct_tracked_docx = tracked_docx
                                 st.session_state.direct_clean_docx = clean_docx
-                                st.write(f"✅ DEBUG: Session state stored! Tracked: {len(st.session_state.direct_tracked_docx)} bytes, Clean: {len(st.session_state.direct_clean_docx)} bytes")
                                 st.session_state.original_docx_file = uploaded_file  # Store original file for Spire comparison
                                 st.session_state.direct_generation_results = {
                                     'high_priority': high_priority,
