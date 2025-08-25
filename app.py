@@ -4549,8 +4549,13 @@ def display_word_interface_content(uploaded_file, model, temperature):
                             
                             # Step 1: Clean findings with LLM
                             st.info("Step 1/3: Cleaning findings with AI...")
+                            
+                            # Read the converted document content
+                            with open(converted_path, 'r', encoding='utf-8') as f:
+                                nda_text_content = f.read()
+                            
                             cleaned_findings = clean_findings_with_llm(
-                                converted_path, 
+                                nda_text_content, 
                                 raw_findings, 
                                 additional_info_by_id, 
                                 model
