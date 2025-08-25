@@ -19,4 +19,5 @@ dependencies = [
     "python-docx>=1.2.0",
     "sift-stack-py>=0.8.3",
     "regex>=2025.7.34",
+    "spire-doc>=13.8.0",
 ]
