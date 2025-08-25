@@ -881,17 +881,12 @@ def display_single_nda_review(model, temperature):
             st.success(f"✅ File uploaded: {uploaded_file.name}")
             
             # Store the original uploaded file in session state for Spire comparison
-            st.info(f"DEBUG: File name = '{uploaded_file.name}', extension = '{uploaded_file.name.split('.')[-1].lower()}'")
             if uploaded_file.name.lower().endswith('.docx'):
                 # Store the file content as bytes to preserve it across sessions
                 file_content = uploaded_file.getvalue()
                 st.session_state.single_nda_uploaded_file = uploaded_file
                 st.session_state.single_nda_uploaded_content = file_content
                 st.session_state.single_nda_uploaded_name = uploaded_file.name
-                st.success(f"✅ DOCX file stored for Spire comparison: {len(file_content)} bytes")
-                st.info(f"DEBUG: Session state set - Content length: {len(file_content)}, Name: {uploaded_file.name}")
-            else:
-                st.warning(f"DEBUG: File is not DOCX - no session state set for '{uploaded_file.name}'")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):
@@ -940,14 +935,9 @@ def display_single_nda_review(model, temperature):
                 file_content = uploaded_file.getvalue()
                 
                 # Store original DOCX content for Spire comparison BEFORE processing
-                st.info(f"DEBUG ANALYSIS: File extension = '{file_extension}', name = '{uploaded_file.name}'")
                 if file_extension == 'docx':
                     st.session_state.single_nda_uploaded_content = file_content
                     st.session_state.single_nda_uploaded_name = uploaded_file.name
-                    st.info(f"📁 Preserved original DOCX ({len(file_content)} bytes) for Spire comparison")
-                    st.success(f"DEBUG ANALYSIS: Session state set - Content: {len(file_content)} bytes, Name: {uploaded_file.name}")
-                else:
-                    st.warning(f"DEBUG ANALYSIS: Not DOCX file, no session state preserved")
                 
                 # Write content to temporary file
                 import tempfile
@@ -3024,7 +3014,9 @@ def display_edit_mode_interface():
                             'changes_count': changes_count,
                             'replacements_count': replacements_count,
                             'cleaned_findings': cleaned_findings,
-                            'original_findings': {f.id: f for f in selected_findings}
+                            'original_findings': {f.id: f for f in selected_findings},
+                            'original_docx_content': file_content if file_extension == 'docx' else None,
+                            'original_docx_name': uploaded_file.name if file_extension == 'docx' else None
                         }
                         
                     except Exception as e:
@@ -3064,22 +3056,9 @@ def display_edit_mode_interface():
             with col3:
                 # Generate and download Spire comparison document
                 if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
-                    # Debug: Check what's in session state
-                    st.write("DEBUG - Session State Check:")
-                    st.write(f"Has single_nda_uploaded_content: {hasattr(st.session_state, 'single_nda_uploaded_content')}")
-                    st.write(f"Has single_nda_uploaded_name: {hasattr(st.session_state, 'single_nda_uploaded_name')}")
-                    if hasattr(st.session_state, 'single_nda_uploaded_content'):
-                        st.write(f"Content length: {len(st.session_state.single_nda_uploaded_content) if st.session_state.single_nda_uploaded_content else 0}")
-                    if hasattr(st.session_state, 'single_nda_uploaded_name'):
-                        st.write(f"File name: {st.session_state.single_nda_uploaded_name}")
-                    
-                    if (hasattr(st.session_state, 'single_nda_uploaded_content') and 
-                        hasattr(st.session_state, 'single_nda_uploaded_name') and 
-                        st.session_state.single_nda_uploaded_content and
-                        st.session_state.single_nda_uploaded_name):
+                    if docs.get('original_docx_content') and docs.get('original_docx_name'):
                         try:
                             # Create a temporary file-like object from stored content
-                            import io
                             class TempFile:
                                 def __init__(self, content, name):
                                     self.content = content
@@ -3089,11 +3068,12 @@ def display_edit_mode_interface():
                                     return self.content
                             
                             temp_uploaded_file = TempFile(
-                                st.session_state.single_nda_uploaded_content,
-                                st.session_state.single_nda_uploaded_name
+                                docs['original_docx_content'],
+                                docs['original_docx_name']
                             )
                             
                             # Generate the Spire comparison document
+                            # Original DOCX vs Clean Edited DOCX
                             comparison_docx = generate_spire_comparison_document(
                                 temp_uploaded_file,
                                 docs['clean_edit_data']
@@ -3129,10 +3109,6 @@ def display_edit_mode_interface():
                     delattr(st.session_state, 'generated_docs')
                 if hasattr(st.session_state, 'spire_comparison_immediate_docx'):
                     delattr(st.session_state, 'spire_comparison_immediate_docx')
-                if hasattr(st.session_state, 'single_nda_uploaded_content'):
-                    delattr(st.session_state, 'single_nda_uploaded_content')
-                if hasattr(st.session_state, 'single_nda_uploaded_name'):
-                    delattr(st.session_state, 'single_nda_uploaded_name')
                 st.rerun()
             
             # Show cleaned findings details
