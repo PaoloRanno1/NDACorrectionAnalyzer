@@ -3053,37 +3053,29 @@ def display_edit_mode_interface():
             with col3:
                 # Generate and download Spire comparison document
                 if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
-                    # Check for original file from either workflow
-                    original_file = None
-                    
-                    # Method 1: Direct review workflow (single_nda_uploaded_*)
                     if (hasattr(st.session_state, 'single_nda_uploaded_content') and 
                         hasattr(st.session_state, 'single_nda_uploaded_name') and 
                         st.session_state.single_nda_uploaded_content and
                         st.session_state.single_nda_uploaded_name):
-                        
-                        class TempFile:
-                            def __init__(self, content, name):
-                                self.content = content
-                                self.name = name
-                            def getvalue(self):
-                                return self.content
-                        
-                        original_file = TempFile(
-                            st.session_state.single_nda_uploaded_content,
-                            st.session_state.single_nda_uploaded_name
-                        )
-                    
-                    # Method 2: Post-review editing workflow (original_docx_file)
-                    elif (hasattr(st.session_state, 'original_docx_file') and 
-                          st.session_state.original_docx_file):
-                        original_file = st.session_state.original_docx_file
-                    
-                    if original_file:
                         try:
+                            # Create a temporary file-like object from stored content
+                            import io
+                            class TempFile:
+                                def __init__(self, content, name):
+                                    self.content = content
+                                    self.name = name
+                                
+                                def getvalue(self):
+                                    return self.content
+                            
+                            temp_uploaded_file = TempFile(
+                                st.session_state.single_nda_uploaded_content,
+                                st.session_state.single_nda_uploaded_name
+                            )
+                            
                             # Generate the Spire comparison document
                             comparison_docx = generate_spire_comparison_document(
-                                original_file,
+                                temp_uploaded_file,
                                 docs['clean_edit_data']
                             )
                             
@@ -3095,7 +3087,6 @@ def display_edit_mode_interface():
                         except Exception as e:
                             st.error(f"❌ Failed to generate comparison: {str(e)}")
                             with st.expander("Error Details"):
-                                import traceback
                                 st.code(traceback.format_exc())
                     else:
                         st.error("❌ Original DOCX file not available for comparison")
@@ -4317,7 +4308,8 @@ def display_analysis_results(analysis_result, filename):
 def generate_spire_comparison_document(original_file, clean_docx_bytes):
     """Generate a Spire comparison document comparing original vs clean edited"""
     try:
-        from spire.doc import Document, FileFormat
+        from spire.doc import Document
+        from spire.doc.common import FileFormat
         import tempfile
         import os
         
