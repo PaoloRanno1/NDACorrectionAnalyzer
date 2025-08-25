@@ -3015,8 +3015,8 @@ def display_edit_mode_interface():
                             'replacements_count': replacements_count,
                             'cleaned_findings': cleaned_findings,
                             'original_findings': {f.id: f for f in selected_findings},
-                            'original_docx_content': file_content if uploaded_file.name.lower().endswith('.docx') else None,
-                            'original_docx_name': uploaded_file.name if uploaded_file.name.lower().endswith('.docx') else None
+                            'original_docx_content': original_file.getvalue() if original_file.name.lower().endswith('.docx') else None,
+                            'original_docx_name': original_file.name if original_file.name.lower().endswith('.docx') else None
                         }
                         
                     except Exception as e:
