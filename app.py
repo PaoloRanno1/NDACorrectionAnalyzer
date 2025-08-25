@@ -1028,25 +1028,46 @@ def display_single_nda_review(model, temperature):
                 import traceback
                 from datetime import datetime
                 
+                # Debug: Dependency check
+                st.write("🐛 DEBUG: Checking dependencies...")
+                try:
+                    from docx import Document
+                    st.write("✅ DEBUG: python-docx available")
+                except ImportError as e:
+                    st.error(f"❌ DEBUG: python-docx missing: {e}")
+                    return
+                
+                try:
+                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings_with_llm
+                    st.write("✅ DEBUG: Tracked changes tools available")
+                except ImportError as e:
+                    st.error(f"❌ DEBUG: Tracked changes tools missing: {e}")
+                    return
+                
                 with st.spinner("Analyzing NDA and generating tracked changes document..."):
-                    st.info("Running AI analysis to identify all compliance issues...")
+                    st.write("🐛 DEBUG: Starting file processing...")
                     
                     file_content = uploaded_file.getvalue()
+                    st.write(f"🐛 DEBUG: File content loaded, size: {len(file_content)} bytes")
                     
                     # Store original docx content for later Word comparison
                     st.session_state['original_docx_content'] = file_content
                     
                     # Write content to temporary file
+                    st.write("🐛 DEBUG: Creating temporary file...")
                     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                         temp_file.write(file_content)
                         temp_file_path = temp_file.name
+                    st.write(f"🐛 DEBUG: Temporary file created: {temp_file_path}")
                     
                     # Convert DOCX to markdown for analysis
+                    st.write("🐛 DEBUG: Converting DOCX to markdown with pandoc...")
                     try:
                         converted_path = temp_file_path.replace('.docx', '.md')
                         result = subprocess.run([
                             'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
                         ], capture_output=True, text=True, check=True)
+                        st.write(f"✅ DEBUG: Pandoc conversion successful: {converted_path}")
                     except subprocess.CalledProcessError as e:
                         st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
                         os.unlink(temp_file_path)
@@ -1061,12 +1082,14 @@ def display_single_nda_review(model, temperature):
                         st.stop()
                     
                     # Run analysis
+                    st.write("🐛 DEBUG: Starting AI analysis...")
                     from playbook_manager import get_current_playbook
                     from NDA_Review_chain import StradaComplianceChain
                     
                     playbook_content = get_current_playbook()
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    st.write(f"✅ DEBUG: AI analysis completed, found {len(compliance_report.get('High Priority', []))} high priority issues")
                     
                     # Keep converted file for later use
                     # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
@@ -1207,7 +1230,7 @@ def display_single_nda_review(model, temperature):
                             os.unlink(temp_file_path)
                             
                             if tracked_docx and clean_docx:
-                                st.success("Tracked changes documents generated successfully!")
+                                st.write(f"✅ DEBUG: Documents generated! Tracked: {len(tracked_docx)} bytes, Clean: {len(clean_docx)} bytes")
                                 
                                 # Display results
                                 st.subheader("Direct Generation Summary")
@@ -1280,11 +1303,15 @@ def display_single_nda_review(model, temperature):
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
             except Exception as e:
-                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
-                with st.expander("Error Details"):
+                st.error(f"❌ DEBUG: Failed to process direct tracked changes generation: {str(e)}")
+                st.error(f"❌ DEBUG: Error type: {type(e).__name__}")
+                with st.expander("Debug: Full Error Details"):
                     st.code(traceback.format_exc())
     
     # Display persistent direct generation results if available
+    st.write(f"🐛 DEBUG: Checking for persistent results... Has results: {hasattr(st.session_state, 'direct_generation_results')}")
+    if hasattr(st.session_state, 'direct_generation_results'):
+        st.write(f"🐛 DEBUG: Results found: {bool(st.session_state.direct_generation_results)}")
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
         from datetime import datetime
         st.markdown("---")
@@ -4456,25 +4483,46 @@ def display_word_interface_content(uploaded_file, model, temperature):
                 import traceback
                 from datetime import datetime
                 
+                # Debug: Dependency check
+                st.write("🐛 DEBUG: Checking dependencies...")
+                try:
+                    from docx import Document
+                    st.write("✅ DEBUG: python-docx available")
+                except ImportError as e:
+                    st.error(f"❌ DEBUG: python-docx missing: {e}")
+                    return
+                
+                try:
+                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings_with_llm
+                    st.write("✅ DEBUG: Tracked changes tools available")
+                except ImportError as e:
+                    st.error(f"❌ DEBUG: Tracked changes tools missing: {e}")
+                    return
+                
                 with st.spinner("Analyzing NDA and generating tracked changes document..."):
-                    st.info("Running AI analysis to identify all compliance issues...")
+                    st.write("🐛 DEBUG: Starting file processing...")
                     
                     file_content = uploaded_file.getvalue()
+                    st.write(f"🐛 DEBUG: File content loaded, size: {len(file_content)} bytes")
                     
                     # Store original docx content for later Word comparison
                     st.session_state['original_docx_content'] = file_content
                     
                     # Write content to temporary file
+                    st.write("🐛 DEBUG: Creating temporary file...")
                     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                         temp_file.write(file_content)
                         temp_file_path = temp_file.name
+                    st.write(f"🐛 DEBUG: Temporary file created: {temp_file_path}")
                     
                     # Convert DOCX to markdown for analysis
+                    st.write("🐛 DEBUG: Converting DOCX to markdown with pandoc...")
                     try:
                         converted_path = temp_file_path.replace('.docx', '.md')
                         result = subprocess.run([
                             'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
                         ], capture_output=True, text=True, check=True)
+                        st.write(f"✅ DEBUG: Pandoc conversion successful: {converted_path}")
                     except subprocess.CalledProcessError as e:
                         st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
                         os.unlink(temp_file_path)
@@ -4489,12 +4537,14 @@ def display_word_interface_content(uploaded_file, model, temperature):
                         st.stop()
                     
                     # Run analysis
+                    st.write("🐛 DEBUG: Starting AI analysis...")
                     from playbook_manager import get_current_playbook
                     from NDA_Review_chain import StradaComplianceChain
                     
                     playbook_content = get_current_playbook()
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    st.write(f"✅ DEBUG: AI analysis completed, found {len(compliance_report.get('High Priority', []))} high priority issues")
                     
                     # Keep converted file for later use
                     # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
@@ -4683,8 +4733,9 @@ def display_word_interface_content(uploaded_file, model, temperature):
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
             except Exception as e:
-                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
-                with st.expander("Error Details"):
+                st.error(f"❌ DEBUG: Failed to process direct tracked changes generation: {str(e)}")
+                st.error(f"❌ DEBUG: Error type: {type(e).__name__}")
+                with st.expander("Debug: Full Error Details"):
                     st.code(traceback.format_exc())
 
     # Display persistent direct tracked changes results if available
