@@ -883,9 +883,8 @@ def display_single_nda_review(model, temperature):
             # Store the original uploaded file in session state for Spire comparison
             if uploaded_file.name.lower().endswith('.docx'):
                 # Store the file content as bytes to preserve it across sessions
-                file_content = uploaded_file.getvalue()
                 st.session_state.single_nda_uploaded_file = uploaded_file
-                st.session_state.single_nda_uploaded_content = file_content
+                st.session_state.single_nda_uploaded_content = uploaded_file.getvalue()
                 st.session_state.single_nda_uploaded_name = uploaded_file.name
             
             # Preview option
@@ -3014,9 +3013,7 @@ def display_edit_mode_interface():
                             'changes_count': changes_count,
                             'replacements_count': replacements_count,
                             'cleaned_findings': cleaned_findings,
-                            'original_findings': {f.id: f for f in selected_findings},
-                            'original_docx_content': original_file.getvalue() if original_file.name.lower().endswith('.docx') else None,
-                            'original_docx_name': original_file.name if original_file.name.lower().endswith('.docx') else None
+                            'original_findings': {f.id: f for f in selected_findings}
                         }
                         
                     except Exception as e:
@@ -3056,9 +3053,13 @@ def display_edit_mode_interface():
             with col3:
                 # Generate and download Spire comparison document
                 if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
-                    if docs.get('original_docx_content') and docs.get('original_docx_name'):
+                    if (hasattr(st.session_state, 'single_nda_uploaded_content') and 
+                        hasattr(st.session_state, 'single_nda_uploaded_name') and 
+                        st.session_state.single_nda_uploaded_content and
+                        st.session_state.single_nda_uploaded_name):
                         try:
                             # Create a temporary file-like object from stored content
+                            import io
                             class TempFile:
                                 def __init__(self, content, name):
                                     self.content = content
@@ -3068,12 +3069,11 @@ def display_edit_mode_interface():
                                     return self.content
                             
                             temp_uploaded_file = TempFile(
-                                docs['original_docx_content'],
-                                docs['original_docx_name']
+                                st.session_state.single_nda_uploaded_content,
+                                st.session_state.single_nda_uploaded_name
                             )
                             
                             # Generate the Spire comparison document
-                            # Original DOCX vs Clean Edited DOCX
                             comparison_docx = generate_spire_comparison_document(
                                 temp_uploaded_file,
                                 docs['clean_edit_data']
@@ -3086,12 +3086,10 @@ def display_edit_mode_interface():
                             
                         except Exception as e:
                             st.error(f"❌ Failed to generate comparison: {str(e)}")
-                            import traceback
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
                     else:
                         st.error("❌ Original DOCX file not available for comparison")
-                        st.write("💡 Make sure you uploaded a DOCX file and completed the analysis first.")
             
             # Show Spire comparison download if available
             if hasattr(st.session_state, 'spire_comparison_immediate_docx') and st.session_state.spire_comparison_immediate_docx:
@@ -3110,6 +3108,10 @@ def display_edit_mode_interface():
                     delattr(st.session_state, 'generated_docs')
                 if hasattr(st.session_state, 'spire_comparison_immediate_docx'):
                     delattr(st.session_state, 'spire_comparison_immediate_docx')
+                if hasattr(st.session_state, 'single_nda_uploaded_content'):
+                    delattr(st.session_state, 'single_nda_uploaded_content')
+                if hasattr(st.session_state, 'single_nda_uploaded_name'):
+                    delattr(st.session_state, 'single_nda_uploaded_name')
                 st.rerun()
             
             # Show cleaned findings details
@@ -4307,16 +4309,9 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
     """Generate a Spire comparison document comparing original vs clean edited"""
     try:
         from spire.doc import Document
+        from spire.doc.common import FileFormat
         import tempfile
         import os
-        
-        # Try to import FileFormat, fall back to string if needed
-        try:
-            from spire.doc.common import FileFormat
-            docx_format = FileFormat.Docx2016
-        except ImportError:
-            # Fallback if FileFormat import fails
-            docx_format = 1  # Docx format code
         
         # Create temporary files
         original_temp = tempfile.mktemp(suffix='_original.docx')
@@ -4335,14 +4330,14 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
         firstDoc = Document(original_temp)
         firstDoc.AcceptChanges()
         cleaned_original = tempfile.mktemp(suffix='_cleaned_original.docx')
-        firstDoc.SaveToFile(cleaned_original, docx_format)
+        firstDoc.SaveToFile(cleaned_original, FileFormat.Docx2016)
         firstDoc.Close()
         
         # Load and clean the edited document
         secondDoc = Document(clean_temp)
         secondDoc.AcceptChanges()
         cleaned_edited = tempfile.mktemp(suffix='_cleaned_edited.docx')
-        secondDoc.SaveToFile(cleaned_edited, docx_format)
+        secondDoc.SaveToFile(cleaned_edited, FileFormat.Docx2016)
         secondDoc.Close()
         
         # Now load the cleaned documents for comparison
@@ -4353,7 +4348,7 @@ def generate_spire_comparison_document(original_file, clean_docx_bytes):
             # Compare the cleaned documents
             firstDoc.Compare(secondDoc, "AI")
             # Save the result
-            firstDoc.SaveToFile(output_temp, docx_format)
+            firstDoc.SaveToFile(output_temp, FileFormat.Docx2016)
             
             # Read the comparison result
             with open(output_temp, 'rb') as f:
