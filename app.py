@@ -68,7 +68,7 @@ def initialize_session_state():
             'analysis_mode': 'Full Analysis'
         }
     if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'clean_review'
+        st.session_state.current_page = 'unified_review'
     
     # Background processing states
     if 'background_analysis' not in st.session_state:
@@ -2192,8 +2192,7 @@ def display_navigation():
     
     # Navigation options
     nav_options = {
-        "NDA REVIEW (WORD)": "clean_review",
-        "NDA REVIEW (ALL FILES)": "all_files_review",
+        "NDA REVIEW": "unified_review",
         "TESTING": "testing", 
         "POLICIES": "policies",
         "FAQ": "faq"
@@ -4164,6 +4163,235 @@ def display_testing_results_page():
                 st.success("All results cleared!")
                 st.rerun()
 
+def display_unified_nda_review(model, temperature):
+    """Display unified NDA review section that switches interface based on file type"""
+    # Header with settings button
+    col1, col2, col3 = st.columns([3, 1, 1])
+    
+    with col1:
+        st.title("⚖️ NDA Legal Compliance Review")
+    
+    with col2:
+        if st.button("⚙️ AI Settings", key="unified_review_settings", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.get('show_settings', False)
+            st.rerun()
+    
+    with col3:
+        pass  # Empty space
+    
+    # Display settings modal if activated
+    if st.session_state.get('show_settings', False):
+        display_settings_modal()
+    
+    st.markdown("""- Upload an NDA document in any supported format (PDF, DOCX, TXT, MD) to get AI-powered compliance analysis.
+- **DOCX files**: Include post-review editing capabilities with tracked changes document generation.
+- **Other formats**: Provide comprehensive analysis without editing features.
+- Please don't change page when reviewing an NDA, it will stop the review.
+""")
+    
+    # File source selection
+    source_type = st.radio(
+        "Select NDA source:",
+        ["Upload File", "Load from Database"],
+        help="Choose whether to upload a new file or select from your existing database",
+        key="unified_source_type"
+    )
+    
+    uploaded_file = None
+    
+    if source_type == "Upload File":
+        # File upload section
+        uploaded_file = st.file_uploader(
+            "Choose an NDA file to analyze",
+            type=['pdf', 'docx', 'txt', 'md'],
+            help="Upload the NDA document you want to analyze for compliance issues",
+            key="unified_nda_upload"
+        )
+        
+        # Show file type information
+        if uploaded_file:
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            if file_extension == 'docx':
+                st.info("📝 **DOCX detected**: Full editing capabilities will be available after analysis.")
+            else:
+                st.info(f"📄 **{file_extension.upper()} detected**: Analysis only (no editing features).")
+    
+    else:
+        # Database selection
+        from test_database import get_all_clean_ndas
+        clean_ndas = get_all_clean_ndas()
+        
+        if clean_ndas:
+            selected_nda = st.selectbox(
+                "Select NDA from database:",
+                list(clean_ndas.keys()),
+                help="Choose a clean NDA from your database to analyze",
+                key="unified_db_select"
+            )
+            
+            if selected_nda:
+                # Create a file-like object from the database file
+                clean_file_path = clean_ndas[selected_nda]
+                
+                class DatabaseFile:
+                    def __init__(self, file_path, name):
+                        self.file_path = file_path
+                        self.name = name
+                    
+                    def getvalue(self):
+                        with open(self.file_path, 'r', encoding='utf-8') as f:
+                            return f.read().encode('utf-8')
+                    
+                    def read(self):
+                        with open(self.file_path, 'r', encoding='utf-8') as f:
+                            return f.read().encode('utf-8')
+                
+                uploaded_file = DatabaseFile(clean_file_path, f"{selected_nda}_clean.md")
+                st.success(f"✅ Loaded from database: {selected_nda}")
+                st.info("📄 **MD format**: Analysis only (no editing features).")
+        else:
+            st.info("No NDAs found in database. Upload some NDAs using the Database tab first.")
+            st.markdown("👆 Click the 'Database' button above to upload NDAs to your database.")
+    
+    # Process the uploaded file and route to appropriate interface
+    if uploaded_file:
+        if validate_file(uploaded_file):
+            st.success(f"✅ File uploaded: {uploaded_file.name}")
+            
+            # Detect file type and route accordingly
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            
+            if file_extension == 'docx':
+                # Route to Word interface functionality
+                display_word_interface_content(uploaded_file, model, temperature)
+            else:
+                # Route to All Files interface functionality  
+                display_all_files_interface_content(uploaded_file, model, temperature)
+
+def display_word_interface_content(uploaded_file, model, temperature):
+    """Display the Word interface content (extracted from display_single_nda_review)"""
+    # Preview option
+    if st.checkbox("Preview file content", key="preview_word"):
+        try:
+            content = uploaded_file.getvalue().decode('utf-8')
+            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+        except:
+            # For actual DOCX files, show a different message
+            st.info("DOCX file content preview not available. Proceed with analysis to view content.")
+    
+    # Analysis controls
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # Analysis button
+        if st.button("🔍 Analyze NDA", key="analyze_word_nda", type="primary"):
+            with st.spinner("Analyzing NDA for compliance issues..."):
+                try:
+                    from NDA_Review_chain import load_and_analyze_nda
+                    
+                    # Create temporary file
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
+                        tmp_file.write(uploaded_file.getvalue())
+                        tmp_file_path = tmp_file.name
+                    
+                    try:
+                        analysis_result = load_and_analyze_nda(tmp_file_path, model, temperature)
+                        if analysis_result:
+                            st.session_state.single_nda_results = analysis_result
+                            st.success("✅ Analysis completed!")
+                        else:
+                            st.error("❌ Analysis failed - no results returned")
+                    finally:
+                        # Clean up temp file
+                        import os
+                        if os.path.exists(tmp_file_path):
+                            os.unlink(tmp_file_path)
+                            
+                except Exception as e:
+                    st.error(f"Analysis failed: {str(e)}")
+                    import traceback
+                    with st.expander("Error Details"):
+                        st.code(traceback.format_exc())
+    
+    with col2:
+        # Direct tracked changes generation
+        if st.button("⚡ Direct Tracked Changes", key="direct_word_changes", help="Generate tracked changes directly without review"):
+            direct_tracked_changes_generation(uploaded_file, model, temperature)
+    
+    # Display results if available - directly go to edit mode
+    if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
+        st.session_state.show_edit_mode = True
+        st.session_state.original_docx_file = uploaded_file  # Store the original file
+    
+    # Show edit mode interface if activated
+    if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
+        st.markdown("---")
+        display_edit_mode_interface()
+
+def display_all_files_interface_content(uploaded_file, model, temperature):
+    """Display the All Files interface content (extracted from display_all_files_nda_review)"""
+    # Preview option
+    if st.checkbox("Preview file content", key="preview_all_files"):
+        try:
+            content = uploaded_file.getvalue().decode('utf-8')
+            st.text_area("File Preview", content[:1000] + "..." if len(content) > 1000 else content, height=200)
+        except:
+            st.error("Unable to preview file content")
+    
+    # Analysis section
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("### 🔍 Analysis Options")
+    
+    with col2:
+        pass
+    
+    # Analysis button
+    if st.button("🔍 Analyze NDA", key="analyze_all_files_nda", type="primary"):
+        with st.spinner("Analyzing NDA for compliance issues..."):
+            try:
+                from NDA_Review_chain import load_and_analyze_nda
+                
+                # Create temporary file
+                import tempfile
+                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    tmp_file_path = tmp_file.name
+                
+                try:
+                    analysis_result = load_and_analyze_nda(tmp_file_path, model, temperature)
+                    if analysis_result:
+                        # Display results immediately
+                        display_analysis_results(analysis_result, uploaded_file.name)
+                        
+                        # Generate text summary for download
+                        text_summary = generate_text_summary(analysis_result, uploaded_file.name)
+                        
+                        # Download button for text summary
+                        from datetime import datetime
+                        st.download_button(
+                            label="📄 Download Analysis Summary (TXT)",
+                            data=text_summary,
+                            file_name=f"NDA_Analysis_{uploaded_file.name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                            mime="text/plain",
+                            key="download_all_files_summary"
+                        )
+                    else:
+                        st.error("❌ Analysis failed - no results returned")
+                finally:
+                    # Clean up temp file
+                    import os
+                    if os.path.exists(tmp_file_path):
+                        os.unlink(tmp_file_path)
+                        
+            except Exception as e:
+                st.error(f"Analysis failed: {str(e)}")
+                import traceback
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
+
 def main():
     """Main application function"""
     initialize_session_state()
@@ -4189,10 +4417,8 @@ def main():
     display_navigation()
     
     # Page routing
-    if st.session_state.current_page == "clean_review":
-        display_single_nda_review(model, temperature)
-    elif st.session_state.current_page == "all_files_review":
-        display_all_files_nda_review(model, temperature)
+    if st.session_state.current_page == "unified_review":
+        display_unified_nda_review(model, temperature)
     elif st.session_state.current_page == "testing":
         display_testing_page(model, temperature, "Full Analysis")
     elif st.session_state.current_page == "results":
