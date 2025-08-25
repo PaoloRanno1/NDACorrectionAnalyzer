@@ -4316,8 +4316,232 @@ def display_word_interface_content(uploaded_file, model, temperature):
     
     with col2:
         # Direct tracked changes generation
-        if st.button("⚡ Direct Tracked Changes", key="direct_word_changes", help="Generate tracked changes directly without review"):
-            direct_tracked_changes_generation(uploaded_file, model, temperature)
+        run_direct_tracked_changes = st.button("⚡ Direct Tracked Changes", key="direct_word_changes", help="Generate tracked changes directly without review")
+    
+    # Handle direct tracked changes generation
+    if run_direct_tracked_changes and uploaded_file:
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        if file_extension != 'docx':
+            st.error("Direct tracked changes generation requires a Word document (.docx file).")
+            st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
+        else:
+            try:
+                import tempfile
+                import os
+                import subprocess
+                import traceback
+                from datetime import datetime
+                
+                with st.spinner("Analyzing NDA and generating tracked changes document..."):
+                    st.info("Running AI analysis to identify all compliance issues...")
+                    
+                    file_content = uploaded_file.getvalue()
+                    
+                    # Store original docx content for later Word comparison
+                    st.session_state['original_docx_content'] = file_content
+                    
+                    # Write content to temporary file
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                    
+                    # Convert DOCX to markdown for analysis
+                    try:
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        result = subprocess.run([
+                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                        ], capture_output=True, text=True, check=True)
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except FileNotFoundError:
+                        st.error("Pandoc is not installed. Cannot process DOCX files.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except Exception as e:
+                        st.error(f"Failed to convert DOCX file: {str(e)}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    # Run analysis
+                    from playbook_manager import get_current_playbook
+                    from NDA_Review_chain import StradaComplianceChain
+                    
+                    playbook_content = get_current_playbook()
+                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    
+                    # Keep converted file for later use
+                    # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
+                    
+                    if not compliance_report:
+                        st.error("Failed to get analysis results.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    st.info("Auto-selecting all identified compliance issues...")
+                    
+                    # Auto-select all findings
+                    high_priority = compliance_report.get('High Priority', [])
+                    medium_priority = compliance_report.get('Medium Priority', [])
+                    low_priority = compliance_report.get('Low Priority', [])
+                    
+                    selected_findings = {
+                        'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
+                        'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
+                        'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
+                    }
+                    
+                    selected_comments = {}
+                    for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                        selected_comments[priority] = {}
+                        for idx in selected_findings[priority].keys():
+                            selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
+                    
+                    total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                    
+                    if total_issues == 0:
+                        st.success("No compliance issues found! Your NDA appears to be fully compliant.")
+                        os.unlink(temp_file_path)
+                    else:
+                        st.info(f"Generating tracked changes document with {total_issues} identified issues...")
+                        
+                        try:
+                            from Tracked_changes_tools_clean import (
+                                apply_cleaned_findings_to_docx, 
+                                clean_findings_with_llm, 
+                                flatten_findings, 
+                                select_findings,
+                                CleanedFinding,
+                                replace_cleaned_findings_in_docx,
+                                RawFinding
+                            )
+                            import shutil
+                            
+                            # Flatten all findings into a single list with proper structure
+                            raw_findings = []
+                            additional_info_by_id = {}
+                            finding_id = 1
+                            
+                            for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                                for idx, finding in selected_findings[priority].items():
+                                    raw_finding = RawFinding(
+                                        id=finding_id,
+                                        priority=priority,
+                                        section=finding.get('section', ''),
+                                        issue=finding.get('issue', ''),
+                                        problem=finding.get('problem', ''),
+                                        citation=finding.get('citation', ''),
+                                        suggested_replacement=finding.get('suggested_replacement', '')
+                                    )
+                                    raw_findings.append(raw_finding)
+                                    
+                                    # Store additional comment info by ID
+                                    comment = selected_comments.get(priority, {}).get(idx, "")
+                                    if comment:
+                                        additional_info_by_id[finding_id] = comment
+                                    
+                                    finding_id += 1
+                            
+                            # Step 1: Clean findings with LLM
+                            st.info("Step 1/3: Cleaning findings with AI...")
+                            cleaned_findings = clean_findings_with_llm(
+                                converted_path, 
+                                raw_findings, 
+                                additional_info_by_id, 
+                                model, 
+                                temperature
+                            )
+                            
+                            changes_count = len([f for f in cleaned_findings if f.citation_clean and f.suggested_replacement_clean])
+                            replacements_count = len([f for f in cleaned_findings if f.citation_clean and f.suggested_replacement_clean and f.citation_clean != f.suggested_replacement_clean])
+                            
+                            if changes_count == 0:
+                                st.warning("No valid changes could be generated from the findings.")
+                                os.unlink(temp_file_path)
+                                if os.path.exists(converted_path):
+                                    os.unlink(converted_path)
+                            else:
+                                # Step 2: Generate tracked changes document
+                                st.info("Step 2/3: Generating tracked changes document...")
+                                
+                                tracked_changes_file = temp_file_path.replace('.docx', '_tracked_changes.docx')
+                                tracked_docx = apply_cleaned_findings_to_docx(
+                                    temp_file_path,
+                                    cleaned_findings,
+                                    tracked_changes_file,
+                                    "AI Reviewer"
+                                )
+                                
+                                # Step 3: Generate clean edited document
+                                st.info("Step 3/3: Generating clean edited document...")
+                                
+                                clean_edit_file = temp_file_path.replace('.docx', '_clean_edit.docx')
+                                clean_docx = replace_cleaned_findings_in_docx(
+                                    temp_file_path,
+                                    cleaned_findings,
+                                    clean_edit_file
+                                )
+                                
+                                # Store documents in session state to persist after download
+                                st.session_state.direct_tracked_docx = tracked_docx
+                                st.session_state.direct_clean_docx = clean_docx
+                                st.session_state.direct_generation_results = {
+                                    'high_priority': high_priority,
+                                    'medium_priority': medium_priority,
+                                    'low_priority': low_priority,
+                                    'total_issues': total_issues
+                                }
+                                
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.download_button(
+                                        label="Download Tracked Changes Document",
+                                        data=tracked_docx,
+                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_tracked"
+                                    )
+                                
+                                with col2:
+                                    st.download_button(
+                                        label="Download Clean Edited Document",
+                                        data=clean_docx,
+                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_clean"
+                                    )
+                                
+                                # Show what was processed
+                                with st.expander("Issues Processed (Click to expand)"):
+                                    def display_issue_details(issues, priority_name):
+                                        if issues:
+                                            st.write(f"**{priority_name} Issues:**")
+                                            for i, issue in enumerate(issues):
+                                                with st.container():
+                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                                                    if issue.get('section'):
+                                                        st.write(f"📍 **Section:** {issue.get('section')}")
+                                                    if issue.get('problem'):
+                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                                                    if issue.get('citation'):
+                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
+                                                    if issue.get('suggested_replacement'):
+                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                                                    st.markdown("---")
+                                    
+                                    display_issue_details(high_priority, "High Priority")
+                                    display_issue_details(medium_priority, "Medium Priority")
+                                    display_issue_details(low_priority, "Low Priority")
+                        except Exception as e:
+                            st.error(f"Failed to generate tracked changes: {str(e)}")
+                            with st.expander("Error Details"):
+                                st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
     
     # Display results if available - directly go to edit mode
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
