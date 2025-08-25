@@ -880,6 +880,10 @@ def display_single_nda_review(model, temperature):
         if validate_file(uploaded_file):
             st.success(f"✅ File uploaded: {uploaded_file.name}")
             
+            # Store the original uploaded file in session state for Spire comparison
+            if uploaded_file.name.lower().endswith('.docx'):
+                st.session_state.single_nda_uploaded_file = uploaded_file
+            
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):
                 try:
@@ -3018,7 +3022,7 @@ def display_edit_mode_interface():
             st.success(f"✅ Documents generated successfully!")
             #st.info(f"Applied {docs['changes_count']} tracked changes and {docs['replacements_count']} direct replacements")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 st.download_button(
@@ -3037,6 +3041,48 @@ def display_edit_mode_interface():
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key="download_clean_edit"
                 )
+            
+            with col3:
+                # Generate and download Spire comparison document
+                if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
+                    if hasattr(st.session_state, 'single_nda_uploaded_file') and st.session_state.single_nda_uploaded_file:
+                        try:
+                            # Generate the Spire comparison document
+                            comparison_docx = generate_spire_comparison_document(
+                                st.session_state.single_nda_uploaded_file,
+                                docs['clean_edit_data']
+                            )
+                            
+                            # Store in session state for download
+                            st.session_state.spire_comparison_immediate_docx = comparison_docx
+                            st.success("✅ Spire comparison document generated!")
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"❌ Failed to generate comparison: {str(e)}")
+                            with st.expander("Error Details"):
+                                st.code(traceback.format_exc())
+                    else:
+                        st.error("❌ Original DOCX file not available for comparison")
+            
+            # Show Spire comparison download if available
+            if hasattr(st.session_state, 'spire_comparison_immediate_docx') and st.session_state.spire_comparison_immediate_docx:
+                st.download_button(
+                    label="📄 Download Spire Comparison Document",
+                    data=st.session_state.spire_comparison_immediate_docx,
+                    file_name=f"{docs['output_prefix']}_spire_comparison.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_spire_comparison_immediate"
+                )
+            
+            # Clear results button
+            st.markdown("---")
+            if st.button("🔄 New Generation", key="clear_immediate_results"):
+                if hasattr(st.session_state, 'generated_docs'):
+                    delattr(st.session_state, 'generated_docs')
+                if hasattr(st.session_state, 'spire_comparison_immediate_docx'):
+                    delattr(st.session_state, 'spire_comparison_immediate_docx')
+                st.rerun()
             
             # Show cleaned findings details
             st.markdown("---")
