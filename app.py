@@ -3085,6 +3085,7 @@ def display_edit_mode_interface():
                             st.rerun()
                             
                         except Exception as e:
+                            import traceback
                             st.error(f"❌ Failed to generate comparison: {str(e)}")
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
@@ -4308,8 +4309,7 @@ def display_analysis_results(analysis_result, filename):
 def generate_spire_comparison_document(original_file, clean_docx_bytes):
     """Generate a Spire comparison document comparing original vs clean edited"""
     try:
-        from spire.doc import Document
-        from spire.doc.common import FileFormat
+        from spire.doc import Document, FileFormat
         import tempfile
         import os
         
