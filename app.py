@@ -1343,12 +1343,13 @@ def display_single_nda_review(model, temperature):
                 del st.session_state.direct_clean_docx
             st.rerun()
     
-    # Display results if available - directly go to edit mode
+    # Display results if available - show issue review first
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
-        st.session_state.show_edit_mode = True
         st.session_state.original_docx_file = uploaded_file  # Store the original file
+        st.markdown("---")
+        display_issue_review_interface()
     
-    # Show edit mode interface if activated
+    # Show edit mode interface if activated from issue review
     if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
         st.markdown("---")
         display_edit_mode_interface()
@@ -2699,6 +2700,183 @@ def display_testing_results_section():
             display_detailed_comparison(comparison_analysis)
         else:
             st.error("Failed to load result data.")
+
+def display_issue_review_interface():
+    """Display the detailed issue review interface before document generation"""
+    st.subheader("📋 Available Issues")
+    
+    compliance_report = st.session_state.single_nda_results
+    
+    # Import the tracking changes tools to flatten findings
+    try:
+        import Tracked_changes_tools_clean as tr_tools
+        flatten_findings = tr_tools.flatten_findings(compliance_report)
+    except Exception as e:
+        st.error(f"Error processing findings: {str(e)}")
+        return
+    
+    if not flatten_findings:
+        st.warning("No findings to process.")
+        return
+    
+    st.markdown(f"Found **{len(flatten_findings)}** issues across all priority levels.")
+    
+    # Separate findings by priority
+    high_findings = [f for f in flatten_findings if f.priority == "High Priority"]
+    medium_findings = [f for f in flatten_findings if f.priority == "Medium Priority"] 
+    low_findings = [f for f in flatten_findings if f.priority == "Low Priority"]
+    
+    # High Priority Issues
+    if high_findings:
+        st.markdown("### 🔴 High Priority Issues (Mandatory)")
+        for i, finding in enumerate(high_findings, 1):
+            with st.container():
+                st.markdown(f"**High Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                st.markdown("---")
+    
+    # Medium Priority Issues  
+    if medium_findings:
+        st.markdown("### 🟡 Medium Priority Issues")
+        for i, finding in enumerate(medium_findings, 1):
+            with st.container():
+                st.markdown(f"**Medium Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                st.markdown("---")
+    
+    # Low Priority Issues
+    if low_findings:
+        st.markdown("### 🟢 Low Priority Issues")
+        for i, finding in enumerate(low_findings, 1):
+            with st.container():
+                st.markdown(f"**Low Priority {i}: {finding.issue}**")
+                
+                if finding.section:
+                    st.markdown(f"📍 **Section:** {finding.section}")
+                
+                if finding.problem:
+                    st.markdown(f"❌ **Problem:** {finding.problem}")
+                
+                if finding.citation:
+                    st.markdown(f"📄 **Citation:** {finding.citation}")
+                
+                if finding.suggested_replacement:
+                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
+                
+                st.markdown("---")
+    
+    # Action buttons
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📄 Edit Selected Issues", key="proceed_to_edit", use_container_width=True):
+            st.session_state.show_edit_mode = True
+            st.rerun()
+    
+    with col2:
+        if st.button("📄 Generate All Documents", key="generate_all_direct", use_container_width=True):
+            # Generate documents for all issues directly
+            with st.spinner("Generating documents with all identified issues..."):
+                try:
+                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings
+                    import tempfile
+                    import shutil
+                    import os
+                    from datetime import datetime
+                    
+                    # Get original DOCX file
+                    original_file = st.session_state.get('original_docx_file')
+                    if not original_file or not original_file.name.endswith('.docx'):
+                        st.error("⚠️ Document editing requires a DOCX file.")
+                        return
+                    
+                    # Save uploaded file to temp location
+                    temp_file_path = tempfile.mktemp(suffix='.docx')
+                    with open(temp_file_path, 'wb') as f:
+                        f.write(original_file.getvalue())
+                    
+                    # Clean the findings
+                    cleaned_findings = clean_findings(flatten_findings, "", "gemini-2.5-pro", 0.0)
+                    
+                    # Generate tracked changes document
+                    tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                    shutil.copy2(temp_file_path, tracked_temp_path)
+                    
+                    changes_applied = apply_cleaned_findings_to_docx(
+                        input_docx=tracked_temp_path,
+                        cleaned_findings=cleaned_findings,
+                        output_docx=tracked_temp_path,
+                        author="AI Compliance Reviewer"
+                    )
+                    
+                    # Generate clean edited document
+                    clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                    shutil.copy2(temp_file_path, clean_temp_path)
+                    
+                    replacements_applied = replace_cleaned_findings_in_docx(
+                        input_docx=clean_temp_path,
+                        cleaned_findings=cleaned_findings,
+                        output_docx=clean_temp_path
+                    )
+                    
+                    # Read the generated files
+                    with open(tracked_temp_path, 'rb') as f:
+                        tracked_docx = f.read()
+                    
+                    with open(clean_temp_path, 'rb') as f:
+                        clean_docx = f.read()
+                    
+                    # Cleanup temp files
+                    os.unlink(tracked_temp_path)
+                    os.unlink(clean_temp_path) 
+                    os.unlink(temp_file_path)
+                    
+                    if tracked_docx and clean_docx:
+                        # Store documents in session state
+                        st.session_state.direct_tracked_docx = tracked_docx
+                        st.session_state.direct_clean_docx = clean_docx
+                        st.session_state.direct_generation_results = {
+                            'high_priority': [f.dict() for f in high_findings],
+                            'medium_priority': [f.dict() for f in medium_findings], 
+                            'low_priority': [f.dict() for f in low_findings],
+                            'total_issues': len(flatten_findings)
+                        }
+                        
+                        st.success(f"✅ Documents generated successfully! Applied {changes_applied} tracked changes and {replacements_applied} direct replacements.")
+                        st.rerun()
+                    else:
+                        st.error("Failed to generate documents.")
+                        
+                except Exception as e:
+                    st.error(f"Failed to generate documents: {str(e)}")
+                    import traceback
+                    with st.expander("Error Details"):
+                        st.code(traceback.format_exc())
 
 def display_edit_mode_interface():
     """Display the post-review editing interface for selecting and processing findings"""
