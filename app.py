@@ -886,6 +886,7 @@ def display_single_nda_review(model, temperature):
                 st.session_state.single_nda_uploaded_file = uploaded_file
                 st.session_state.single_nda_uploaded_content = uploaded_file.getvalue()
                 st.session_state.single_nda_uploaded_name = uploaded_file.name
+                st.success(f"✅ DOCX file stored for Spire comparison: {len(uploaded_file.getvalue())} bytes")
             
             # Preview option
             if st.checkbox("Preview file content", key="preview_single"):
@@ -937,6 +938,7 @@ def display_single_nda_review(model, temperature):
                 if file_extension == 'docx':
                     st.session_state.single_nda_uploaded_content = file_content
                     st.session_state.single_nda_uploaded_name = uploaded_file.name
+                    st.info(f"📁 Preserved original DOCX ({len(file_content)} bytes) for Spire comparison")
                 
                 # Write content to temporary file
                 import tempfile
