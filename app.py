@@ -1243,20 +1243,25 @@ def display_single_nda_review(model, temperature):
                                 
                                 # Show what was processed
                                 with st.expander("Issues Processed (Click to expand)"):
-                                    if high_priority:
-                                        st.write("**High Priority Issues:**")
-                                        for i, issue in enumerate(high_priority):
-                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+                                    def display_issue_details(issues, priority_name):
+                                        if issues:
+                                            st.write(f"**{priority_name} Issues:**")
+                                            for i, issue in enumerate(issues):
+                                                with st.container():
+                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                                                    if issue.get('section'):
+                                                        st.write(f"📍 **Section:** {issue.get('section')}")
+                                                    if issue.get('problem'):
+                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                                                    if issue.get('citation'):
+                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
+                                                    if issue.get('suggested_replacement'):
+                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                                                    st.markdown("---")
                                     
-                                    if medium_priority:
-                                        st.write("**Medium Priority Issues:**")
-                                        for i, issue in enumerate(medium_priority):
-                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
-                                    
-                                    if low_priority:
-                                        st.write("**Low Priority Issues:**")
-                                        for i, issue in enumerate(low_priority):
-                                            st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+                                    display_issue_details(high_priority, "High Priority")
+                                    display_issue_details(medium_priority, "Medium Priority")
+                                    display_issue_details(low_priority, "Low Priority")
                             else:
                                 st.error("Failed to generate tracked changes documents.")
                         except Exception as e:
@@ -1308,20 +1313,25 @@ def display_single_nda_review(model, temperature):
         
         # Show what was processed
         with st.expander("Issues Processed (Click to expand)"):
-            if results['high_priority']:
-                st.write("**High Priority Issues:**")
-                for i, issue in enumerate(results['high_priority']):
-                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+            def display_detailed_issues(issues, priority_name):
+                if issues:
+                    st.write(f"**{priority_name} Issues:**")
+                    for i, issue in enumerate(issues):
+                        with st.container():
+                            st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                            if issue.get('section'):
+                                st.write(f"📍 **Section:** {issue.get('section')}")
+                            if issue.get('problem'):
+                                st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                            if issue.get('citation'):
+                                st.write(f"📄 **Citation:** {issue.get('citation')}")
+                            if issue.get('suggested_replacement'):
+                                st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                            st.markdown("---")
             
-            if results['medium_priority']:
-                st.write("**Medium Priority Issues:**")
-                for i, issue in enumerate(results['medium_priority']):
-                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
-            
-            if results['low_priority']:
-                st.write("**Low Priority Issues:**")
-                for i, issue in enumerate(results['low_priority']):
-                    st.write(f"{i+1}. {issue.get('issue', 'Compliance Issue')}")
+            display_detailed_issues(results['high_priority'], "High Priority")
+            display_detailed_issues(results['medium_priority'], "Medium Priority")
+            display_detailed_issues(results['low_priority'], "Low Priority")
         
         # Add button to clear results and start fresh
         if st.button("Start New Analysis", key="clear_direct_results"):
