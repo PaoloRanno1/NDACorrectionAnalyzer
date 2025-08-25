@@ -933,6 +933,11 @@ def display_single_nda_review(model, temperature):
                 file_extension = uploaded_file.name.split('.')[-1].lower()
                 file_content = uploaded_file.getvalue()
                 
+                # Store original DOCX content for Spire comparison BEFORE processing
+                if file_extension == 'docx':
+                    st.session_state.single_nda_uploaded_content = file_content
+                    st.session_state.single_nda_uploaded_name = uploaded_file.name
+                
                 # Write content to temporary file
                 import tempfile
                 import os
