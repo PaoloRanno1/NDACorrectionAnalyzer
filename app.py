@@ -3030,7 +3030,7 @@ def display_edit_mode_interface():
             st.success(f"✅ Documents generated successfully!")
             #st.info(f"Applied {docs['changes_count']} tracked changes and {docs['replacements_count']} direct replacements")
             
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             
             with col1:
                 st.download_button(
@@ -3050,65 +3050,11 @@ def display_edit_mode_interface():
                     key="download_clean_edit"
                 )
             
-            with col3:
-                # Generate and download Spire comparison document
-                if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison_immediate"):
-                    if (hasattr(st.session_state, 'single_nda_uploaded_content') and 
-                        hasattr(st.session_state, 'single_nda_uploaded_name') and 
-                        st.session_state.single_nda_uploaded_content and
-                        st.session_state.single_nda_uploaded_name):
-                        try:
-                            # Create a temporary file-like object from stored content
-                            import io
-                            class TempFile:
-                                def __init__(self, content, name):
-                                    self.content = content
-                                    self.name = name
-                                
-                                def getvalue(self):
-                                    return self.content
-                            
-                            temp_uploaded_file = TempFile(
-                                st.session_state.single_nda_uploaded_content,
-                                st.session_state.single_nda_uploaded_name
-                            )
-                            
-                            # Generate the Spire comparison document
-                            comparison_docx = generate_spire_comparison_document(
-                                temp_uploaded_file,
-                                docs['clean_edit_data']
-                            )
-                            
-                            # Store in session state for download
-                            st.session_state.spire_comparison_immediate_docx = comparison_docx
-                            st.success("✅ Spire comparison document generated!")
-                            st.rerun()
-                            
-                        except Exception as e:
-                            import traceback
-                            st.error(f"❌ Failed to generate comparison: {str(e)}")
-                            with st.expander("Error Details"):
-                                st.code(traceback.format_exc())
-                    else:
-                        st.error("❌ Original DOCX file not available for comparison")
-            
-            # Show Spire comparison download if available
-            if hasattr(st.session_state, 'spire_comparison_immediate_docx') and st.session_state.spire_comparison_immediate_docx:
-                st.download_button(
-                    label="📄 Download Spire Comparison Document",
-                    data=st.session_state.spire_comparison_immediate_docx,
-                    file_name=f"{docs['output_prefix']}_spire_comparison.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_spire_comparison_immediate"
-                )
-            
             # Clear results button
             st.markdown("---")
             if st.button("🔄 New Generation", key="clear_immediate_results"):
                 if hasattr(st.session_state, 'generated_docs'):
                     delattr(st.session_state, 'generated_docs')
-                if hasattr(st.session_state, 'spire_comparison_immediate_docx'):
-                    delattr(st.session_state, 'spire_comparison_immediate_docx')
                 if hasattr(st.session_state, 'single_nda_uploaded_content'):
                     delattr(st.session_state, 'single_nda_uploaded_content')
                 if hasattr(st.session_state, 'single_nda_uploaded_name'):
@@ -4306,71 +4252,6 @@ def display_analysis_results(analysis_result, filename):
     else:
         st.success("✅ No low priority issues found!")
 
-def generate_spire_comparison_document(original_file, clean_docx_bytes):
-    """Generate a Spire comparison document comparing original vs clean edited"""
-    try:
-        from spire.doc import Document, FileFormat
-        import tempfile
-        import os
-        
-        # Create temporary files
-        original_temp = tempfile.mktemp(suffix='_original.docx')
-        clean_temp = tempfile.mktemp(suffix='_clean.docx')
-        output_temp = tempfile.mktemp(suffix='_comparison.docx')
-        
-        # Save original file
-        with open(original_temp, 'wb') as f:
-            f.write(original_file.getvalue())
-        
-        # Save clean edited file
-        with open(clean_temp, 'wb') as f:
-            f.write(clean_docx_bytes)
-        
-        # Load and clean the original document
-        firstDoc = Document(original_temp)
-        firstDoc.AcceptChanges()
-        cleaned_original = tempfile.mktemp(suffix='_cleaned_original.docx')
-        firstDoc.SaveToFile(cleaned_original, FileFormat.Docx2016)
-        firstDoc.Close()
-        
-        # Load and clean the edited document
-        secondDoc = Document(clean_temp)
-        secondDoc.AcceptChanges()
-        cleaned_edited = tempfile.mktemp(suffix='_cleaned_edited.docx')
-        secondDoc.SaveToFile(cleaned_edited, FileFormat.Docx2016)
-        secondDoc.Close()
-        
-        # Now load the cleaned documents for comparison
-        firstDoc = Document(cleaned_original)
-        secondDoc = Document(cleaned_edited)
-        
-        try:
-            # Compare the cleaned documents
-            firstDoc.Compare(secondDoc, "AI")
-            # Save the result
-            firstDoc.SaveToFile(output_temp, FileFormat.Docx2016)
-            
-            # Read the comparison result
-            with open(output_temp, 'rb') as f:
-                comparison_bytes = f.read()
-            
-            return comparison_bytes
-            
-        finally:
-            # Clean up
-            firstDoc.Close()
-            secondDoc.Close()
-            
-            # Remove all temporary files
-            for temp_file in [original_temp, clean_temp, output_temp, cleaned_original, cleaned_edited]:
-                try:
-                    if os.path.exists(temp_file):
-                        os.unlink(temp_file)
-                except:
-                    pass
-                    
-    except Exception as e:
-        raise Exception(f"Spire comparison failed: {str(e)}")
 
 def generate_text_summary(analysis_result, filename):
     """Generate a text summary of the analysis results"""
@@ -4830,7 +4711,7 @@ def display_word_interface_content(uploaded_file, model, temperature):
         
         # Download buttons
         st.markdown("### 📥 Download Generated Documents")
-        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+        col1, col2, col3 = st.columns([3, 3, 2])
         
         with col1:
             from datetime import datetime
@@ -4852,29 +4733,6 @@ def display_word_interface_content(uploaded_file, model, temperature):
             )
         
         with col3:
-            # Generate and download Spire comparison document
-            if st.button("📄 Download Tracked changes new version", key="generate_spire_comparison"):
-                if hasattr(st.session_state, 'original_docx_file') and st.session_state.original_docx_file:
-                    try:
-                        # Generate the Spire comparison document
-                        comparison_docx = generate_spire_comparison_document(
-                            st.session_state.original_docx_file,
-                            st.session_state.direct_clean_docx
-                        )
-                        
-                        # Store in session state for download
-                        st.session_state.spire_comparison_docx = comparison_docx
-                        st.success("✅ Spire comparison document generated!")
-                        st.rerun()
-                        
-                    except Exception as e:
-                        st.error(f"❌ Failed to generate comparison: {str(e)}")
-                        with st.expander("Error Details"):
-                            st.code(traceback.format_exc())
-                else:
-                    st.error("❌ Original DOCX file not available for comparison")
-        
-        with col4:
             # Clear results button
             if st.button("🔄 New Generation", key="clear_direct_results"):
                 if hasattr(st.session_state, 'direct_tracked_docx'):
@@ -4883,21 +4741,10 @@ def display_word_interface_content(uploaded_file, model, temperature):
                     delattr(st.session_state, 'direct_clean_docx')
                 if hasattr(st.session_state, 'direct_generation_results'):
                     delattr(st.session_state, 'direct_generation_results')
-                if hasattr(st.session_state, 'spire_comparison_docx'):
-                    delattr(st.session_state, 'spire_comparison_docx')
                 if hasattr(st.session_state, 'original_docx_file'):
                     delattr(st.session_state, 'original_docx_file')
                 st.rerun()
         
-        # Show Spire comparison download if available
-        if hasattr(st.session_state, 'spire_comparison_docx') and st.session_state.spire_comparison_docx:
-            st.download_button(
-                label="📄 Download Spire Comparison Document",
-                data=st.session_state.spire_comparison_docx,
-                file_name=f"NDA_SpireComparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_spire_comparison"
-            )
         
         # Show what was processed
         with st.expander("Issues Processed (Click to expand)"):
