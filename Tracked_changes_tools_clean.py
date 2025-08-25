@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 import tempfile
 from pathlib import Path
 
-from google import genai
+import google.generativeai as genai
 try:
     from docx import Document
     from docx.oxml import OxmlElement
