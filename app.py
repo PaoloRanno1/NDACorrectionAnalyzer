@@ -1304,14 +1304,14 @@ def display_single_nda_review(model, temperature):
                             st.error(f"Failed to generate tracked changes: {str(e)}")
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
-                except Exception as e:
-                    if 'progress_container' in locals():
-                        progress_container.empty()
-                    if 'status_container' in locals():
-                        status_container.empty()
-                    st.error(f"Failed to process direct tracked changes generation: {str(e)}")
-                    with st.expander("Error Details"):
-                        st.code(traceback.format_exc())
+            except Exception as e:
+                if 'progress_container' in locals():
+                    progress_container.empty()
+                if 'status_container' in locals():
+                    status_container.empty()
+                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
     
     # Display persistent direct generation results if available
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
