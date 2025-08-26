@@ -1013,6 +1013,8 @@ def display_single_nda_review(model, temperature):
             del st.session_state.direct_tracked_docx
         if hasattr(st.session_state, 'direct_clean_docx'):
             del st.session_state.direct_clean_docx
+        if hasattr(st.session_state, 'direct_generation_complete'):
+            del st.session_state.direct_generation_complete
             
         file_extension = uploaded_file.name.split('.')[-1].lower()
         if file_extension != 'docx':
@@ -1216,9 +1218,63 @@ def display_single_nda_review(model, temperature):
                                     'low_priority': low_priority,
                                     'total_issues': total_issues
                                 }
+                                st.session_state.direct_generation_complete = True
                                 
-                                # Force page refresh to display results
-                                st.rerun()
+                                # Display results immediately without rerun
+                                st.markdown("---")
+                                st.subheader("Direct Generation Summary")
+                                
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("High Priority", len(high_priority))
+                                with col2:
+                                    st.metric("Medium Priority", len(medium_priority))
+                                with col3:
+                                    st.metric("Low Priority", len(low_priority))
+                                
+                                st.markdown("---")
+                                st.subheader("Download Generated Documents")
+                                
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.download_button(
+                                        label="Download Tracked Changes Document",
+                                        data=tracked_docx,
+                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_tracked_immediate"
+                                    )
+                                
+                                with col2:
+                                    st.download_button(
+                                        label="Download Clean Edited Document",
+                                        data=clean_docx,
+                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_clean_immediate"
+                                    )
+                                
+                                # Show what was processed
+                                with st.expander("Issues Processed (Click to expand)"):
+                                    def display_immediate_issues(issues, priority_name):
+                                        if issues:
+                                            st.write(f"**{priority_name} Issues:**")
+                                            for i, issue in enumerate(issues):
+                                                with st.container():
+                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                                                    if issue.get('section'):
+                                                        st.write(f"📍 **Section:** {issue.get('section')}")
+                                                    if issue.get('problem'):
+                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                                                    if issue.get('citation'):
+                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
+                                                    if issue.get('suggested_replacement'):
+                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                                                    st.markdown("---")
+                                    
+                                    display_immediate_issues(high_priority, "High Priority")
+                                    display_immediate_issues(medium_priority, "Medium Priority")
+                                    display_immediate_issues(low_priority, "Low Priority")
                             else:
                                 st.error("Failed to generate tracked changes documents.")
                         except Exception as e:
