@@ -291,11 +291,13 @@ def clean_findings_with_llm(
             if _norm(citation_clean) and _norm(citation_clean) in _norm(nda_text):
                 pass  # Accept normalized match but retain original citation_clean
             else:
-                raise ValueError(
-                    f"[id={cid}] citation_clean is not an exact substring of NDA text.\n"
-                    f"citation_clean: {citation_clean[:200]}...\n"
-                    "Tip: Re-run with stronger guidance or shorten the expected span."
-                )
+                # More flexible fallback: use original citation if cleanup fails
+                print(f"⚠️  Warning: Could not find exact match for cleaned citation (id={cid})")
+                print(f"    Original: {f.citation[:100]}...")
+                print(f"    Cleaned:  {citation_clean[:100]}...")
+                print(f"    Using original citation as fallback")
+                # Use the original citation instead of the cleaned version
+                citation_clean = f.citation
 
         results.append(
             CleanedFinding(
