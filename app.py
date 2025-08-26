@@ -1006,6 +1006,14 @@ def display_single_nda_review(model, temperature):
     
     # Handle direct tracked changes generation
     if run_direct_tracked_changes and uploaded_file:
+        # Clear any previous direct generation results
+        if hasattr(st.session_state, 'direct_generation_results'):
+            del st.session_state.direct_generation_results
+        if hasattr(st.session_state, 'direct_tracked_docx'):
+            del st.session_state.direct_tracked_docx
+        if hasattr(st.session_state, 'direct_clean_docx'):
+            del st.session_state.direct_clean_docx
+            
         file_extension = uploaded_file.name.split('.')[-1].lower()
         if file_extension != 'docx':
             st.error("Direct tracked changes generation requires a Word document (.docx file).")
@@ -1208,6 +1216,9 @@ def display_single_nda_review(model, temperature):
                                     'low_priority': low_priority,
                                     'total_issues': total_issues
                                 }
+                                
+                                # Force page refresh to display results
+                                st.rerun()
                             else:
                                 st.error("Failed to generate tracked changes documents.")
                         except Exception as e:
