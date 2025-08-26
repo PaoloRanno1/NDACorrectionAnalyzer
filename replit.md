@@ -63,8 +63,6 @@ Preferred communication style: Simple, everyday language.
 - **Streamlit**: Web application framework
 - **Plotly**: Interactive data visualization
 - **Pandas**: Data manipulation and analysis
-- **FastAPI**: API server for email webhook integration
-- **Uvicorn**: ASGI server for FastAPI
 
 ### Environment Management
 - **python-dotenv**: Environment variable management for API keys
@@ -171,15 +169,3 @@ The application uses a sophisticated prompt engineering approach with persona-ba
 - **Demo Mode**: Graceful fallback when python-docx dependencies are unavailable, showing interface in demo mode
 - **User Workflow**: Complete post-review editing workflow: AI analysis → issue selection → comment addition → LLM processing → document generation
 - **UI Cleanup**: Removed JSON Data Viewer section from NDA Review results as requested by user
-
-### Email Integration System (January 2025)
-- **FastAPI Server**: Created separate API server (server.py) running on port 8000 for email webhook processing
-- **Direct Tracked Changes Extraction**: Extracted core logic from Streamlit app into reusable function (direct_tracked_changes.py)
-- **Email Webhook**: Added /webhook/email endpoint to process incoming DOCX attachments and automatically reply with tracked changes
-- **SMTP Integration**: Email system configured with Gmail SMTP for automated responses
-- **Domain Restriction**: Optional ALLOWED_DOMAIN environment variable to restrict sender domains
-- **Test Endpoint**: Added /test endpoint for local testing with curl before email provider integration
-- **Document Processing**: Automatic processing of emailed DOCX files through full AI analysis pipeline
-- **Error Handling**: Comprehensive error handling with email notifications for processing failures
-- **Dual Workflows**: Maintained Streamlit UI (port 5000) alongside FastAPI server (port 8000) for different use cases
-- **Environment Configuration**: Secure credential management through Replit Secrets (SMTP_USER, SMTP_PASS, FROM_ADDR)
