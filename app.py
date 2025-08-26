@@ -1021,24 +1021,23 @@ def display_single_nda_review(model, temperature):
             st.error("Direct tracked changes generation requires a Word document (.docx file).")
             st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
         else:
+            import tempfile
+            import os
+            import subprocess
+            import traceback
+            from datetime import datetime
+            
+            # Create progress container
+            progress_container = st.empty()
+            status_container = st.empty()
+            
+            with progress_container.container():
+                progress_bar = st.progress(0)
+                
+            with status_container:
+                st.info("🔄 Step 1/4: Preparing document...")
+            
             try:
-                import tempfile
-                import os
-                import subprocess
-                import traceback
-                from datetime import datetime
-                
-                # Create progress container
-                progress_container = st.empty()
-                status_container = st.empty()
-                
-                with progress_container.container():
-                    progress_bar = st.progress(0)
-                    
-                with status_container:
-                    st.info("🔄 Step 1/4: Preparing document...")
-                
-                try:
                     file_content = uploaded_file.getvalue()
                     
                     # Store original docx content for later Word comparison
