@@ -1038,125 +1038,125 @@ def display_single_nda_review(model, temperature):
                 st.info("🔄 Step 1/4: Preparing document...")
             
             try:
-                    file_content = uploaded_file.getvalue()
+                file_content = uploaded_file.getvalue()
+                
+                # Store original docx content for later Word comparison
+                st.session_state['original_docx_content'] = file_content
+                
+                # Write content to temporary file
+                with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_path = temp_file.name
+                
+                progress_bar.progress(25)
+                status_container.info("🔄 Step 2/4: Converting document format...")
+                
+                # Convert DOCX to markdown for analysis
+                try:
+                    converted_path = temp_file_path.replace('.docx', '.md')
+                    result = subprocess.run([
+                        'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                    ], capture_output=True, text=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                    os.unlink(temp_file_path)
+                    st.stop()
+                except FileNotFoundError:
+                    st.error("Pandoc is not installed. Cannot process DOCX files.")
+                    os.unlink(temp_file_path)
+                    st.stop()
+                except Exception as e:
+                    st.error(f"Failed to convert DOCX file: {str(e)}")
+                    os.unlink(temp_file_path)
+                    st.stop()
+                
+                progress_bar.progress(50)
+                status_container.info("🔄 Step 3/4: Running AI compliance analysis... (This may take several minutes)")
+                
+                # Run analysis
+                from playbook_manager import get_current_playbook
+                from NDA_Review_chain import StradaComplianceChain
+                
+                playbook_content = get_current_playbook()
+                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                
+                progress_bar.progress(75)
+                status_container.info("🔄 Step 4/4: Generating tracked changes documents...")
+                
+                # Keep converted file for later use
+                # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
+                
+                if not compliance_report:
+                    st.error("Failed to get analysis results.")
+                    os.unlink(temp_file_path)
+                    st.stop()
+                
+                st.info("Auto-selecting all identified compliance issues...")
+                
+                # Auto-select all findings
+                high_priority = compliance_report.get('High Priority', [])
+                medium_priority = compliance_report.get('Medium Priority', [])
+                low_priority = compliance_report.get('Low Priority', [])
+                
+                selected_findings = {
+                    'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
+                    'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
+                    'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
+                }
+                
+                selected_comments = {}
+                for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                    selected_comments[priority] = {}
+                    for idx in selected_findings[priority].keys():
+                        selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
+                
+                total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                
+                if total_issues == 0:
+                    st.success("No compliance issues found! Your NDA appears to be fully compliant.")
+                    os.unlink(temp_file_path)
+                else:
+                    st.info(f"Generating tracked changes document with {total_issues} identified issues...")
                     
-                    # Store original docx content for later Word comparison
-                    st.session_state['original_docx_content'] = file_content
-                    
-                    # Write content to temporary file
-                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
-                        temp_file.write(file_content)
-                        temp_file_path = temp_file.name
-                    
-                    progress_bar.progress(25)
-                    status_container.info("🔄 Step 2/4: Converting document format...")
-                    
-                    # Convert DOCX to markdown for analysis
                     try:
-                        converted_path = temp_file_path.replace('.docx', '.md')
-                        result = subprocess.run([
-                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
-                        ], capture_output=True, text=True, check=True)
-                    except subprocess.CalledProcessError as e:
-                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    except FileNotFoundError:
-                        st.error("Pandoc is not installed. Cannot process DOCX files.")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    except Exception as e:
-                        st.error(f"Failed to convert DOCX file: {str(e)}")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    
-                    progress_bar.progress(50)
-                    status_container.info("🔄 Step 3/4: Running AI compliance analysis... (This may take several minutes)")
-                    
-                    # Run analysis
-                    from playbook_manager import get_current_playbook
-                    from NDA_Review_chain import StradaComplianceChain
-                    
-                    playbook_content = get_current_playbook()
-                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
-                    
-                    progress_bar.progress(75)
-                    status_container.info("🔄 Step 4/4: Generating tracked changes documents...")
-                    
-                    # Keep converted file for later use
-                    # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
-                    
-                    if not compliance_report:
-                        st.error("Failed to get analysis results.")
-                        os.unlink(temp_file_path)
-                        st.stop()
-                    
-                    st.info("Auto-selecting all identified compliance issues...")
-                    
-                    # Auto-select all findings
-                    high_priority = compliance_report.get('High Priority', [])
-                    medium_priority = compliance_report.get('Medium Priority', [])
-                    low_priority = compliance_report.get('Low Priority', [])
-                    
-                    selected_findings = {
-                        'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
-                        'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
-                        'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
-                    }
-                    
-                    selected_comments = {}
-                    for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                        selected_comments[priority] = {}
-                        for idx in selected_findings[priority].keys():
-                            selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
-                    
-                    total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
-                    
-                    if total_issues == 0:
-                        st.success("No compliance issues found! Your NDA appears to be fully compliant.")
-                        os.unlink(temp_file_path)
-                    else:
-                        st.info(f"Generating tracked changes document with {total_issues} identified issues...")
+                        from Tracked_changes_tools_clean import (
+                            apply_cleaned_findings_to_docx, 
+                            clean_findings_with_llm, 
+                            flatten_findings, 
+                            select_findings,
+                            CleanedFinding,
+                            replace_cleaned_findings_in_docx
+                        )
+                        import tempfile
+                        import shutil
                         
-                        try:
-                            from Tracked_changes_tools_clean import (
-                                apply_cleaned_findings_to_docx, 
-                                clean_findings_with_llm, 
-                                flatten_findings, 
-                                select_findings,
-                                CleanedFinding,
-                                replace_cleaned_findings_in_docx
-                            )
-                            import tempfile
-                            import shutil
-                            
-                            from Tracked_changes_tools_clean import RawFinding
-                            
-                            # Flatten all findings into a single list with proper structure
-                            raw_findings = []
-                            additional_info_by_id = {}
-                            finding_id = 1
-                            
-                            for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                                for idx, finding in selected_findings[priority].items():
-                                    raw_finding = RawFinding(
-                                        id=finding_id,
-                                        priority=priority,
-                                        section=finding.get('section', ''),
-                                        issue=finding.get('issue', ''),
-                                        problem=finding.get('problem', ''),
-                                        citation=finding.get('citation', ''),
-                                        suggested_replacement=finding.get('suggested_replacement', '')
-                                    )
-                                    raw_findings.append(raw_finding)
-                                    
-                                    # Store additional comment info by ID
-                                    comment = selected_comments.get(priority, {}).get(idx, "")
-                                    if comment:
-                                        additional_info_by_id[finding_id] = comment
-                                    
-                                    finding_id += 1
+                        from Tracked_changes_tools_clean import RawFinding
+                        
+                        # Flatten all findings into a single list with proper structure
+                        raw_findings = []
+                        additional_info_by_id = {}
+                        finding_id = 1
+                        
+                        for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                            for idx, finding in selected_findings[priority].items():
+                                raw_finding = RawFinding(
+                                    id=finding_id,
+                                    priority=priority,
+                                    section=finding.get('section', ''),
+                                    issue=finding.get('issue', ''),
+                                    problem=finding.get('problem', ''),
+                                    citation=finding.get('citation', ''),
+                                    suggested_replacement=finding.get('suggested_replacement', '')
+                                )
+                                raw_findings.append(raw_finding)
+                                
+                                # Store additional comment info by ID
+                                comment = selected_comments.get(priority, {}).get(idx, "")
+                                if comment:
+                                    additional_info_by_id[finding_id] = comment
+                                
+                                finding_id += 1
                             
                             # Clean the findings using LLM
                             st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
