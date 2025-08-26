@@ -1028,9 +1028,17 @@ def display_single_nda_review(model, temperature):
                 import traceback
                 from datetime import datetime
                 
-                with st.spinner("Analyzing NDA and generating tracked changes document..."):
-                    st.info("Running AI analysis to identify all compliance issues...")
+                # Create progress container
+                progress_container = st.empty()
+                status_container = st.empty()
+                
+                with progress_container.container():
+                    progress_bar = st.progress(0)
                     
+                with status_container:
+                    st.info("🔄 Step 1/4: Preparing document...")
+                
+                try:
                     file_content = uploaded_file.getvalue()
                     
                     # Store original docx content for later Word comparison
@@ -1040,6 +1048,9 @@ def display_single_nda_review(model, temperature):
                     with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                         temp_file.write(file_content)
                         temp_file_path = temp_file.name
+                    
+                    progress_bar.progress(25)
+                    status_container.info("🔄 Step 2/4: Converting document format...")
                     
                     # Convert DOCX to markdown for analysis
                     try:
@@ -1060,6 +1071,9 @@ def display_single_nda_review(model, temperature):
                         os.unlink(temp_file_path)
                         st.stop()
                     
+                    progress_bar.progress(50)
+                    status_container.info("🔄 Step 3/4: Running AI compliance analysis... (This may take several minutes)")
+                    
                     # Run analysis
                     from playbook_manager import get_current_playbook
                     from NDA_Review_chain import StradaComplianceChain
@@ -1067,6 +1081,9 @@ def display_single_nda_review(model, temperature):
                     playbook_content = get_current_playbook()
                     review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
                     compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    
+                    progress_bar.progress(75)
+                    status_container.info("🔄 Step 4/4: Generating tracked changes documents...")
                     
                     # Keep converted file for later use
                     # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
@@ -1207,7 +1224,12 @@ def display_single_nda_review(model, temperature):
                             os.unlink(temp_file_path)
                             
                             if tracked_docx and clean_docx:
-                                st.success("Tracked changes documents generated successfully!")
+                                progress_bar.progress(100)
+                                status_container.success("✅ Analysis and document generation completed successfully!")
+                                
+                                # Clear progress indicators
+                                progress_container.empty()
+                                status_container.empty()
                                 
                                 # Store documents in session state to persist after download
                                 st.session_state.direct_tracked_docx = tracked_docx
@@ -1278,13 +1300,19 @@ def display_single_nda_review(model, temperature):
                             else:
                                 st.error("Failed to generate tracked changes documents.")
                         except Exception as e:
+                            progress_container.empty()
+                            status_container.empty()
                             st.error(f"Failed to generate tracked changes: {str(e)}")
                             with st.expander("Error Details"):
                                 st.code(traceback.format_exc())
-            except Exception as e:
-                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
-                with st.expander("Error Details"):
-                    st.code(traceback.format_exc())
+                except Exception as e:
+                    if 'progress_container' in locals():
+                        progress_container.empty()
+                    if 'status_container' in locals():
+                        status_container.empty()
+                    st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                    with st.expander("Error Details"):
+                        st.code(traceback.format_exc())
     
     # Display persistent direct generation results if available
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
