@@ -1298,12 +1298,12 @@ def display_single_nda_review(model, temperature):
                                 display_immediate_issues(low_priority, "Low Priority")
                         else:
                             st.error("Failed to generate tracked changes documents.")
-                        except Exception as e:
-                            progress_container.empty()
-                            status_container.empty()
-                            st.error(f"Failed to generate tracked changes: {str(e)}")
-                            with st.expander("Error Details"):
-                                st.code(traceback.format_exc())
+                    except Exception as e:
+                        progress_container.empty()
+                        status_container.empty()
+                        st.error(f"Failed to generate tracked changes: {str(e)}")
+                        with st.expander("Error Details"):
+                            st.code(traceback.format_exc())
             except Exception as e:
                 if 'progress_container' in locals():
                     progress_container.empty()
