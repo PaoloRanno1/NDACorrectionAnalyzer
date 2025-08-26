@@ -1157,147 +1157,147 @@ def display_single_nda_review(model, temperature):
                                     additional_info_by_id[finding_id] = comment
                                 
                                 finding_id += 1
-                            
-                            # Clean the findings using LLM
-                            st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
-                            
-                            # Read the original NDA text for context
-                            with open(converted_path, 'r', encoding='utf-8') as f:
-                                nda_text = f.read()
-                            
-                            # Clean all findings at once
-                            try:
-                                cleaned_findings = clean_findings_with_llm(
-                                    nda_text,
-                                    raw_findings,
-                                    additional_info_by_id,
-                                    model
+                        
+                        # Clean the findings using LLM
+                        st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
+                        
+                        # Read the original NDA text for context
+                        with open(converted_path, 'r', encoding='utf-8') as f:
+                            nda_text = f.read()
+                        
+                        # Clean all findings at once
+                        try:
+                            cleaned_findings = clean_findings_with_llm(
+                                nda_text,
+                                raw_findings,
+                                additional_info_by_id,
+                                model
+                            )
+                        except Exception as e:
+                            st.warning(f"Could not clean findings with LLM: {str(e)}")
+                            # Create basic cleaned findings as fallback
+                            cleaned_findings = []
+                            for raw_finding in raw_findings:
+                                cleaned_finding = CleanedFinding(
+                                    id=raw_finding.id,
+                                    citation_clean=raw_finding.citation,
+                                    suggested_replacement_clean=raw_finding.suggested_replacement
                                 )
-                            except Exception as e:
-                                st.warning(f"Could not clean findings with LLM: {str(e)}")
-                                # Create basic cleaned findings as fallback
-                                cleaned_findings = []
-                                for raw_finding in raw_findings:
-                                    cleaned_finding = CleanedFinding(
-                                        id=raw_finding.id,
-                                        citation_clean=raw_finding.citation,
-                                        suggested_replacement_clean=raw_finding.suggested_replacement
-                                    )
-                                    cleaned_findings.append(cleaned_finding)
+                                cleaned_findings.append(cleaned_finding)
+                        
+                        st.info(f"Successfully cleaned {len(cleaned_findings)} findings. Generating documents...")
+                        
+                        # Generate tracked changes document
+                        tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                        shutil.copy2(temp_file_path, tracked_temp_path)
+                        
+                        changes_applied = apply_cleaned_findings_to_docx(
+                            input_docx=tracked_temp_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=tracked_temp_path,
+                            author="AI Compliance Reviewer"
+                        )
+                        
+                        # Generate clean edited document  
+                        clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                        shutil.copy2(temp_file_path, clean_temp_path)
+                        
+                        clean_changes_applied = replace_cleaned_findings_in_docx(
+                            input_docx=clean_temp_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=clean_temp_path
+                        )
+                        
+                        # Read the generated files for download
+                        with open(tracked_temp_path, 'rb') as f:
+                            tracked_docx = f.read()
+                        
+                        with open(clean_temp_path, 'rb') as f:
+                            clean_docx = f.read()
+                        
+                        # Cleanup temp files
+                        os.unlink(tracked_temp_path)
+                        os.unlink(clean_temp_path)
+                        os.unlink(converted_path)  # Clean up the converted markdown file
+                        
+                        os.unlink(temp_file_path)
+                        
+                        if tracked_docx and clean_docx:
+                            progress_bar.progress(100)
+                            status_container.success("✅ Analysis and document generation completed successfully!")
                             
-                            st.info(f"Successfully cleaned {len(cleaned_findings)} findings. Generating documents...")
+                            # Clear progress indicators
+                            progress_container.empty()
+                            status_container.empty()
                             
-                            # Generate tracked changes document
-                            tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
-                            shutil.copy2(temp_file_path, tracked_temp_path)
+                            # Store documents in session state to persist after download
+                            st.session_state.direct_tracked_docx = tracked_docx
+                            st.session_state.direct_clean_docx = clean_docx
+                            st.session_state.direct_generation_results = {
+                                'high_priority': high_priority,
+                                'medium_priority': medium_priority,
+                                'low_priority': low_priority,
+                                'total_issues': total_issues
+                            }
+                            st.session_state.direct_generation_complete = True
                             
-                            changes_applied = apply_cleaned_findings_to_docx(
-                                input_docx=tracked_temp_path,
-                                cleaned_findings=cleaned_findings,
-                                output_docx=tracked_temp_path,
-                                author="AI Compliance Reviewer"
-                            )
+                            # Display results immediately without rerun
+                            st.markdown("---")
+                            st.subheader("Direct Generation Summary")
                             
-                            # Generate clean edited document  
-                            clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
-                            shutil.copy2(temp_file_path, clean_temp_path)
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("High Priority", len(high_priority))
+                            with col2:
+                                st.metric("Medium Priority", len(medium_priority))
+                            with col3:
+                                st.metric("Low Priority", len(low_priority))
                             
-                            clean_changes_applied = replace_cleaned_findings_in_docx(
-                                input_docx=clean_temp_path,
-                                cleaned_findings=cleaned_findings,
-                                output_docx=clean_temp_path
-                            )
+                            st.markdown("---")
+                            st.subheader("Download Generated Documents")
                             
-                            # Read the generated files for download
-                            with open(tracked_temp_path, 'rb') as f:
-                                tracked_docx = f.read()
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.download_button(
+                                    label="Download Tracked Changes Document",
+                                    data=tracked_docx,
+                                    file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key="download_direct_tracked_immediate"
+                                )
                             
-                            with open(clean_temp_path, 'rb') as f:
-                                clean_docx = f.read()
+                            with col2:
+                                st.download_button(
+                                    label="Download Clean Edited Document",
+                                    data=clean_docx,
+                                    file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    key="download_direct_clean_immediate"
+                                )
                             
-                            # Cleanup temp files
-                            os.unlink(tracked_temp_path)
-                            os.unlink(clean_temp_path)
-                            os.unlink(converted_path)  # Clean up the converted markdown file
-                            
-                            os.unlink(temp_file_path)
-                            
-                            if tracked_docx and clean_docx:
-                                progress_bar.progress(100)
-                                status_container.success("✅ Analysis and document generation completed successfully!")
+                            # Show what was processed
+                            with st.expander("Issues Processed (Click to expand)"):
+                                def display_immediate_issues(issues, priority_name):
+                                    if issues:
+                                        st.write(f"**{priority_name} Issues:**")
+                                        for i, issue in enumerate(issues):
+                                            with st.container():
+                                                st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                                                if issue.get('section'):
+                                                    st.write(f"📍 **Section:** {issue.get('section')}")
+                                                if issue.get('problem'):
+                                                    st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                                                if issue.get('citation'):
+                                                    st.write(f"📄 **Citation:** {issue.get('citation')}")
+                                                if issue.get('suggested_replacement'):
+                                                    st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                                                st.markdown("---")
                                 
-                                # Clear progress indicators
-                                progress_container.empty()
-                                status_container.empty()
-                                
-                                # Store documents in session state to persist after download
-                                st.session_state.direct_tracked_docx = tracked_docx
-                                st.session_state.direct_clean_docx = clean_docx
-                                st.session_state.direct_generation_results = {
-                                    'high_priority': high_priority,
-                                    'medium_priority': medium_priority,
-                                    'low_priority': low_priority,
-                                    'total_issues': total_issues
-                                }
-                                st.session_state.direct_generation_complete = True
-                                
-                                # Display results immediately without rerun
-                                st.markdown("---")
-                                st.subheader("Direct Generation Summary")
-                                
-                                col1, col2, col3 = st.columns(3)
-                                with col1:
-                                    st.metric("High Priority", len(high_priority))
-                                with col2:
-                                    st.metric("Medium Priority", len(medium_priority))
-                                with col3:
-                                    st.metric("Low Priority", len(low_priority))
-                                
-                                st.markdown("---")
-                                st.subheader("Download Generated Documents")
-                                
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    st.download_button(
-                                        label="Download Tracked Changes Document",
-                                        data=tracked_docx,
-                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key="download_direct_tracked_immediate"
-                                    )
-                                
-                                with col2:
-                                    st.download_button(
-                                        label="Download Clean Edited Document",
-                                        data=clean_docx,
-                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
-                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        key="download_direct_clean_immediate"
-                                    )
-                                
-                                # Show what was processed
-                                with st.expander("Issues Processed (Click to expand)"):
-                                    def display_immediate_issues(issues, priority_name):
-                                        if issues:
-                                            st.write(f"**{priority_name} Issues:**")
-                                            for i, issue in enumerate(issues):
-                                                with st.container():
-                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
-                                                    if issue.get('section'):
-                                                        st.write(f"📍 **Section:** {issue.get('section')}")
-                                                    if issue.get('problem'):
-                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
-                                                    if issue.get('citation'):
-                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
-                                                    if issue.get('suggested_replacement'):
-                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
-                                                    st.markdown("---")
-                                    
-                                    display_immediate_issues(high_priority, "High Priority")
-                                    display_immediate_issues(medium_priority, "Medium Priority")
-                                    display_immediate_issues(low_priority, "Low Priority")
-                            else:
-                                st.error("Failed to generate tracked changes documents.")
+                                display_immediate_issues(high_priority, "High Priority")
+                                display_immediate_issues(medium_priority, "Medium Priority")
+                                display_immediate_issues(low_priority, "Low Priority")
+                        else:
+                            st.error("Failed to generate tracked changes documents.")
                         except Exception as e:
                             progress_container.empty()
                             status_container.empty()
