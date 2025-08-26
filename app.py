@@ -68,7 +68,7 @@ def initialize_session_state():
             'analysis_mode': 'Full Analysis'
         }
     if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'clean_review'
+        st.session_state.current_page = 'homepage'
     
     # Background processing states
     if 'background_analysis' not in st.session_state:
@@ -2844,93 +2844,161 @@ def display_nda_review_page():
     st.title("🔍 NDA Compliance Review")
     st.write("Upload an NDA document for AI-powered compliance analysis.")
 
-# Navigation structure
-def display_navigation():
-    """Display navigation tabs"""
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+def display_homepage():
+    """Display the application homepage with navigation"""
+    st.title("⚖️ NDA Analysis Comparison Tool")
+    st.markdown("### Welcome to the comprehensive NDA legal compliance review system")
+    
+    st.markdown("""
+    This sophisticated tool helps legal teams analyze NDA documents using AI-powered compliance checking
+    and provides comparative analysis between AI reviews and HR-edited versions.
+    """)
+    
+    # Main navigation cards
+    st.markdown("### 🧭 Choose Your Action")
+    
+    # Create navigation columns
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔍 NDA Review", key="nav_nda_review", use_container_width=True):
-            st.session_state.current_page = 'clean_review'
-            st.rerun()
+        with st.container():
+            st.markdown("#### 🔍 **NDA Review**")
+            st.markdown("Analyze individual NDAs for compliance issues")
+            if st.button("Start NDA Review", key="home_nda_review", use_container_width=True):
+                st.session_state.current_page = "clean_review"
+                st.rerun()
     
     with col2:
-        if st.button("🧪 Testing", key="nav_testing", use_container_width=True):
-            st.session_state.current_page = 'testing'
-            st.rerun()
+        with st.container():
+            st.markdown("#### 🧪 **Testing & Comparison**")
+            st.markdown("Compare AI reviews with HR-edited versions")
+            if st.button("Start Testing", key="home_testing", use_container_width=True):
+                st.session_state.current_page = "testing"
+                st.rerun()
     
     with col3:
-        if st.button("💾 Database", key="nav_database", use_container_width=True):
-            st.session_state.current_page = 'database'
-            st.rerun()
+        with st.container():
+            st.markdown("#### 💾 **Database Management**")
+            st.markdown("Manage your NDA document database")
+            if st.button("Open Database", key="home_database", use_container_width=True):
+                st.session_state.current_page = "database"
+                st.rerun()
+    
+    st.markdown("---")
+    
+    # Secondary navigation
+    col4, col5, col6 = st.columns(3)
     
     with col4:
-        if st.button("📋 Policies", key="nav_policies", use_container_width=True):
-            st.session_state.current_page = 'policies'
-            st.rerun()
+        with st.container():
+            st.markdown("#### 📋 **Policies & Playbook**")
+            st.markdown("View and edit compliance playbook")
+            if st.button("View Policies", key="home_policies", use_container_width=True):
+                st.session_state.current_page = "policies"
+                st.rerun()
     
     with col5:
-        if st.button("📊 Results", key="nav_results", use_container_width=True):
-            st.session_state.current_page = 'results'
-            st.rerun()
+        with st.container():
+            st.markdown("#### 📊 **Results Analysis**")
+            st.markdown("Review past testing results and metrics")
+            if st.button("View Results", key="home_results", use_container_width=True):
+                st.session_state.current_page = "results"
+                st.rerun()
     
     with col6:
-        if st.button("❓ FAQ", key="nav_faq", use_container_width=True):
-            st.session_state.current_page = 'faq'
-            st.rerun()
+        with st.container():
+            st.markdown("#### ❓ **Help & FAQ**")
+            st.markdown("Get help and answers to common questions")
+            if st.button("Get Help", key="home_faq", use_container_width=True):
+                st.session_state.current_page = "faq"
+                st.rerun()
 
-def display_testing_page():
-    """Display testing page for comparing AI vs HR reviews"""
-    st.title("🧪 NDA Testing & Comparison")
-    st.write("Compare AI-generated reviews with HR-edited versions to assess accuracy.")
-    
-    # Add basic testing interface
-    st.info("Testing functionality - upload clean and corrected NDA files for comparison analysis.")
+def display_global_background_notification():
+    """Display global background analysis notification"""
+    if st.session_state.background_analysis.get('running', False):
+        status = st.session_state.background_analysis.get('status', 'Processing...')
+        progress = st.session_state.background_analysis.get('progress', 0)
+        
+        # Show global notification
+        with st.container():
+            st.info(f"🔄 Background Analysis Running: {status}")
+            st.progress(progress / 100, text=f"Progress: {progress}%")
 
-def display_database_page():
-    """Display database management page"""
-    st.title("💾 NDA Database")
-    st.write("Manage your NDA document database.")
-    
-    # Add basic database interface
-    st.info("Database management functionality - view and manage stored NDAs.")
+def display_navigation():
+    """Display navigation tabs"""
+    # Check if we should show the homepage or specific page
+    if st.session_state.get('current_page') == 'homepage':
+        # Show homepage navigation buttons
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        
+        with col1:
+            if st.button("🔍 NDA Review", key="nav_nda_review", use_container_width=True):
+                st.session_state.current_page = 'clean_review'
+                st.rerun()
+        
+        with col2:
+            if st.button("🧪 Testing", key="nav_testing", use_container_width=True):
+                st.session_state.current_page = 'testing'
+                st.rerun()
+        
+        with col3:
+            if st.button("💾 Database", key="nav_database", use_container_width=True):
+                st.session_state.current_page = 'database'
+                st.rerun()
+        
+        with col4:
+            if st.button("📋 Policies", key="nav_policies", use_container_width=True):
+                st.session_state.current_page = 'policies'
+                st.rerun()
+        
+        with col5:
+            if st.button("📊 Results", key="nav_results", use_container_width=True):
+                st.session_state.current_page = 'results'
+                st.rerun()
+        
+        with col6:
+            if st.button("❓ FAQ", key="nav_faq", use_container_width=True):
+                st.session_state.current_page = 'faq'
+                st.rerun()
+    else:
+        # Show compact navigation for other pages
+        col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+        
+        with col1:
+            if st.button("🏠 Home", key="nav_home", use_container_width=True):
+                st.session_state.current_page = 'homepage'
+                st.rerun()
+        
+        with col2:
+            if st.button("🔍 Review", key="nav_nda_review", use_container_width=True):
+                st.session_state.current_page = 'clean_review'
+                st.rerun()
+        
+        with col3:
+            if st.button("🧪 Testing", key="nav_testing", use_container_width=True):
+                st.session_state.current_page = 'testing'
+                st.rerun()
+        
+        with col4:
+            if st.button("💾 Database", key="nav_database", use_container_width=True):
+                st.session_state.current_page = 'database'
+                st.rerun()
+        
+        with col5:
+            if st.button("📋 Policies", key="nav_policies", use_container_width=True):
+                st.session_state.current_page = 'policies'
+                st.rerun()
+        
+        with col6:
+            if st.button("📊 Results", key="nav_results", use_container_width=True):
+                st.session_state.current_page = 'results'
+                st.rerun()
+        
+        with col7:
+            if st.button("❓ FAQ", key="nav_faq", use_container_width=True):
+                st.session_state.current_page = 'faq'
+                st.rerun()
 
-def display_policies_page():
-    """Display policies and playbook page"""
-    st.title("📋 NDA Policies & Playbook")
-    st.write("View and edit the NDA compliance playbook.")
-    
-    # Add basic policies interface
-    from policies_playbook import display_policies_playbook
-    try:
-        display_policies_playbook()
-    except:
-        st.info("Policies playbook functionality.")
-
-def display_results_page():
-    """Display results analysis page"""
-    st.title("📊 Testing Results")
-    st.write("View saved analysis results and performance metrics.")
-    
-    # Add basic results interface
-    st.info("Results analysis functionality - view past testing results and metrics.")
-
-def display_faq_page():
-    """Display FAQ page"""
-    st.title("❓ Frequently Asked Questions")
-    st.write("Common questions and answers about the NDA analysis tool.")
-    
-    # Add basic FAQ content
-    with st.expander("How does the AI analysis work?"):
-        st.write("The AI uses Google's Gemini models to analyze NDAs against your compliance playbook.")
-    
-    with st.expander("What file formats are supported?"):
-        st.write("Supported formats: DOCX (recommended), PDF, TXT, MD")
-    
-    with st.expander("How accurate is the AI review?"):
-        st.write("Accuracy varies by document complexity. Use the Testing page to compare AI results with HR reviews.")
-
-# Main execution
 def main():
     """Main application function"""
     initialize_session_state()
@@ -2940,34 +3008,72 @@ def main():
         display_login_screen()
         return
     
-    # Display header and navigation
     display_header()
+    
+    # Display global background notification if analysis is running
+    display_global_background_notification()
+    
+    # Get current settings
+    model = st.session_state.analysis_config['model']
+    temperature = st.session_state.analysis_config['temperature']
+    
+    # Navigation (hidden visual tabs but maintains functionality)
     display_navigation()
     
-    st.markdown("---")
+    # Page routing
+    current_page = st.session_state.get('current_page', 'homepage')
     
-    # Get configuration from session state
-    model = st.session_state.analysis_config.get('model', 'gemini-2.5-pro')
-    temperature = st.session_state.analysis_config.get('temperature', 0.0)
-    
-    # Route to appropriate page based on current_page
-    current_page = st.session_state.get('current_page', 'clean_review')
-    
-    if current_page == 'clean_review':
+    if current_page == "homepage":
+        display_homepage()
+    elif current_page == "clean_review":
         display_single_nda_review(model, temperature)
-    elif current_page == 'testing':
-        display_testing_page()
-    elif current_page == 'database':
-        display_database_page()
-    elif current_page == 'policies':
-        display_policies_page()
-    elif current_page == 'results':
-        display_results_page()
-    elif current_page == 'faq':
-        display_faq_page()
+    elif current_page == "all_files_review":
+        # This was in the original - placeholder for now
+        st.title("📁 All Files Review")
+        st.info("All files review functionality - placeholder")
+    elif current_page == "testing":
+        # Import and call testing page with proper parameters
+        from testing_page import display_testing_page as display_testing_page_full
+        try:
+            display_testing_page_full(model, temperature, "Full Analysis")
+        except ImportError:
+            st.title("🧪 NDA Testing & Comparison")
+            st.info("Testing functionality - comparison analysis between AI and HR reviews")
+    elif current_page == "results":
+        # Import and call results page
+        from results_page import display_testing_results_page
+        try:
+            display_testing_results_page()
+        except ImportError:
+            st.title("📊 Testing Results")
+            st.info("Results analysis functionality - view past testing results and metrics")
+    elif current_page == "database":
+        # Import and call database page
+        from database_page import display_database_page as display_database_page_full
+        try:
+            display_database_page_full()
+        except ImportError:
+            st.title("💾 NDA Database")
+            st.info("Database management functionality - view and manage stored NDAs")
+    elif current_page == "faq":
+        # Import and call FAQ page
+        from faq_page import display_faq_page as display_faq_page_full
+        try:
+            display_faq_page_full()
+        except ImportError:
+            st.title("❓ Frequently Asked Questions")
+            with st.expander("How does the AI analysis work?"):
+                st.write("The AI uses Google's Gemini models to analyze NDAs against your compliance playbook.")
+            with st.expander("What file formats are supported?"):
+                st.write("Supported formats: DOCX (recommended), PDF, TXT, MD")
+    elif current_page == "policies":
+        display_policies_playbook()
+    elif current_page == "edit_playbook":
+        from playbook_manager import display_editable_playbook
+        display_editable_playbook()
     else:
-        # Default fallback
-        display_single_nda_review(model, temperature)
+        # Default to homepage
+        display_homepage()
 
 if __name__ == "__main__":
     main()
