@@ -2811,7 +2811,55 @@ def display_single_nda_review(model, temperature):
                 st.session_state.direct_processing_status = 'idle'
                 st.rerun()
 
+def display_settings_modal():
+    """Display settings modal for AI configuration"""
+    with st.expander("⚙️ AI Configuration Settings", expanded=True):
+        st.subheader("AI Model Settings")
+        
+        model = st.selectbox(
+            "Select AI Model:",
+            ["gemini-2.5-pro", "gemini-2.5-flash"],
+            index=0 if st.session_state.analysis_config.get('model') == 'gemini-2.5-pro' else 1,
+            help="Choose the AI model for analysis"
+        )
+        
+        temperature = st.slider(
+            "Temperature:",
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.analysis_config.get('temperature', 0.0),
+            step=0.1,
+            help="Controls randomness in AI responses (0 = more deterministic)"
+        )
+        
+        if st.button("Save Settings", key="save_settings"):
+            st.session_state.analysis_config['model'] = model
+            st.session_state.analysis_config['temperature'] = temperature
+            st.success("Settings saved!")
+            st.session_state.show_settings = False
+            st.rerun()
+
 def display_nda_review_page():
     """Display the main NDA Review page"""
     st.title("🔍 NDA Compliance Review")
     st.write("Upload an NDA document for AI-powered compliance analysis.")
+
+# Main execution
+def main():
+    """Main application function"""
+    initialize_session_state()
+    
+    # Check authentication
+    if not st.session_state.authenticated:
+        display_login_screen()
+        return
+    
+    # Get configuration from session state
+    model = st.session_state.analysis_config.get('model', 'gemini-2.5-pro')
+    temperature = st.session_state.analysis_config.get('temperature', 0.0)
+    
+    # Run the main app
+    display_single_nda_review(model, temperature)
+
+if __name__ == "__main__":
+    main()
