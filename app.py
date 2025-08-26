@@ -2844,6 +2844,92 @@ def display_nda_review_page():
     st.title("🔍 NDA Compliance Review")
     st.write("Upload an NDA document for AI-powered compliance analysis.")
 
+# Navigation structure
+def display_navigation():
+    """Display navigation tabs"""
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    
+    with col1:
+        if st.button("🔍 NDA Review", key="nav_nda_review", use_container_width=True):
+            st.session_state.current_page = 'clean_review'
+            st.rerun()
+    
+    with col2:
+        if st.button("🧪 Testing", key="nav_testing", use_container_width=True):
+            st.session_state.current_page = 'testing'
+            st.rerun()
+    
+    with col3:
+        if st.button("💾 Database", key="nav_database", use_container_width=True):
+            st.session_state.current_page = 'database'
+            st.rerun()
+    
+    with col4:
+        if st.button("📋 Policies", key="nav_policies", use_container_width=True):
+            st.session_state.current_page = 'policies'
+            st.rerun()
+    
+    with col5:
+        if st.button("📊 Results", key="nav_results", use_container_width=True):
+            st.session_state.current_page = 'results'
+            st.rerun()
+    
+    with col6:
+        if st.button("❓ FAQ", key="nav_faq", use_container_width=True):
+            st.session_state.current_page = 'faq'
+            st.rerun()
+
+def display_testing_page():
+    """Display testing page for comparing AI vs HR reviews"""
+    st.title("🧪 NDA Testing & Comparison")
+    st.write("Compare AI-generated reviews with HR-edited versions to assess accuracy.")
+    
+    # Add basic testing interface
+    st.info("Testing functionality - upload clean and corrected NDA files for comparison analysis.")
+
+def display_database_page():
+    """Display database management page"""
+    st.title("💾 NDA Database")
+    st.write("Manage your NDA document database.")
+    
+    # Add basic database interface
+    st.info("Database management functionality - view and manage stored NDAs.")
+
+def display_policies_page():
+    """Display policies and playbook page"""
+    st.title("📋 NDA Policies & Playbook")
+    st.write("View and edit the NDA compliance playbook.")
+    
+    # Add basic policies interface
+    from policies_playbook import display_policies_playbook
+    try:
+        display_policies_playbook()
+    except:
+        st.info("Policies playbook functionality.")
+
+def display_results_page():
+    """Display results analysis page"""
+    st.title("📊 Testing Results")
+    st.write("View saved analysis results and performance metrics.")
+    
+    # Add basic results interface
+    st.info("Results analysis functionality - view past testing results and metrics.")
+
+def display_faq_page():
+    """Display FAQ page"""
+    st.title("❓ Frequently Asked Questions")
+    st.write("Common questions and answers about the NDA analysis tool.")
+    
+    # Add basic FAQ content
+    with st.expander("How does the AI analysis work?"):
+        st.write("The AI uses Google's Gemini models to analyze NDAs against your compliance playbook.")
+    
+    with st.expander("What file formats are supported?"):
+        st.write("Supported formats: DOCX (recommended), PDF, TXT, MD")
+    
+    with st.expander("How accurate is the AI review?"):
+        st.write("Accuracy varies by document complexity. Use the Testing page to compare AI results with HR reviews.")
+
 # Main execution
 def main():
     """Main application function"""
@@ -2854,12 +2940,34 @@ def main():
         display_login_screen()
         return
     
+    # Display header and navigation
+    display_header()
+    display_navigation()
+    
+    st.markdown("---")
+    
     # Get configuration from session state
     model = st.session_state.analysis_config.get('model', 'gemini-2.5-pro')
     temperature = st.session_state.analysis_config.get('temperature', 0.0)
     
-    # Run the main app
-    display_single_nda_review(model, temperature)
+    # Route to appropriate page based on current_page
+    current_page = st.session_state.get('current_page', 'clean_review')
+    
+    if current_page == 'clean_review':
+        display_single_nda_review(model, temperature)
+    elif current_page == 'testing':
+        display_testing_page()
+    elif current_page == 'database':
+        display_database_page()
+    elif current_page == 'policies':
+        display_policies_page()
+    elif current_page == 'results':
+        display_results_page()
+    elif current_page == 'faq':
+        display_faq_page()
+    else:
+        # Default fallback
+        display_single_nda_review(model, temperature)
 
 if __name__ == "__main__":
     main()
