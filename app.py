@@ -837,7 +837,7 @@ def display_single_nda_review(model, temperature):
         # File upload section
         uploaded_file = st.file_uploader(
             "Choose an NDA file to analyze",
-            type=['docx', 'pdf', 'txt', 'md'],
+            type=['docx'],
             help="Upload the NDA document (DOCX preferred for post-review editing features)",
             key="single_nda_upload"
         )
