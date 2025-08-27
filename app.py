@@ -1563,152 +1563,222 @@ def display_all_files_nda_review(model, temperature):
         
         st.markdown("---")
         
-        # Available Issues Section
-        st.subheader("📋 Available Issues")
+        # Available Issues Section with custom styling
+        st.markdown("<div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin: 10px 0;'>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: white; margin: 0;'>📋 Available Issues</h3>", unsafe_allow_html=True)
         total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
-        st.write(f"Found {total_issues} issues across all priority levels.")
-        st.markdown("---")
+        st.markdown(f"<p style='color: #cccccc; margin: 5px 0 0 0;'>Found {total_issues} issues across all priority levels.</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
         # High priority issues
         if high_priority:
-            st.markdown("### 🔴 High Priority Issues (Mandatory)")
+            st.markdown("<div style='background-color: #2d1f1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff4444;'>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #ff6b6b; margin: 0 0 15px 0;'>🔴 High Priority Issues (Mandatory)</h4>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
             for idx, flag in enumerate(high_priority):
                 issue_title = flag.get('issue', 'Compliance Issue')
                 
-                # Create a container for each issue with custom styling
-                with st.container():
-                    st.markdown(f"**High Priority {idx + 1}: {issue_title}**")
-                    
-                    # Section with icon
-                    if flag.get('section'):
-                        st.markdown(f"📍 **Section:** {flag.get('section')}")
-                    
-                    # Problem with icon
-                    if flag.get('problem'):
-                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
-                    
-                    # Citation with icon
-                    if flag.get('citation'):
-                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
-                    
-                    # Suggested replacement with icon
-                    if flag.get('suggested_replacement'):
-                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
-                    
-                    # Additional Comments/Instructions section
-                    st.markdown("**Additional Comments/Instructions:**")
-                    comment_key = f"comment_high_{idx}"
-                    st.text_area(
-                        label="",
-                        key=comment_key,
-                        placeholder="Enter any additional comments or instructions for this issue...",
-                        label_visibility="collapsed",
-                        height=60
-                    )
-                    
-                    # Checkbox for acceptance
-                    accept_key = f"accept_high_{idx}"
-                    st.checkbox(
-                        f"✅ Accept Issue {idx + 1}",
-                        key=accept_key,
-                        value=True
-                    )
-                    
-                    st.markdown("---")
+                # Create dark container for each issue
+                st.markdown(f"""
+                <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                    <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                        High Priority {idx + 1}: {issue_title}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Section
+                if flag.get('section'):
+                    st.markdown(f"""
+                    <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{flag.get('section')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Problem
+                if flag.get('problem'):
+                    st.markdown(f"""
+                    <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{flag.get('problem')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Citation
+                if flag.get('citation'):
+                    st.markdown(f"""
+                    <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{flag.get('citation')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Suggested Replacement
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"""
+                    <div style='color: #ff6b6b; margin-bottom: 15px;'>
+                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{flag.get('suggested_replacement')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Additional Comments section
+                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                comment_key = f"comment_high_{idx}"
+                st.text_area(
+                    label="",
+                    key=comment_key,
+                    placeholder="Enter any additional comments or instructions for this issue...",
+                    label_visibility="collapsed",
+                    height=80
+                )
+                
+                # Checkbox for acceptance
+                accept_key = f"accept_high_{idx}"
+                st.checkbox(
+                    f"✅ Accept Issue {idx + 1}",
+                    key=accept_key,
+                    value=True
+                )
         
         # Medium priority issues
         if medium_priority:
-            st.markdown("### 🟡 Medium Priority Issues (Preferential)")
+            st.markdown("<div style='background-color: #2d2d1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffbb33;'>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #ffcc5c; margin: 0 0 15px 0;'>🟡 Medium Priority Issues (Preferential)</h4>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
             for idx, flag in enumerate(medium_priority):
                 issue_title = flag.get('issue', 'Compliance Issue')
                 
-                # Create a container for each issue
-                with st.container():
-                    st.markdown(f"**Medium Priority {idx + 1}: {issue_title}**")
-                    
-                    # Section with icon
-                    if flag.get('section'):
-                        st.markdown(f"📍 **Section:** {flag.get('section')}")
-                    
-                    # Problem with icon
-                    if flag.get('problem'):
-                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
-                    
-                    # Citation with icon
-                    if flag.get('citation'):
-                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
-                    
-                    # Suggested replacement with icon
-                    if flag.get('suggested_replacement'):
-                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
-                    
-                    # Additional Comments/Instructions section
-                    st.markdown("**Additional Comments/Instructions:**")
-                    comment_key = f"comment_medium_{idx}"
-                    st.text_area(
-                        label="",
-                        key=comment_key,
-                        placeholder="Enter any additional comments or instructions for this issue...",
-                        label_visibility="collapsed",
-                        height=60
-                    )
-                    
-                    # Checkbox for acceptance
-                    accept_key = f"accept_medium_{idx}"
-                    st.checkbox(
-                        f"✅ Accept Issue {idx + 1}",
-                        key=accept_key,
-                        value=True
-                    )
-                    
-                    st.markdown("---")
+                # Create dark container for each issue
+                st.markdown(f"""
+                <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                    <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                        Medium Priority {idx + 1}: {issue_title}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Section
+                if flag.get('section'):
+                    st.markdown(f"""
+                    <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{flag.get('section')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Problem
+                if flag.get('problem'):
+                    st.markdown(f"""
+                    <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{flag.get('problem')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Citation
+                if flag.get('citation'):
+                    st.markdown(f"""
+                    <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{flag.get('citation')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Suggested Replacement
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"""
+                    <div style='color: #ffcc5c; margin-bottom: 15px;'>
+                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{flag.get('suggested_replacement')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Additional Comments section
+                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                comment_key = f"comment_medium_{idx}"
+                st.text_area(
+                    label="",
+                    key=comment_key,
+                    placeholder="Enter any additional comments or instructions for this issue...",
+                    label_visibility="collapsed",
+                    height=80
+                )
+                
+                # Checkbox for acceptance
+                accept_key = f"accept_medium_{idx}"
+                st.checkbox(
+                    f"✅ Accept Issue {idx + 1}",
+                    key=accept_key,
+                    value=True
+                )
         
         # Low priority issues
         if low_priority:
-            st.markdown("### 🟢 Low Priority Issues (Optional)")
+            st.markdown("<div style='background-color: #1f2d1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4caf50;'>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #81c784; margin: 0 0 15px 0;'>🟢 Low Priority Issues (Optional)</h4>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
             for idx, flag in enumerate(low_priority):
                 issue_title = flag.get('issue', 'Compliance Issue')
                 
-                # Create a container for each issue
-                with st.container():
-                    st.markdown(f"**Low Priority {idx + 1}: {issue_title}**")
-                    
-                    # Section with icon
-                    if flag.get('section'):
-                        st.markdown(f"📍 **Section:** {flag.get('section')}")
-                    
-                    # Problem with icon
-                    if flag.get('problem'):
-                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
-                    
-                    # Citation with icon
-                    if flag.get('citation'):
-                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
-                    
-                    # Suggested replacement with icon
-                    if flag.get('suggested_replacement'):
-                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
-                    
-                    # Additional Comments/Instructions section
-                    st.markdown("**Additional Comments/Instructions:**")
-                    comment_key = f"comment_low_{idx}"
-                    st.text_area(
-                        label="",
-                        key=comment_key,
-                        placeholder="Enter any additional comments or instructions for this issue...",
-                        label_visibility="collapsed",
-                        height=60
-                    )
-                    
-                    # Checkbox for acceptance
-                    accept_key = f"accept_low_{idx}"
-                    st.checkbox(
-                        f"✅ Accept Issue {idx + 1}",
-                        key=accept_key,
-                        value=True
-                    )
-                    
-                    st.markdown("---")
+                # Create dark container for each issue
+                st.markdown(f"""
+                <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                    <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                        Low Priority {idx + 1}: {issue_title}
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Section
+                if flag.get('section'):
+                    st.markdown(f"""
+                    <div style='color: #81c784; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{flag.get('section')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Problem
+                if flag.get('problem'):
+                    st.markdown(f"""
+                    <div style='color: #81c784; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{flag.get('problem')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Citation
+                if flag.get('citation'):
+                    st.markdown(f"""
+                    <div style='color: #81c784; margin-bottom: 10px;'>
+                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{flag.get('citation')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Suggested Replacement
+                if flag.get('suggested_replacement'):
+                    st.markdown(f"""
+                    <div style='color: #81c784; margin-bottom: 15px;'>
+                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{flag.get('suggested_replacement')}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Additional Comments section
+                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                comment_key = f"comment_low_{idx}"
+                st.text_area(
+                    label="",
+                    key=comment_key,
+                    placeholder="Enter any additional comments or instructions for this issue...",
+                    label_visibility="collapsed",
+                    height=80
+                )
+                
+                # Checkbox for acceptance
+                accept_key = f"accept_low_{idx}"
+                st.checkbox(
+                    f"✅ Accept Issue {idx + 1}",
+                    key=accept_key,
+                    value=True
+                )
         
         # Show message if no issues found
         if not high_priority and not medium_priority and not low_priority:
