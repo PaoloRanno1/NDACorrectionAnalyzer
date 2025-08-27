@@ -2926,105 +2926,219 @@ def display_edit_mode_interface():
     
     # High Priority
     if high_findings:
-        st.subheader("🔴 High Priority Issues (Mandatory)")
+        st.markdown("<div style='background-color: #2d1f1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff4444;'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #ff6b6b; margin: 0 0 15px 0;'>🔴 High Priority Issues (Mandatory)</h4>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
         for finding in high_findings:
-            col1, col2 = st.columns([1, 4])
+            # Create dark container for each issue
+            st.markdown(f"""
+            <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                    High Priority {finding.id}: {finding.issue}
+                </div>
+            """, unsafe_allow_html=True)
             
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
+            # Section
+            if finding.section:
+                st.markdown(f"""
+                <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
+                </div>
+                """, unsafe_allow_html=True)
             
-            with col2:
-                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
-                    comment = st.text_area(
-                        "Additional Comments/Instructions:",
-                        value=st.session_state.finding_comments.get(finding.id, ""),
-                        key=f"comment_{finding.id}",
-                        help="Add any specific instructions or comments for this finding"
-                    )
-                    st.session_state.finding_comments[finding.id] = comment
+            # Problem
+            if finding.problem:
+                st.markdown(f"""
+                <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Citation
+            if finding.citation:
+                st.markdown(f"""
+                <div style='color: #ff6b6b; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Suggested Replacement
+            if finding.suggested_replacement:
+                st.markdown(f"""
+                <div style='color: #ff6b6b; margin-bottom: 15px;'>
+                    <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Additional Comments section
+            st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+            comment = st.text_area(
+                "",
+                value=st.session_state.finding_comments.get(finding.id, ""),
+                key=f"comment_{finding.id}",
+                placeholder="Enter any additional comments or instructions for this issue...",
+                label_visibility="collapsed",
+                height=80
+            )
+            st.session_state.finding_comments[finding.id] = comment
+            
+            # Checkbox for acceptance
+            selected = st.checkbox(
+                f"✅ Accept Issue {finding.id}",
+                value=finding.id in st.session_state.selected_findings,
+                key=f"select_{finding.id}"
+            )
+            if selected:
+                st.session_state.selected_findings.add(finding.id)
+            else:
+                st.session_state.selected_findings.discard(finding.id)
     
     # Medium Priority
     if medium_findings:
-        st.subheader("🟡 Medium Priority Issues (Preferential)")
+        st.markdown("<div style='background-color: #2d2d1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffbb33;'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #ffcc5c; margin: 0 0 15px 0;'>🟡 Medium Priority Issues (Preferential)</h4>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
         for finding in medium_findings:
-            col1, col2 = st.columns([1, 4])
+            # Create dark container for each issue
+            st.markdown(f"""
+            <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                    Medium Priority {finding.id}: {finding.issue}
+                </div>
+            """, unsafe_allow_html=True)
             
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
+            # Section
+            if finding.section:
+                st.markdown(f"""
+                <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
+                </div>
+                """, unsafe_allow_html=True)
             
-            with col2:
-                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
-                    comment = st.text_area(
-                        "Additional Comments/Instructions:",
-                        value=st.session_state.finding_comments.get(finding.id, ""),
-                        key=f"comment_{finding.id}",
-                        help="Add any specific instructions or comments for this finding"
-                    )
-                    st.session_state.finding_comments[finding.id] = comment
+            # Problem
+            if finding.problem:
+                st.markdown(f"""
+                <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Citation
+            if finding.citation:
+                st.markdown(f"""
+                <div style='color: #ffcc5c; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Suggested Replacement
+            if finding.suggested_replacement:
+                st.markdown(f"""
+                <div style='color: #ffcc5c; margin-bottom: 15px;'>
+                    <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Additional Comments section
+            st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+            comment = st.text_area(
+                "",
+                value=st.session_state.finding_comments.get(finding.id, ""),
+                key=f"comment_{finding.id}",
+                placeholder="Enter any additional comments or instructions for this issue...",
+                label_visibility="collapsed",
+                height=80
+            )
+            st.session_state.finding_comments[finding.id] = comment
+            
+            # Checkbox for acceptance
+            selected = st.checkbox(
+                f"✅ Accept Issue {finding.id}",
+                value=finding.id in st.session_state.selected_findings,
+                key=f"select_{finding.id}"
+            )
+            if selected:
+                st.session_state.selected_findings.add(finding.id)
+            else:
+                st.session_state.selected_findings.discard(finding.id)
     
     # Low Priority
     if low_findings:
-        st.subheader("🟢 Low Priority Issues (Optional)")
+        st.markdown("<div style='background-color: #1f2d1f; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4caf50;'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='color: #81c784; margin: 0 0 15px 0;'>🟢 Low Priority Issues (Optional)</h4>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
         for finding in low_findings:
-            col1, col2 = st.columns([1, 4])
+            # Create dark container for each issue
+            st.markdown(f"""
+            <div style='background-color: #2a2a2a; padding: 20px; border-radius: 10px; margin: 15px 0; border: 1px solid #444;'>
+                <div style='color: white; font-weight: bold; font-size: 16px; margin-bottom: 15px;'>
+                    Low Priority {finding.id}: {finding.issue}
+                </div>
+            """, unsafe_allow_html=True)
             
-            with col1:
-                selected = st.checkbox(
-                    f"Issue {finding.id}",
-                    value=finding.id in st.session_state.selected_findings,
-                    key=f"select_{finding.id}"
-                )
-                if selected:
-                    st.session_state.selected_findings.add(finding.id)
-                else:
-                    st.session_state.selected_findings.discard(finding.id)
+            # Section
+            if finding.section:
+                st.markdown(f"""
+                <div style='color: #81c784; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
+                </div>
+                """, unsafe_allow_html=True)
             
-            with col2:
-                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
-                    st.markdown(f"**Section:** {finding.section}")
-                    st.markdown(f"**Issue:** {finding.issue}")
-                    st.markdown(f"**Problem:** {finding.problem}")
-                    st.markdown(f"**Citation:** {finding.citation}")
-                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
-                    
-                    # Comment input for this finding
-                    comment = st.text_area(
-                        "Additional Comments/Instructions:",
-                        value=st.session_state.finding_comments.get(finding.id, ""),
-                        key=f"comment_{finding.id}",
-                        help="Add any specific instructions or comments for this finding"
-                    )
-                    st.session_state.finding_comments[finding.id] = comment
+            # Problem
+            if finding.problem:
+                st.markdown(f"""
+                <div style='color: #81c784; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Citation
+            if finding.citation:
+                st.markdown(f"""
+                <div style='color: #81c784; margin-bottom: 10px;'>
+                    <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Suggested Replacement
+            if finding.suggested_replacement:
+                st.markdown(f"""
+                <div style='color: #81c784; margin-bottom: 15px;'>
+                    <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Additional Comments section
+            st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+            comment = st.text_area(
+                "",
+                value=st.session_state.finding_comments.get(finding.id, ""),
+                key=f"comment_{finding.id}",
+                placeholder="Enter any additional comments or instructions for this issue...",
+                label_visibility="collapsed",
+                height=80
+            )
+            st.session_state.finding_comments[finding.id] = comment
+            
+            # Checkbox for acceptance
+            selected = st.checkbox(
+                f"✅ Accept Issue {finding.id}",
+                value=finding.id in st.session_state.selected_findings,
+                key=f"select_{finding.id}"
+            )
+            if selected:
+                st.session_state.selected_findings.add(finding.id)
+            else:
+                st.session_state.selected_findings.discard(finding.id)
     
     st.markdown("---")
     
