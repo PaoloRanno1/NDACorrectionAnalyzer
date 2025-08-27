@@ -1154,12 +1154,14 @@ def display_single_nda_review(model, temperature):
                     try:
                         cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
                         print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
-                    except (ValueError, RuntimeError) as e:
+                    except (ValueError, RuntimeError, Exception) as e:
                         error_msg = str(e)
                         if ("citation_clean is not an exact substring" in error_msg or 
                             "503 UNAVAILABLE" in error_msg or 
                             "The model is overloaded" in error_msg or
-                            "LLM call failed" in error_msg):
+                            "LLM call failed" in error_msg or
+                            "ServerError" in error_msg or
+                            "UNAVAILABLE" in error_msg):
                             
                             if "503 UNAVAILABLE" in error_msg or "overloaded" in error_msg:
                                 print(f"[DIRECT] LLM cleaning failed due to API overload: {error_msg}")
