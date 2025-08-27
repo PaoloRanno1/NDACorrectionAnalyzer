@@ -270,7 +270,33 @@ class StradaComplianceChain:
             print(f"Document loaded successfully. Length: {len(nda_text)} characters")
             print("Running compliance analysis...")
 
-            response = self.chain.invoke({"nda_text": nda_text})
+            # Add timeout handling for API calls
+            import signal
+            import time
+            
+            def timeout_handler(signum, frame):
+                raise TimeoutError("API call timed out after 60 seconds")
+            
+            try:
+                # Set 60 second timeout
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(60)
+                
+                response = self.chain.invoke({"nda_text": nda_text})
+                
+                # Clear the alarm
+                signal.alarm(0)
+                
+            except TimeoutError:
+                signal.alarm(0)  # Clear alarm
+                raise Exception("Google Gemini API call timed out (60s). The API may be overloaded. Please try again later.")
+            except Exception as e:
+                signal.alarm(0)  # Clear alarm
+                error_msg = str(e)
+                if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg:
+                    raise Exception(f"Google Gemini API is temporarily overloaded: {error_msg}")
+                else:
+                    raise Exception(f"API call failed: {error_msg}")
 
             print("Parsing compliance report...")
             try:
