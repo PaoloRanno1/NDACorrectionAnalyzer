@@ -1024,36 +1024,57 @@ def display_single_nda_review(model, temperature):
                 
                 status_text.info("🔄 Starting direct generation...")
                 progress_bar.progress(0.1)
+                print("[DIRECT] Starting direct tracked changes generation")
                 
                 file_content = uploaded_file.getvalue()
+                print(f"[DIRECT] File uploaded: {uploaded_file.name}, size: {len(file_content)} bytes")
                 
                 # Write content to temporary file
                 with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
                     temp_file.write(file_content)
                     temp_file_path = temp_file.name
+                print(f"[DIRECT] Temporary file created: {temp_file_path}")
                 
                 status_text.info("📄 Converting document format...")
                 progress_bar.progress(0.2)
+                print("[DIRECT] Converting DOCX to Markdown using pandoc...")
                 
                 # Convert DOCX to markdown for analysis
                 converted_path = temp_file_path.replace('.docx', '.md')
-                subprocess.run([
+                result = subprocess.run([
                     'pandoc', temp_file_path, '-o', converted_path, '--to=markdown', '--wrap=none'
-                ], check=True)
+                ], check=True, capture_output=True, text=True)
+                print(f"[DIRECT] Document converted successfully: {converted_path}")
+                
+                # Check converted file size
+                if os.path.exists(converted_path):
+                    with open(converted_path, 'r', encoding='utf-8') as f:
+                        md_content = f.read()
+                    print(f"[DIRECT] Converted markdown length: {len(md_content)} characters")
+                else:
+                    print("[DIRECT] ERROR: Converted markdown file not found!")
                 
                 status_text.info("🤖 Running AI compliance analysis...")
                 progress_bar.progress(0.4)
+                print(f"[DIRECT] Starting AI analysis with model: {model}, temperature: {temperature}")
                 
                 # Run analysis
                 from playbook_manager import get_current_playbook
                 from NDA_Review_chain import StradaComplianceChain
                 
                 playbook_content = get_current_playbook()
+                print(f"[DIRECT] Playbook loaded, length: {len(playbook_content)} characters")
+                
                 review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                print("[DIRECT] Review chain initialized, running analysis...")
+                
                 compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                print("[DIRECT] AI analysis completed successfully!")
+                print(f"[DIRECT] Compliance report keys: {list(compliance_report.keys()) if compliance_report else 'None'}")
                 
                 status_text.info("📋 Processing findings...")
                 progress_bar.progress(0.6)
+                print("[DIRECT] Processing compliance findings...")
                 
                 # Auto-select all findings
                 high_priority = compliance_report.get('high_priority', []) or compliance_report.get('High Priority', [])
@@ -1061,15 +1082,20 @@ def display_single_nda_review(model, temperature):
                 low_priority = compliance_report.get('low_priority', []) or compliance_report.get('Low Priority', [])
                 
                 total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                print(f"[DIRECT] Found {len(high_priority)} high, {len(medium_priority)} medium, {len(low_priority)} low priority issues")
+                print(f"[DIRECT] Total issues to process: {total_issues}")
                 
                 if total_issues == 0:
+                    print("[DIRECT] No compliance issues found - NDA is fully compliant!")
                     progress_bar.progress(1.0)
                     status_text.success("✅ No compliance issues found! Your NDA is fully compliant.")
                     os.unlink(temp_file_path)
                     os.unlink(converted_path)
+                    print("[DIRECT] Temporary files cleaned up")
                 else:
                     status_text.info(f"⚙️ Generating documents with {total_issues} issues...")
                     progress_bar.progress(0.8)
+                    print(f"[DIRECT] Starting document generation with {total_issues} issues...")
                     
                     # Process findings
                     from Tracked_changes_tools_clean import (
@@ -1083,12 +1109,14 @@ def display_single_nda_review(model, temperature):
                     # Create RawFinding objects
                     raw_findings = []
                     finding_id = 1
+                    print("[DIRECT] Creating RawFinding objects...")
                     
                     for priority_list, priority_label in [
                         (high_priority, "High Priority"),
                         (medium_priority, "Medium Priority"), 
                         (low_priority, "Low Priority")
                     ]:
+                        print(f"[DIRECT] Processing {len(priority_list)} {priority_label} findings")
                         for finding in priority_list:
                             if hasattr(finding, '__dict__'):
                                 raw_findings.append(RawFinding(
@@ -1111,20 +1139,27 @@ def display_single_nda_review(model, temperature):
                                     suggested_replacement=finding.get('suggested_replacement', '')
                                 ))
                             finding_id += 1
+                    print(f"[DIRECT] Created {len(raw_findings)} RawFinding objects")
                     
                     # Read NDA text and clean findings
+                    print("[DIRECT] Reading NDA text for cleaning process...")
                     with open(converted_path, 'r', encoding='utf-8') as f:
                         nda_text = f.read()
+                    print(f"[DIRECT] NDA text length: {len(nda_text)} characters")
                     
+                    print("[DIRECT] Starting LLM cleaning process...")
                     auto_comments = {finding.id: "" for finding in raw_findings}
                     cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+                    print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
                     
                     progress_bar.progress(0.9)
                     status_text.info("📝 Generating final documents...")
+                    print("[DIRECT] Generating tracked changes document...")
                     
                     # Generate tracked changes document
                     tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
                     shutil.copy2(temp_file_path, tracked_temp_path)
+                    print(f"[DIRECT] Tracked changes template created: {tracked_temp_path}")
                     
                     apply_cleaned_findings_to_docx(
                         input_docx=tracked_temp_path,
@@ -1132,30 +1167,41 @@ def display_single_nda_review(model, temperature):
                         output_docx=tracked_temp_path,
                         author="AI Compliance Reviewer"
                     )
+                    print("[DIRECT] Tracked changes document generated successfully!")
                     
                     # Generate clean edited document
+                    print("[DIRECT] Generating clean edited document...")
                     clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
                     shutil.copy2(temp_file_path, clean_temp_path)
+                    print(f"[DIRECT] Clean document template created: {clean_temp_path}")
                     
                     replace_cleaned_findings_in_docx(
                         input_docx=clean_temp_path,
                         cleaned_findings=cleaned_findings,
                         output_docx=clean_temp_path
                     )
+                    print("[DIRECT] Clean edited document generated successfully!")
                     
                     # Read generated files
+                    print("[DIRECT] Reading generated documents...")
                     with open(tracked_temp_path, 'rb') as f:
                         tracked_docx = f.read()
+                    print(f"[DIRECT] Tracked changes document size: {len(tracked_docx)} bytes")
+                    
                     with open(clean_temp_path, 'rb') as f:
                         clean_docx = f.read()
+                    print(f"[DIRECT] Clean document size: {len(clean_docx)} bytes")
                     
                     # Cleanup temp files
+                    print("[DIRECT] Cleaning up temporary files...")
                     for path in [temp_file_path, converted_path, tracked_temp_path, clean_temp_path]:
                         if os.path.exists(path):
                             os.unlink(path)
+                            print(f"[DIRECT] Deleted: {path}")
                     
                     progress_bar.progress(1.0)
                     status_text.success("✅ Direct generation completed!")
+                    print("[DIRECT] All processing completed successfully!")
                     
                     # Store results
                     st.session_state.direct_sync_results = {
@@ -1167,12 +1213,15 @@ def display_single_nda_review(model, temperature):
                         'low_priority': low_priority,
                         'total_issues': total_issues
                     }
+                    print("[DIRECT] Results stored in session state")
                     
                     st.rerun()
                     
             except Exception as e:
-                st.error(f"❌ Direct generation failed: {str(e)}")
+                print(f"[DIRECT] ERROR: {str(e)}")
                 import traceback
+                print(f"[DIRECT] Full traceback: {traceback.format_exc()}")
+                st.error(f"❌ Direct generation failed: {str(e)}")
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
     
