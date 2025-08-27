@@ -1281,6 +1281,7 @@ def display_single_nda_review(model, temperature):
         st.subheader("📄 Download Generated Documents")
         
         from datetime import datetime
+        import os
         base_name = os.path.splitext(results['filename'])[0]
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
