@@ -1188,6 +1188,8 @@ def display_single_nda_review(model, temperature):
                     try:
                         cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
                         print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
+                        print(f"[DIRECT] Starting document generation phase...")
+                        print(f"[DIRECT] Current memory usage check point 1")
                     except (ValueError, RuntimeError, Exception) as e:
                         error_msg = str(e)
                         if ("citation_clean is not an exact substring" in error_msg or 
@@ -1221,6 +1223,7 @@ def display_single_nda_review(model, temperature):
                     progress_bar.progress(0.9)
                     status_text.info("📝 Generating final documents...")
                     print("[DIRECT] Generating tracked changes document...")
+                    print(f"[DIRECT] Current memory usage check point 2 - about to start DOCX generation")
                     
                     try:
                         # Generate tracked changes document
