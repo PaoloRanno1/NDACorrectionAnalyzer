@@ -1563,47 +1563,156 @@ def display_all_files_nda_review(model, temperature):
         
         st.markdown("---")
         
-        # Detailed results
-        st.subheader("🔍 Detailed Review Results")
+        # Available Issues Section
+        st.subheader("📋 Available Issues")
+        total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+        st.write(f"Found {total_issues} issues across all priority levels.")
+        st.markdown("---")
         
         # High priority issues
         if high_priority:
-            st.subheader("🔴 High Priority Issues (Mandatory Changes Required)")
+            st.markdown("### 🔴 High Priority Issues (Mandatory)")
             for idx, flag in enumerate(high_priority):
-                with st.expander(f"High Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                issue_title = flag.get('issue', 'Compliance Issue')
+                
+                # Create a container for each issue with custom styling
+                with st.container():
+                    st.markdown(f"**High Priority {idx + 1}: {issue_title}**")
+                    
+                    # Section with icon
+                    if flag.get('section'):
+                        st.markdown(f"📍 **Section:** {flag.get('section')}")
+                    
+                    # Problem with icon
+                    if flag.get('problem'):
+                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
+                    
+                    # Citation with icon
+                    if flag.get('citation'):
+                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
+                    
+                    # Suggested replacement with icon
                     if flag.get('suggested_replacement'):
-                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-        else:
-            st.success("✅ No high priority issues found!")
+                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
+                    
+                    # Additional Comments/Instructions section
+                    st.markdown("**Additional Comments/Instructions:**")
+                    comment_key = f"comment_high_{idx}"
+                    st.text_area(
+                        label="",
+                        key=comment_key,
+                        placeholder="Enter any additional comments or instructions for this issue...",
+                        label_visibility="collapsed",
+                        height=60
+                    )
+                    
+                    # Checkbox for acceptance
+                    accept_key = f"accept_high_{idx}"
+                    st.checkbox(
+                        f"✅ Accept Issue {idx + 1}",
+                        key=accept_key,
+                        value=True
+                    )
+                    
+                    st.markdown("---")
         
         # Medium priority issues
         if medium_priority:
-            st.subheader("🟡 Medium Priority Issues (Preferential Changes)")
+            st.markdown("### 🟡 Medium Priority Issues (Preferential)")
             for idx, flag in enumerate(medium_priority):
-                with st.expander(f"Medium Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                issue_title = flag.get('issue', 'Compliance Issue')
+                
+                # Create a container for each issue
+                with st.container():
+                    st.markdown(f"**Medium Priority {idx + 1}: {issue_title}**")
+                    
+                    # Section with icon
+                    if flag.get('section'):
+                        st.markdown(f"📍 **Section:** {flag.get('section')}")
+                    
+                    # Problem with icon
+                    if flag.get('problem'):
+                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
+                    
+                    # Citation with icon
+                    if flag.get('citation'):
+                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
+                    
+                    # Suggested replacement with icon
                     if flag.get('suggested_replacement'):
-                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-        else:
-            st.success("✅ No medium priority issues found!")
+                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
+                    
+                    # Additional Comments/Instructions section
+                    st.markdown("**Additional Comments/Instructions:**")
+                    comment_key = f"comment_medium_{idx}"
+                    st.text_area(
+                        label="",
+                        key=comment_key,
+                        placeholder="Enter any additional comments or instructions for this issue...",
+                        label_visibility="collapsed",
+                        height=60
+                    )
+                    
+                    # Checkbox for acceptance
+                    accept_key = f"accept_medium_{idx}"
+                    st.checkbox(
+                        f"✅ Accept Issue {idx + 1}",
+                        key=accept_key,
+                        value=True
+                    )
+                    
+                    st.markdown("---")
         
         # Low priority issues
         if low_priority:
-            st.subheader("🟢 Low Priority Issues (Optional Changes)")
+            st.markdown("### 🟢 Low Priority Issues (Optional)")
             for idx, flag in enumerate(low_priority):
-                with st.expander(f"Low Priority {idx + 1}: {flag.get('issue', 'Compliance Issue')}", expanded=False):
-                    st.markdown(f"**Section:** {flag.get('section', 'Not specified')}")
-                    st.markdown(f"**Citation:** {flag.get('citation', 'Not provided')}")
-                    st.markdown(f"**Problem:** {flag.get('problem', 'Not specified')}")
+                issue_title = flag.get('issue', 'Compliance Issue')
+                
+                # Create a container for each issue
+                with st.container():
+                    st.markdown(f"**Low Priority {idx + 1}: {issue_title}**")
+                    
+                    # Section with icon
+                    if flag.get('section'):
+                        st.markdown(f"📍 **Section:** {flag.get('section')}")
+                    
+                    # Problem with icon
+                    if flag.get('problem'):
+                        st.markdown(f"❌ **Problem:** {flag.get('problem')}")
+                    
+                    # Citation with icon
+                    if flag.get('citation'):
+                        st.markdown(f"📄 **Citation:** {flag.get('citation')}")
+                    
+                    # Suggested replacement with icon
                     if flag.get('suggested_replacement'):
-                        st.markdown(f"**Suggested Replacement:** {flag.get('suggested_replacement')}")
-        else:
-            st.success("✅ No low priority issues found!")
+                        st.markdown(f"✏️ **Suggested Replacement:** {flag.get('suggested_replacement')}")
+                    
+                    # Additional Comments/Instructions section
+                    st.markdown("**Additional Comments/Instructions:**")
+                    comment_key = f"comment_low_{idx}"
+                    st.text_area(
+                        label="",
+                        key=comment_key,
+                        placeholder="Enter any additional comments or instructions for this issue...",
+                        label_visibility="collapsed",
+                        height=60
+                    )
+                    
+                    # Checkbox for acceptance
+                    accept_key = f"accept_low_{idx}"
+                    st.checkbox(
+                        f"✅ Accept Issue {idx + 1}",
+                        key=accept_key,
+                        value=True
+                    )
+                    
+                    st.markdown("---")
+        
+        # Show message if no issues found
+        if not high_priority and not medium_priority and not low_priority:
+            st.success("✅ No compliance issues found in this NDA!")
         
         st.markdown("---")
         
