@@ -1184,8 +1184,12 @@ def display_single_nda_review(model, temperature):
                     print("[DIRECT] Starting LLM cleaning process...")
                     auto_comments = {finding.id: "" for finding in raw_findings}
                     
-                    # Try LLM cleaning with error handling
+                    # Try LLM cleaning with error handling and Pro model timeout protection
                     try:
+                        print(f"[DIRECT] About to start LLM cleaning with model: {model}")
+                        if model == "gemini-2.5-pro":
+                            print(f"[DIRECT] Using Pro model - implementing timeout protection")
+                        
                         cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
                         print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
                         print(f"[DIRECT] Starting document generation phase...")

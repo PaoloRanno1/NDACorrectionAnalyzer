@@ -1,0 +1,109 @@
+[DIRECT] Deleted: /tmp/tmpms7m8ntk_tracked.docx
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Deleted: /tmp/tmpe4v8zql0_clean.docx
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] All processing completed successfully!
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Results stored in session state
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Results ready flag set - should display results now
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Displaying persistent results for Stern_cleaned.docx with 8 issues
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Loading NDA document from: /tmp/tmpu49xgby3.md
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Document loaded successfully. Length: 15770 characters
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Running compliance analysis...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Parsing compliance report...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+✅ Analysis completed successfully!
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Starting direct tracked changes generation
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] File uploaded: Stern_cleaned.docx, size: 34791 bytes
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Temporary file created: /tmp/tmp0awwv1q2.docx
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Converting DOCX to Markdown using pandoc...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Document converted successfully: /tmp/tmp0awwv1q2.md
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Converted markdown length: 15134 characters
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Starting AI analysis with model: gemini-2.5-pro, temperature: 0.0
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Playbook loaded, length: 12164 characters
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Review chain initialized, running analysis...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Loading NDA document from: /tmp/tmp0awwv1q2.md
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Document loaded successfully. Length: 15134 characters
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Running compliance analysis...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+Parsing compliance report...
+2025-08-27 19:13:01.33
+f0b602f5
+User
+✅ Analysis completed successfully!
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] AI analysis completed successfully!
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Compliance report keys: ['High Priority', 'Medium Priority', 'Low Priority']
+2025-08-27 19:13:01.33
+f0b602f5
+User
+[DIRECT] Processing compliance findings...
