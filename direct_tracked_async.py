@@ -113,9 +113,29 @@ def _set_status(status: str = None, progress: int = None, message: str = None, *
                     'job_id': job_id,
                     'timestamp': time.time()
                 }
-                # Don't include binary results in file
-                if 'results' in dp and dp['results']:
+                
+                # Handle results separately - save binary data to files
+                if 'results' in extra and extra['results']:
+                    results = extra['results']
                     status_data['has_results'] = True
+                    status_data['original_filename'] = results.get('original_filename', 'document')
+                    
+                    # Save binary data to separate files
+                    results_dir = os.path.join(tempfile.gettempdir(), f"results_{job_id}")
+                    os.makedirs(results_dir, exist_ok=True)
+                    
+                    if 'tracked_changes_content' in results:
+                        tracked_file = os.path.join(results_dir, 'tracked.docx')
+                        with open(tracked_file, 'wb') as f:
+                            f.write(results['tracked_changes_content'])
+                        status_data['tracked_file'] = tracked_file
+                    
+                    if 'clean_edited_content' in results:
+                        clean_file = os.path.join(results_dir, 'clean.docx')
+                        with open(clean_file, 'wb') as f:
+                            f.write(results['clean_edited_content'])
+                        status_data['clean_file'] = clean_file
+                        
                 else:
                     status_data['has_results'] = False
                     
@@ -130,7 +150,27 @@ def _load_status_from_file(job_id: str) -> Dict[str, Any]:
         status_file = _get_status_file_path(job_id)
         if os.path.exists(status_file):
             with open(status_file, 'r') as f:
-                return json.load(f)
+                status_data = json.load(f)
+                
+            # If we have results files, load them back into memory
+            if status_data.get('has_results'):
+                results = {
+                    'original_filename': status_data.get('original_filename', 'document')
+                }
+                
+                # Load tracked changes file
+                if 'tracked_file' in status_data and os.path.exists(status_data['tracked_file']):
+                    with open(status_data['tracked_file'], 'rb') as f:
+                        results['tracked_changes_content'] = f.read()
+                
+                # Load clean edited file  
+                if 'clean_file' in status_data and os.path.exists(status_data['clean_file']):
+                    with open(status_data['clean_file'], 'rb') as f:
+                        results['clean_edited_content'] = f.read()
+                
+                status_data['results'] = results
+                
+            return status_data
     except Exception as e:
         print(f"Error loading status: {e}")
     return {}
@@ -356,6 +396,10 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
             dp['status'] = file_status.get('status', dp['status'])
             dp['progress'] = file_status.get('progress', dp['progress'])
             dp['message'] = file_status.get('message', dp['message'])
+            
+            # Load results if available
+            if 'results' in file_status:
+                dp['results'] = file_status['results']
             
             # Update the session state properly
             st.session_state.direct_processing = dp
