@@ -16,7 +16,14 @@ def run_direct_changes_background(analysis_id: str, file_content: bytes, file_na
         st.session_state.direct_processing_message = 'Initializing document processing...'
         
         # Import here to avoid circular imports
-        from Tracked_changes_tools_clean import generate_tracked_changes_document
+        from Tracked_changes_tools_clean import (
+            apply_cleaned_findings_to_docx, 
+            clean_findings_with_llm, 
+            CleanedFinding,
+            replace_cleaned_findings_in_docx,
+            RawFinding
+        )
+        import shutil
         
         # Create temporary file
         st.session_state.direct_processing_progress = 20
@@ -30,41 +37,97 @@ def run_direct_changes_background(analysis_id: str, file_content: bytes, file_na
         st.session_state.direct_processing_progress = 40
         st.session_state.direct_processing_message = 'Processing selected findings...'
         
-        from Tracked_changes_tools_clean import RawFinding
-        
         raw_findings = []
+        additional_info_by_id = {}
         finding_id = 1
         
         for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
             for idx, finding in selected_findings[priority].items():
                 raw_finding = RawFinding(
                     id=finding_id,
-                    issue=finding['issue'],
-                    citation=finding.get('citation', ''),
+                    priority=priority,
                     section=finding.get('section', ''),
+                    issue=finding.get('issue', ''),
                     problem=finding.get('problem', ''),
-                    suggested_replacement=finding.get('suggested_replacement', ''),
-                    user_comment=user_comments.get(f"{priority}_{idx}", "")
+                    citation=finding.get('citation', ''),
+                    suggested_replacement=finding.get('suggested_replacement', '')
                 )
                 raw_findings.append(raw_finding)
+                
+                # Store additional comment info by ID
+                comment = user_comments.get(f"{priority}_{idx}", "")
+                if comment:
+                    additional_info_by_id[finding_id] = comment
+                
                 finding_id += 1
+        
+        # Clean findings with LLM
+        st.session_state.direct_processing_progress = 50
+        st.session_state.direct_processing_message = 'Cleaning findings with AI...'
+        
+        # Need to read the NDA text for context - convert DOCX to markdown first
+        import subprocess
+        converted_path = temp_file_path.replace('.docx', '.md')
+        result = subprocess.run([
+            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+        ], capture_output=True, text=True, check=True)
+        
+        # Read the original NDA text for context
+        with open(converted_path, 'r', encoding='utf-8') as f:
+            nda_text = f.read()
+        
+        # Clean all findings at once
+        try:
+            cleaned_findings = clean_findings_with_llm(
+                nda_text,
+                raw_findings,
+                additional_info_by_id,
+                "gemini-2.5-pro"  # Use default model
+            )
+        except Exception as e:
+            # Create basic cleaned findings as fallback
+            cleaned_findings = []
+            for raw_finding in raw_findings:
+                cleaned_finding = CleanedFinding(
+                    id=raw_finding.id,
+                    citation_clean=raw_finding.citation,
+                    suggested_replacement_clean=raw_finding.suggested_replacement
+                )
+                cleaned_findings.append(cleaned_finding)
         
         # Generate documents
         st.session_state.direct_processing_progress = 70
         st.session_state.direct_processing_message = 'Generating tracked changes document...'
         
-        tracked_changes_path, clean_edited_path = generate_tracked_changes_document(
-            temp_file_path, raw_findings
+        # Generate tracked changes document
+        tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+        shutil.copy2(temp_file_path, tracked_temp_path)
+        
+        changes_applied = apply_cleaned_findings_to_docx(
+            input_docx=tracked_temp_path,
+            cleaned_findings=cleaned_findings,
+            output_docx=tracked_temp_path,
+            author="AI Compliance Reviewer"
+        )
+        
+        # Generate clean edited document  
+        clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+        shutil.copy2(temp_file_path, clean_temp_path)
+        
+        clean_changes_applied = replace_cleaned_findings_in_docx(
+            input_docx=clean_temp_path,
+            cleaned_findings=cleaned_findings,
+            output_docx=clean_temp_path
         )
         
         # Read generated files
         st.session_state.direct_processing_progress = 90
         st.session_state.direct_processing_message = 'Finalizing documents...'
         
-        with open(tracked_changes_path, 'rb') as f:
+        with open(tracked_temp_path, 'rb') as f:
             tracked_changes_content = f.read()
         
-        with open(clean_edited_path, 'rb') as f:
+        with open(clean_temp_path, 'rb') as f:
             clean_edited_content = f.read()
         
         # Store results
@@ -76,8 +139,9 @@ def run_direct_changes_background(analysis_id: str, file_content: bytes, file_na
         
         # Cleanup
         os.unlink(temp_file_path)
-        os.unlink(tracked_changes_path)
-        os.unlink(clean_edited_path)
+        os.unlink(converted_path)
+        os.unlink(tracked_temp_path)
+        os.unlink(clean_temp_path)
         
         # Complete
         st.session_state.direct_processing_status = 'completed'
