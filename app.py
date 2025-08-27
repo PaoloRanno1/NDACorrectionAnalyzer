@@ -805,7 +805,7 @@ def display_single_nda_review(model, temperature):
     col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
-        st.title("⚖️ NDA Legal Compliance Review (Word Documents)")
+        st.title("Tracked Changes Document Generation")
     
     with col2:
         if st.button("⚙️ AI Settings", key="clean_review_settings", use_container_width=True):
@@ -1356,7 +1356,7 @@ def display_all_files_nda_review(model, temperature):
     col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
-        st.title("📄 NDA Legal Compliance Review (All Files)")
+        st.title("📄 NDA Legal Compliance Review")
     
     with col2:
         if st.button("⚙️ AI Settings", key="all_files_review_settings", use_container_width=True):
@@ -1371,7 +1371,7 @@ def display_all_files_nda_review(model, temperature):
         display_settings_modal()
     
     st.markdown("""- Upload an NDA document in any supported format (PDF, DOCX, TXT, MD) to get AI-powered compliance analysis.
-- This version supports all file types but does not include post-review editing features.
+- This version supports all file types but does not include tracked changes generation.
 - Please don't change page when reviewing an NDA, it will stop the review.
 """)
     
@@ -2368,8 +2368,8 @@ def display_navigation():
     
     # Navigation options
     nav_options = {
-        "NDA REVIEW (WORD)": "clean_review",
-        "NDA REVIEW (ALL FILES)": "all_files_review",
+        "Tracked Changes": "clean_review",
+        "NDA REVIEW ": "all_files_review",
         "TESTING": "testing", 
         "POLICIES": "policies",
         "FAQ": "faq"
