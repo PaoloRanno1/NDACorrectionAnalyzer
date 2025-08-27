@@ -52,15 +52,27 @@ def init_direct_processing_state() -> None:
 
 def _set_status(status: str = None, progress: int = None, message: str = None, **extra) -> None:
     """Update the processing status in session state."""
-    dp = st.session_state.direct_processing
-    if status is not None:
-        dp['status'] = status
-    if progress is not None:
-        dp['progress'] = max(0, min(100, int(progress)))
-    if message is not None:
-        dp['message'] = message
-    for k, v in extra.items():
-        dp[k] = v
+    try:
+        # Initialize if needed
+        if 'direct_processing' not in st.session_state:
+            init_direct_processing_state()
+        
+        dp = st.session_state.direct_processing
+        if status is not None:
+            dp['status'] = status
+        if progress is not None:
+            dp['progress'] = max(0, min(100, int(progress)))
+        if message is not None:
+            dp['message'] = message
+        for k, v in extra.items():
+            dp[k] = v
+        
+        # Force update the session state
+        st.session_state.direct_processing = dp
+    except Exception as e:
+        # If session state access fails from thread, ignore silently
+        print(f"Status update failed (this is normal in threads): {e}")
+        pass
 
 
 def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, model: str, temperature: float) -> None:
@@ -277,10 +289,29 @@ def render_direct_tracked_status_ui() -> None:
             st.write(f"**Progress:** {current_progress}%")
             st.write(f"**Status:** {dp.get('status', 'unknown')}")
             st.write(f"**Message:** {dp.get('message', 'No message')}")
+            
+            # Show error if any
+            if dp.get('error'):
+                st.error(f"**Error:** {dp['error']}")
         
-        # Show refresh button instead of auto-refresh to avoid infinite loops
-        if st.button("🔄 Refresh Status", key="refresh_direct_status"):
-            st.rerun()
+        # Show refresh button and cancel option
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Refresh Status", key="refresh_direct_status"):
+                st.rerun()
+        with col2:
+            if st.button("❌ Cancel Process", key="cancel_direct_process"):
+                # Reset the process
+                st.session_state.direct_processing = {
+                    'status': 'idle',
+                    'progress': 0,
+                    'message': 'Idle',
+                    'results': None,
+                    'error': None,
+                    'job_id': None,
+                }
+                st.success("Process cancelled. You can start a new one.")
+                st.rerun()
 
     elif dp['status'] == 'completed' and dp['results']:
         st.success('✅ Direct tracked changes generation completed!')
