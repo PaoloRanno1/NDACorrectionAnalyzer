@@ -3,8 +3,7 @@ NDA Compliance Check Module - Clean Version
 Analyzes NDAs with tracked changes against Strada's playbook
 """
 
-from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
-
+from langchain.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import StrOutputParser

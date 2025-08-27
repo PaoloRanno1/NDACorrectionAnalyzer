@@ -3,8 +3,7 @@ NDA Reviewer Module - Clean Version
 Handles NDA compliance analysis using Strada's internal playbook
 """
 
-from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
-
+from langchain.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.output_parsers import PydanticOutputParser

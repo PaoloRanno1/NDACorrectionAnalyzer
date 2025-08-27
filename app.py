@@ -83,7 +83,6 @@ def initialize_session_state():
             'files': {'clean': None, 'corrected': None},
             'config': None
         }
-    
 
 def run_background_analysis(analysis_id, clean_file_content, corrected_file_content, model, temperature, analysis_mode):
     """Run NDA analysis in background thread"""
@@ -806,7 +805,7 @@ def display_single_nda_review(model, temperature):
     col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
-        st.title("Tracked Changes Document Generation")
+        st.title("⚖️ NDA Legal Compliance Review (Word Documents)")
     
     with col2:
         if st.button("⚙️ AI Settings", key="clean_review_settings", use_container_width=True):
@@ -820,8 +819,8 @@ def display_single_nda_review(model, temperature):
     if st.session_state.get('show_settings', False):
         display_settings_modal()
     
-    st.markdown("""
-- This version supports tracked changes document generation after AI analysis (it only works for word files).
+    st.markdown("""- Upload a Word document (DOCX) or select from your database to get AI-powered compliance analysis with post-review editing capabilities.
+- This version supports tracked changes document generation after AI analysis.
 - Please don't change page when reviewing an NDA, it will stop the review.
 """)
     
@@ -1005,33 +1004,346 @@ def display_single_nda_review(model, temperature):
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
     
-    # Handle direct tracked changes generation with robust async processing
+    # Handle direct tracked changes generation
     if run_direct_tracked_changes and uploaded_file:
-        from direct_tracked_async import init_direct_processing_state, start_direct_tracked_job, render_direct_tracked_status_ui
-        
         file_extension = uploaded_file.name.split('.')[-1].lower()
         if file_extension != 'docx':
             st.error("Direct tracked changes generation requires a Word document (.docx file).")
             st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
         else:
-            # Initialize the async processing system
-            init_direct_processing_state()
+            try:
+                import tempfile
+                import os
+                import subprocess
+                import traceback
+                from datetime import datetime
+                
+                with st.spinner("Analyzing NDA and generating tracked changes document..."):
+                    st.info("Running AI analysis to identify all compliance issues...")
+                    
+                    file_content = uploaded_file.getvalue()
+                    
+                    # Store original docx content for later Word comparison
+                    st.session_state['original_docx_content'] = file_content
+                    
+                    # Write content to temporary file
+                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                        temp_file.write(file_content)
+                        temp_file_path = temp_file.name
+                    
+                    # Convert DOCX to markdown for analysis
+                    try:
+                        converted_path = temp_file_path.replace('.docx', '.md')
+                        result = subprocess.run([
+                            'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                        ], capture_output=True, text=True, check=True)
+                    except subprocess.CalledProcessError as e:
+                        st.error(f"Failed to convert DOCX file with pandoc: {e.stderr}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except FileNotFoundError:
+                        st.error("Pandoc is not installed. Cannot process DOCX files.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    except Exception as e:
+                        st.error(f"Failed to convert DOCX file: {str(e)}")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    # Run analysis
+                    from playbook_manager import get_current_playbook
+                    from NDA_Review_chain import StradaComplianceChain
+                    
+                    playbook_content = get_current_playbook()
+                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                    
+                    # Keep converted file for later use
+                    # os.unlink(converted_path) - Don't delete yet, we need it for cleaning
+                    
+                    if not compliance_report:
+                        st.error("Failed to get analysis results.")
+                        os.unlink(temp_file_path)
+                        st.stop()
+                    
+                    st.info("Auto-selecting all identified compliance issues...")
+                    
+                    # Auto-select all findings
+                    high_priority = compliance_report.get('High Priority', [])
+                    medium_priority = compliance_report.get('Medium Priority', [])
+                    low_priority = compliance_report.get('Low Priority', [])
+                    
+                    selected_findings = {
+                        'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
+                        'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
+                        'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
+                    }
+                    
+                    selected_comments = {}
+                    for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                        selected_comments[priority] = {}
+                        for idx in selected_findings[priority].keys():
+                            selected_comments[priority][idx] = "Auto-selected for direct tracked changes generation"
+                    
+                    total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                    
+                    if total_issues == 0:
+                        st.success("No compliance issues found! Your NDA appears to be fully compliant.")
+                        os.unlink(temp_file_path)
+                    else:
+                        st.info(f"Generating tracked changes document with {total_issues} identified issues...")
+                        
+                        try:
+                            from Tracked_changes_tools_clean import (
+                                apply_cleaned_findings_to_docx, 
+                                clean_findings_with_llm, 
+                                flatten_findings, 
+                                select_findings,
+                                CleanedFinding,
+                                replace_cleaned_findings_in_docx
+                            )
+                            import tempfile
+                            import shutil
+                            
+                            from Tracked_changes_tools_clean import RawFinding
+                            
+                            # Flatten all findings into a single list with proper structure
+                            raw_findings = []
+                            additional_info_by_id = {}
+                            finding_id = 1
+                            
+                            for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                                for idx, finding in selected_findings[priority].items():
+                                    raw_finding = RawFinding(
+                                        id=finding_id,
+                                        priority=priority,
+                                        section=finding.get('section', ''),
+                                        issue=finding.get('issue', ''),
+                                        problem=finding.get('problem', ''),
+                                        citation=finding.get('citation', ''),
+                                        suggested_replacement=finding.get('suggested_replacement', '')
+                                    )
+                                    raw_findings.append(raw_finding)
+                                    
+                                    # Store additional comment info by ID
+                                    comment = selected_comments.get(priority, {}).get(idx, "")
+                                    if comment:
+                                        additional_info_by_id[finding_id] = comment
+                                    
+                                    finding_id += 1
+                            
+                            # Clean the findings using LLM
+                            st.info(f"Processing {len(raw_findings)} findings with AI cleanup...")
+                            
+                            # Read the original NDA text for context
+                            with open(converted_path, 'r', encoding='utf-8') as f:
+                                nda_text = f.read()
+                            
+                            # Clean all findings at once
+                            try:
+                                cleaned_findings = clean_findings_with_llm(
+                                    nda_text,
+                                    raw_findings,
+                                    additional_info_by_id,
+                                    model
+                                )
+                            except Exception as e:
+                                st.warning(f"Could not clean findings with LLM: {str(e)}")
+                                # Create basic cleaned findings as fallback
+                                cleaned_findings = []
+                                for raw_finding in raw_findings:
+                                    cleaned_finding = CleanedFinding(
+                                        id=raw_finding.id,
+                                        citation_clean=raw_finding.citation,
+                                        suggested_replacement_clean=raw_finding.suggested_replacement
+                                    )
+                                    cleaned_findings.append(cleaned_finding)
+                            
+                            st.info(f"Successfully cleaned {len(cleaned_findings)} findings. Generating documents...")
+                            
+                            # Generate tracked changes document
+                            tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                            shutil.copy2(temp_file_path, tracked_temp_path)
+                            
+                            changes_applied = apply_cleaned_findings_to_docx(
+                                input_docx=tracked_temp_path,
+                                cleaned_findings=cleaned_findings,
+                                output_docx=tracked_temp_path,
+                                author="AI Compliance Reviewer"
+                            )
+                            
+                            # Generate clean edited document  
+                            clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                            shutil.copy2(temp_file_path, clean_temp_path)
+                            
+                            clean_changes_applied = replace_cleaned_findings_in_docx(
+                                input_docx=clean_temp_path,
+                                cleaned_findings=cleaned_findings,
+                                output_docx=clean_temp_path
+                            )
+                            
+                            # Read the generated files for download
+                            with open(tracked_temp_path, 'rb') as f:
+                                tracked_docx = f.read()
+                            
+                            with open(clean_temp_path, 'rb') as f:
+                                clean_docx = f.read()
+                            
+                            # Cleanup temp files
+                            os.unlink(tracked_temp_path)
+                            os.unlink(clean_temp_path)
+                            os.unlink(converted_path)  # Clean up the converted markdown file
+                            
+                            os.unlink(temp_file_path)
+                            
+                            if tracked_docx and clean_docx:
+                                st.success("Tracked changes documents generated successfully!")
+                                
+                                # Display results
+                                st.subheader("Direct Generation Summary")
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("High Priority", len(high_priority))
+                                with col2:
+                                    st.metric("Medium Priority", len(medium_priority))
+                                with col3:
+                                    st.metric("Low Priority", len(low_priority))
+                                
+                                st.markdown("---")
+                                st.subheader("Download Generated Documents")
+                                
+                                # Store documents in session state to persist after download
+                                st.session_state.direct_tracked_docx = tracked_docx
+                                st.session_state.direct_clean_docx = clean_docx
+                                st.session_state.direct_generation_results = {
+                                    'high_priority': high_priority,
+                                    'medium_priority': medium_priority,
+                                    'low_priority': low_priority,
+                                    'total_issues': total_issues
+                                }
+                                
+                                col1, col2 = st.columns(2)
+                                with col1:
+                                    st.download_button(
+                                        label="Download Tracked Changes Document",
+                                        data=tracked_docx,
+                                        file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_tracked"
+                                    )
+                                
+                                with col2:
+                                    st.download_button(
+                                        label="Download Clean Edited Document",
+                                        data=clean_docx,
+                                        file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        key="download_direct_clean"
+                                    )
+                                
+                                # Show what was processed
+                                with st.expander("Issues Processed (Click to expand)"):
+                                    def display_issue_details(issues, priority_name):
+                                        if issues:
+                                            st.write(f"**{priority_name} Issues:**")
+                                            for i, issue in enumerate(issues):
+                                                with st.container():
+                                                    st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                                                    if issue.get('section'):
+                                                        st.write(f"📍 **Section:** {issue.get('section')}")
+                                                    if issue.get('problem'):
+                                                        st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                                                    if issue.get('citation'):
+                                                        st.write(f"📄 **Citation:** {issue.get('citation')}")
+                                                    if issue.get('suggested_replacement'):
+                                                        st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                                                    st.markdown("---")
+                                    
+                                    display_issue_details(high_priority, "High Priority")
+                                    display_issue_details(medium_priority, "Medium Priority")
+                                    display_issue_details(low_priority, "Low Priority")
+                            else:
+                                st.error("Failed to generate tracked changes documents.")
+                        except Exception as e:
+                            st.error(f"Failed to generate tracked changes: {str(e)}")
+                            with st.expander("Error Details"):
+                                st.code(traceback.format_exc())
+            except Exception as e:
+                st.error(f"Failed to process direct tracked changes generation: {str(e)}")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
+    
+    # Display persistent direct generation results if available
+    if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
+        from datetime import datetime
+        st.markdown("---")
+        st.subheader("Direct Generation Summary")
+        
+        results = st.session_state.direct_generation_results
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("High Priority", len(results['high_priority']))
+        with col2:
+            st.metric("Medium Priority", len(results['medium_priority']))
+        with col3:
+            st.metric("Low Priority", len(results['low_priority']))
+        
+        st.markdown("---")
+        st.subheader("Download Generated Documents")
+        
+        if hasattr(st.session_state, 'direct_tracked_docx') and hasattr(st.session_state, 'direct_clean_docx'):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(
+                    label="Download Tracked Changes Document",
+                    data=st.session_state.direct_tracked_docx,
+                    file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_persistent_tracked"
+                )
             
-            # Start the background job
-            start_direct_tracked_job(
-                uploaded_file.getvalue(), 
-                uploaded_file.name, 
-                model=model, 
-                temperature=temperature
-            )
+            with col2:
+                st.download_button(
+                    label="Download Clean Edited Document",
+                    data=st.session_state.direct_clean_docx,
+                    file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key="download_persistent_clean"
+                )
+        
+        # Show what was processed
+        with st.expander("Issues Processed (Click to expand)"):
+            def display_detailed_issues(issues, priority_name):
+                if issues:
+                    st.write(f"**{priority_name} Issues:**")
+                    for i, issue in enumerate(issues):
+                        with st.container():
+                            st.markdown(f"**{i+1}. {issue.get('issue', 'Compliance Issue')}**")
+                            if issue.get('section'):
+                                st.write(f"📍 **Section:** {issue.get('section')}")
+                            if issue.get('problem'):
+                                st.write(f"⚠️ **Problem:** {issue.get('problem')}")
+                            if issue.get('citation'):
+                                st.write(f"📄 **Citation:** {issue.get('citation')}")
+                            if issue.get('suggested_replacement'):
+                                st.write(f"✏️ **Suggested Replacement:** {issue.get('suggested_replacement')}")
+                            st.markdown("---")
+            
+            display_detailed_issues(results['high_priority'], "High Priority")
+            display_detailed_issues(results['medium_priority'], "Medium Priority")
+            display_detailed_issues(results['low_priority'], "Low Priority")
+        
+        # Add button to clear results and start fresh
+        if st.button("Start New Analysis", key="clear_direct_results"):
+            if 'direct_generation_results' in st.session_state:
+                del st.session_state.direct_generation_results
+            if 'direct_tracked_docx' in st.session_state:
+                del st.session_state.direct_tracked_docx
+            if 'direct_clean_docx' in st.session_state:
+                del st.session_state.direct_clean_docx
+            st.rerun()
     
-    # Always render the status UI for direct processing
-    if 'run_direct_tracked_changes' in locals() and uploaded_file and uploaded_file.name.endswith('.docx'):
-        from direct_tracked_async import render_direct_tracked_status_ui
-        render_direct_tracked_status_ui()
-    
-    
-    # Display results if available - go directly to edit mode
+    # Display results if available - directly go to edit mode
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
         st.session_state.show_edit_mode = True
         st.session_state.original_docx_file = uploaded_file  # Store the original file
@@ -1047,7 +1359,7 @@ def display_all_files_nda_review(model, temperature):
     col1, col2, col3 = st.columns([3, 1, 1])
     
     with col1:
-        st.title("📄 NDA Legal Compliance Review ")
+        st.title("📄 NDA Legal Compliance Review (All Files)")
     
     with col2:
         if st.button("⚙️ AI Settings", key="all_files_review_settings", use_container_width=True):
@@ -1880,8 +2192,8 @@ def display_navigation():
     
     # Navigation options
     nav_options = {
-        "TRACKED CHANGES": "clean_review",
-        "NDA REVIEW": "all_files_review",
+        "NDA REVIEW (WORD)": "clean_review",
+        "NDA REVIEW (ALL FILES)": "all_files_review",
         "TESTING": "testing", 
         "POLICIES": "policies",
         "FAQ": "faq"
@@ -2388,183 +2700,6 @@ def display_testing_results_section():
         else:
             st.error("Failed to load result data.")
 
-def display_issue_review_interface():
-    """Display the detailed issue review interface before document generation"""
-    st.subheader("📋 Available Issues")
-    
-    compliance_report = st.session_state.single_nda_results
-    
-    # Import the tracking changes tools to flatten findings
-    try:
-        import Tracked_changes_tools_clean as tr_tools
-        flatten_findings = tr_tools.flatten_findings(compliance_report)
-    except Exception as e:
-        st.error(f"Error processing findings: {str(e)}")
-        return
-    
-    if not flatten_findings:
-        st.warning("No findings to process.")
-        return
-    
-    st.markdown(f"Found **{len(flatten_findings)}** issues across all priority levels.")
-    
-    # Separate findings by priority
-    high_findings = [f for f in flatten_findings if f.priority == "High Priority"]
-    medium_findings = [f for f in flatten_findings if f.priority == "Medium Priority"] 
-    low_findings = [f for f in flatten_findings if f.priority == "Low Priority"]
-    
-    # High Priority Issues
-    if high_findings:
-        st.markdown("### 🔴 High Priority Issues (Mandatory)")
-        for i, finding in enumerate(high_findings, 1):
-            with st.container():
-                st.markdown(f"**High Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                st.markdown("---")
-    
-    # Medium Priority Issues  
-    if medium_findings:
-        st.markdown("### 🟡 Medium Priority Issues")
-        for i, finding in enumerate(medium_findings, 1):
-            with st.container():
-                st.markdown(f"**Medium Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                st.markdown("---")
-    
-    # Low Priority Issues
-    if low_findings:
-        st.markdown("### 🟢 Low Priority Issues")
-        for i, finding in enumerate(low_findings, 1):
-            with st.container():
-                st.markdown(f"**Low Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                st.markdown("---")
-    
-    # Action buttons
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("📄 Edit Selected Issues", key="proceed_to_edit", use_container_width=True):
-            st.session_state.show_edit_mode = True
-            st.rerun()
-    
-    with col2:
-        if st.button("📄 Generate All Documents", key="generate_all_direct", use_container_width=True):
-            # Generate documents for all issues directly
-            with st.spinner("Generating documents with all identified issues..."):
-                try:
-                    from Tracked_changes_tools_clean import apply_cleaned_findings_to_docx, replace_cleaned_findings_in_docx, clean_findings
-                    import tempfile
-                    import shutil
-                    import os
-                    from datetime import datetime
-                    
-                    # Get original DOCX file
-                    original_file = st.session_state.get('original_docx_file')
-                    if not original_file or not original_file.name.endswith('.docx'):
-                        st.error("⚠️ Document editing requires a DOCX file.")
-                        return
-                    
-                    # Save uploaded file to temp location
-                    temp_file_path = tempfile.mktemp(suffix='.docx')
-                    with open(temp_file_path, 'wb') as f:
-                        f.write(original_file.getvalue())
-                    
-                    # Clean the findings
-                    cleaned_findings = clean_findings(flatten_findings, "", "gemini-2.5-pro", 0.0)
-                    
-                    # Generate tracked changes document
-                    tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
-                    shutil.copy2(temp_file_path, tracked_temp_path)
-                    
-                    changes_applied = apply_cleaned_findings_to_docx(
-                        input_docx=tracked_temp_path,
-                        cleaned_findings=cleaned_findings,
-                        output_docx=tracked_temp_path,
-                        author="AI Compliance Reviewer"
-                    )
-                    
-                    # Generate clean edited document
-                    clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
-                    shutil.copy2(temp_file_path, clean_temp_path)
-                    
-                    replacements_applied = replace_cleaned_findings_in_docx(
-                        input_docx=clean_temp_path,
-                        cleaned_findings=cleaned_findings,
-                        output_docx=clean_temp_path
-                    )
-                    
-                    # Read the generated files
-                    with open(tracked_temp_path, 'rb') as f:
-                        tracked_docx = f.read()
-                    
-                    with open(clean_temp_path, 'rb') as f:
-                        clean_docx = f.read()
-                    
-                    # Cleanup temp files
-                    os.unlink(tracked_temp_path)
-                    os.unlink(clean_temp_path) 
-                    os.unlink(temp_file_path)
-                    
-                    if tracked_docx and clean_docx:
-                        # Store documents in session state
-                        st.session_state.direct_tracked_docx = tracked_docx
-                        st.session_state.direct_clean_docx = clean_docx
-                        st.session_state.direct_generation_results = {
-                            'high_priority': [f.dict() for f in high_findings],
-                            'medium_priority': [f.dict() for f in medium_findings], 
-                            'low_priority': [f.dict() for f in low_findings],
-                            'total_issues': len(flatten_findings)
-                        }
-                        
-                        st.success(f"✅ Documents generated successfully! Applied {changes_applied} tracked changes and {replacements_applied} direct replacements.")
-                        st.rerun()
-                    else:
-                        st.error("Failed to generate documents.")
-                        
-                except Exception as e:
-                    st.error(f"Failed to generate documents: {str(e)}")
-                    import traceback
-                    with st.expander("Error Details"):
-                        st.code(traceback.format_exc())
-
 def display_edit_mode_interface():
     """Display the post-review editing interface for selecting and processing findings"""
     st.title("📄 Tracked Changes Document Generation")
@@ -2610,28 +2745,15 @@ def display_edit_mode_interface():
     medium_findings = [f for f in flatten_findings if f.priority == "Medium Priority"]
     low_findings = [f for f in flatten_findings if f.priority == "Low Priority"]
     
-    # High Priority Issues
+    # High Priority
     if high_findings:
-        st.markdown("### 🔴 High Priority Issues")
-        for i, finding in enumerate(high_findings, 1):
-            with st.container():
-                st.markdown(f"**High Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                # Accept checkbox below suggested replacement
+        st.subheader("🔴 High Priority Issues (Mandatory)")
+        for finding in high_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
                 selected = st.checkbox(
-                    f"✅ Accept Issue {finding.id}",
+                    f"Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -2639,9 +2761,16 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-                
-                # Add comment section if selected
-                if finding.id in st.session_state.selected_findings:
+            
+            with col2:
+                with st.expander(f"High Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2649,31 +2778,16 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                
-                st.markdown("---")
     
-    # Medium Priority Issues  
+    # Medium Priority
     if medium_findings:
-        st.markdown("### 🟡 Medium Priority Issues")
-        for i, finding in enumerate(medium_findings, 1):
-            with st.container():
-                st.markdown(f"**Medium Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                # Accept checkbox below suggested replacement
+        st.subheader("🟡 Medium Priority Issues (Preferential)")
+        for finding in medium_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
                 selected = st.checkbox(
-                    f"✅ Accept Issue {finding.id}",
+                    f"Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -2681,9 +2795,16 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-                
-                # Add comment section if selected
-                if finding.id in st.session_state.selected_findings:
+            
+            with col2:
+                with st.expander(f"Medium Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2691,31 +2812,16 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                
-                st.markdown("---")
     
-    # Low Priority Issues
+    # Low Priority
     if low_findings:
-        st.markdown("### 🟢 Low Priority Issues")
-        for i, finding in enumerate(low_findings, 1):
-            with st.container():
-                st.markdown(f"**Low Priority {i}: {finding.issue}**")
-                
-                if finding.section:
-                    st.markdown(f"📍 **Section:** {finding.section}")
-                
-                if finding.problem:
-                    st.markdown(f"❌ **Problem:** {finding.problem}")
-                
-                if finding.citation:
-                    st.markdown(f"📄 **Citation:** {finding.citation}")
-                
-                if finding.suggested_replacement:
-                    st.markdown(f"✏️ **Suggested Replacement:** {finding.suggested_replacement}")
-                
-                # Accept checkbox below suggested replacement
+        st.subheader("🟢 Low Priority Issues (Optional)")
+        for finding in low_findings:
+            col1, col2 = st.columns([1, 4])
+            
+            with col1:
                 selected = st.checkbox(
-                    f"✅ Accept Issue {finding.id}",
+                    f"Issue {finding.id}",
                     value=finding.id in st.session_state.selected_findings,
                     key=f"select_{finding.id}"
                 )
@@ -2723,9 +2829,16 @@ def display_edit_mode_interface():
                     st.session_state.selected_findings.add(finding.id)
                 else:
                     st.session_state.selected_findings.discard(finding.id)
-                
-                # Add comment section if selected
-                if finding.id in st.session_state.selected_findings:
+            
+            with col2:
+                with st.expander(f"Low Priority {finding.id}: {finding.issue[:80]}...", expanded=False):
+                    st.markdown(f"**Section:** {finding.section}")
+                    st.markdown(f"**Issue:** {finding.issue}")
+                    st.markdown(f"**Problem:** {finding.problem}")
+                    st.markdown(f"**Citation:** {finding.citation}")
+                    st.markdown(f"**Suggested Replacement:** {finding.suggested_replacement}")
+                    
+                    # Comment input for this finding
                     comment = st.text_area(
                         "Additional Comments/Instructions:",
                         value=st.session_state.finding_comments.get(finding.id, ""),
@@ -2733,8 +2846,6 @@ def display_edit_mode_interface():
                         help="Add any specific instructions or comments for this finding"
                     )
                     st.session_state.finding_comments[finding.id] = comment
-                
-                st.markdown("---")
     
     st.markdown("---")
     
