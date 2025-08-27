@@ -1177,13 +1177,8 @@ def display_single_nda_review(model, temperature):
                             for rf in raw_findings:
                                 cf = CleanedFinding(
                                     id=rf.id,
-                                    priority=rf.priority,
-                                    section=rf.section,
-                                    issue=rf.issue,
-                                    problem=rf.problem,
                                     citation_clean=rf.citation,  # Use original citation
-                                    suggested_replacement_clean=rf.suggested_replacement,  # Use original replacement
-                                    user_comment=auto_comments.get(rf.id, "")
+                                    suggested_replacement_clean=rf.suggested_replacement  # Use original replacement
                                 )
                                 cleaned_findings.append(cf)
                             print(f"[DIRECT] Created {len(cleaned_findings)} fallback findings without LLM cleaning")
