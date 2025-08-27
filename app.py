@@ -1193,31 +1193,41 @@ def display_single_nda_review(model, temperature):
                     status_text.info("📝 Generating final documents...")
                     print("[DIRECT] Generating tracked changes document...")
                     
-                    # Generate tracked changes document
-                    tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
-                    shutil.copy2(temp_file_path, tracked_temp_path)
-                    print(f"[DIRECT] Tracked changes template created: {tracked_temp_path}")
-                    
-                    apply_cleaned_findings_to_docx(
-                        input_docx=tracked_temp_path,
-                        cleaned_findings=cleaned_findings,
-                        output_docx=tracked_temp_path,
-                        author="AI Compliance Reviewer"
-                    )
-                    print("[DIRECT] Tracked changes document generated successfully!")
+                    try:
+                        # Generate tracked changes document
+                        tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                        shutil.copy2(temp_file_path, tracked_temp_path)
+                        print(f"[DIRECT] Tracked changes template created: {tracked_temp_path}")
+                        
+                        print(f"[DIRECT] Applying {len(cleaned_findings)} findings to tracked changes document...")
+                        apply_cleaned_findings_to_docx(
+                            input_docx=tracked_temp_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=tracked_temp_path,
+                            author="AI Compliance Reviewer"
+                        )
+                        print("[DIRECT] Tracked changes document generated successfully!")
+                    except Exception as e:
+                        print(f"[DIRECT] ERROR in tracked changes generation: {str(e)}")
+                        raise
                     
                     # Generate clean edited document
                     print("[DIRECT] Generating clean edited document...")
-                    clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
-                    shutil.copy2(temp_file_path, clean_temp_path)
-                    print(f"[DIRECT] Clean document template created: {clean_temp_path}")
-                    
-                    replace_cleaned_findings_in_docx(
-                        input_docx=clean_temp_path,
-                        cleaned_findings=cleaned_findings,
-                        output_docx=clean_temp_path
-                    )
-                    print("[DIRECT] Clean edited document generated successfully!")
+                    try:
+                        clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                        shutil.copy2(temp_file_path, clean_temp_path)
+                        print(f"[DIRECT] Clean document template created: {clean_temp_path}")
+                        
+                        print(f"[DIRECT] Applying {len(cleaned_findings)} findings to clean document...")
+                        replace_cleaned_findings_in_docx(
+                            input_docx=clean_temp_path,
+                            cleaned_findings=cleaned_findings,
+                            output_docx=clean_temp_path
+                        )
+                        print("[DIRECT] Clean edited document generated successfully!")
+                    except Exception as e:
+                        print(f"[DIRECT] ERROR in clean document generation: {str(e)}")
+                        raise
                     
                     # Read generated files
                     print("[DIRECT] Reading generated documents...")
@@ -1287,7 +1297,8 @@ def display_single_nda_review(model, temperature):
                             data=tracked_docx,
                             file_name=f"{base_name}_Tracked_{timestamp}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
+                            use_container_width=True,
+                            key=f"direct_tracked_{timestamp}"
                         )
                     with col2:
                         st.download_button(
@@ -1295,7 +1306,8 @@ def display_single_nda_review(model, temperature):
                             data=clean_docx,
                             file_name=f"{base_name}_Clean_{timestamp}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
+                            use_container_width=True,
+                            key=f"direct_clean_{timestamp}"
                         )
                     
                     # Show processed issues
