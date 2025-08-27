@@ -2931,61 +2931,62 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in high_findings:
-            # Create individual container for each issue
+            # Create individual container for each issue using Streamlit container with custom CSS
             with st.container():
-                # Build the complete HTML content for the box
-                issue_text = finding.issue.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                box_content = f"""
-                <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #ff4444; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
-                    <div style='color: white; font-weight: bold; font-size: 18px; margin-bottom: 18px; border-bottom: 1px solid #444; padding-bottom: 10px;'>
-                        High Priority {finding.id}: {issue_text}
-                    </div>
-                """
+                # Apply custom CSS for the container
+                st.markdown("""
+                <style>
+                .high-priority-box {
+                    background-color: #2a2a2a;
+                    padding: 25px;
+                    border-radius: 12px;
+                    margin: 20px 0;
+                    border: 2px solid #ff4444;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                }
+                .high-priority-title {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                    margin-bottom: 18px;
+                    border-bottom: 1px solid #444;
+                    padding-bottom: 10px;
+                }
+                .high-priority-field {
+                    color: #ff6b6b;
+                    margin-bottom: 12px;
+                }
+                .field-content {
+                    color: #cccccc;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 
-                # Section
-                if finding.section:
-                    section_text = finding.section.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{section_text}</span>
-                    </div>
-                    """
-                
-                # Problem
-                if finding.problem:
-                    problem_text = finding.problem.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{problem_text}</span>
-                    </div>
-                    """
-                
-                # Citation
-                if finding.citation:
-                    citation_text = finding.citation.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{citation_text}</span>
-                    </div>
-                    """
-                
-                # Suggested Replacement
-                if finding.suggested_replacement:
-                    replacement_text = finding.suggested_replacement.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ff6b6b; margin-bottom: 15px;'>
-                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{replacement_text}</span>
-                    </div>
-                    """
-                
-                # Close the box
-                box_content += "</div>"
-                
-                # Display the complete box
-                st.markdown(box_content, unsafe_allow_html=True)
+                # Create the issue box content
+                with st.container():
+                    st.markdown(f'<div class="high-priority-box">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="high-priority-title">High Priority {finding.id}: {finding.issue}</div>', unsafe_allow_html=True)
+                    
+                    # Section
+                    if finding.section:
+                        st.markdown(f'<div class="high-priority-field">📍 <strong>Section:</strong> <span class="field-content">{finding.section}</span></div>', unsafe_allow_html=True)
+                    
+                    # Problem
+                    if finding.problem:
+                        st.markdown(f'<div class="high-priority-field">❌ <strong>Problem:</strong> <span class="field-content">{finding.problem}</span></div>', unsafe_allow_html=True)
+                    
+                    # Citation
+                    if finding.citation:
+                        st.markdown(f'<div class="high-priority-field">📄 <strong>Citation:</strong> <span class="field-content">{finding.citation}</span></div>', unsafe_allow_html=True)
+                    
+                    # Suggested Replacement
+                    if finding.suggested_replacement:
+                        st.markdown(f'<div class="high-priority-field">✏️ <strong>Suggested Replacement:</strong> <span class="field-content">{finding.suggested_replacement}</span></div>', unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Additional Comments section (outside the box)
-                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                st.markdown("**Additional Comments/Instructions:**")
                 comment = st.text_area(
                     "Comments",
                     value=st.session_state.finding_comments.get(finding.id, ""),
@@ -3016,61 +3017,59 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in medium_findings:
-            # Create individual container for each issue
+            # Create individual container for each issue using Streamlit container with custom CSS
             with st.container():
-                # Build the complete HTML content for the box
-                issue_text = finding.issue.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                box_content = f"""
-                <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #ffbb33; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
-                    <div style='color: white; font-weight: bold; font-size: 18px; margin-bottom: 18px; border-bottom: 1px solid #444; padding-bottom: 10px;'>
-                        Medium Priority {finding.id}: {issue_text}
-                    </div>
-                """
+                # Apply custom CSS for the container
+                st.markdown("""
+                <style>
+                .medium-priority-box {
+                    background-color: #2a2a2a;
+                    padding: 25px;
+                    border-radius: 12px;
+                    margin: 20px 0;
+                    border: 2px solid #ffbb33;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                }
+                .medium-priority-title {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                    margin-bottom: 18px;
+                    border-bottom: 1px solid #444;
+                    padding-bottom: 10px;
+                }
+                .medium-priority-field {
+                    color: #ffcc5c;
+                    margin-bottom: 12px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 
-                # Section
-                if finding.section:
-                    section_text = finding.section.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{section_text}</span>
-                    </div>
-                    """
-                
-                # Problem
-                if finding.problem:
-                    problem_text = finding.problem.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{problem_text}</span>
-                    </div>
-                    """
-                
-                # Citation
-                if finding.citation:
-                    citation_text = finding.citation.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{citation_text}</span>
-                    </div>
-                    """
-                
-                # Suggested Replacement
-                if finding.suggested_replacement:
-                    replacement_text = finding.suggested_replacement.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #ffcc5c; margin-bottom: 15px;'>
-                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{replacement_text}</span>
-                    </div>
-                    """
-                
-                # Close the box
-                box_content += "</div>"
-                
-                # Display the complete box
-                st.markdown(box_content, unsafe_allow_html=True)
+                # Create the issue box content
+                with st.container():
+                    st.markdown(f'<div class="medium-priority-box">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="medium-priority-title">Medium Priority {finding.id}: {finding.issue}</div>', unsafe_allow_html=True)
+                    
+                    # Section
+                    if finding.section:
+                        st.markdown(f'<div class="medium-priority-field">📍 <strong>Section:</strong> <span class="field-content">{finding.section}</span></div>', unsafe_allow_html=True)
+                    
+                    # Problem
+                    if finding.problem:
+                        st.markdown(f'<div class="medium-priority-field">❌ <strong>Problem:</strong> <span class="field-content">{finding.problem}</span></div>', unsafe_allow_html=True)
+                    
+                    # Citation
+                    if finding.citation:
+                        st.markdown(f'<div class="medium-priority-field">📄 <strong>Citation:</strong> <span class="field-content">{finding.citation}</span></div>', unsafe_allow_html=True)
+                    
+                    # Suggested Replacement
+                    if finding.suggested_replacement:
+                        st.markdown(f'<div class="medium-priority-field">✏️ <strong>Suggested Replacement:</strong> <span class="field-content">{finding.suggested_replacement}</span></div>', unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Additional Comments section (outside the box)
-                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                st.markdown("**Additional Comments/Instructions:**")
                 comment = st.text_area(
                     "Comments",
                     value=st.session_state.finding_comments.get(finding.id, ""),
@@ -3101,61 +3100,59 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in low_findings:
-            # Create individual container for each issue
+            # Create individual container for each issue using Streamlit container with custom CSS
             with st.container():
-                # Build the complete HTML content for the box
-                issue_text = finding.issue.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                box_content = f"""
-                <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #4caf50; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
-                    <div style='color: white; font-weight: bold; font-size: 18px; margin-bottom: 18px; border-bottom: 1px solid #444; padding-bottom: 10px;'>
-                        Low Priority {finding.id}: {issue_text}
-                    </div>
-                """
+                # Apply custom CSS for the container
+                st.markdown("""
+                <style>
+                .low-priority-box {
+                    background-color: #2a2a2a;
+                    padding: 25px;
+                    border-radius: 12px;
+                    margin: 20px 0;
+                    border: 2px solid #4caf50;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                }
+                .low-priority-title {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 18px;
+                    margin-bottom: 18px;
+                    border-bottom: 1px solid #444;
+                    padding-bottom: 10px;
+                }
+                .low-priority-field {
+                    color: #81c784;
+                    margin-bottom: 12px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 
-                # Section
-                if finding.section:
-                    section_text = finding.section.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #81c784; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{section_text}</span>
-                    </div>
-                    """
-                
-                # Problem
-                if finding.problem:
-                    problem_text = finding.problem.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #81c784; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{problem_text}</span>
-                    </div>
-                    """
-                
-                # Citation
-                if finding.citation:
-                    citation_text = finding.citation.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #81c784; margin-bottom: 12px;'>
-                        <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{citation_text}</span>
-                    </div>
-                    """
-                
-                # Suggested Replacement
-                if finding.suggested_replacement:
-                    replacement_text = finding.suggested_replacement.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
-                    box_content += f"""
-                    <div style='color: #81c784; margin-bottom: 15px;'>
-                        <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{replacement_text}</span>
-                    </div>
-                    """
-                
-                # Close the box
-                box_content += "</div>"
-                
-                # Display the complete box
-                st.markdown(box_content, unsafe_allow_html=True)
+                # Create the issue box content
+                with st.container():
+                    st.markdown(f'<div class="low-priority-box">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="low-priority-title">Low Priority {finding.id}: {finding.issue}</div>', unsafe_allow_html=True)
+                    
+                    # Section
+                    if finding.section:
+                        st.markdown(f'<div class="low-priority-field">📍 <strong>Section:</strong> <span class="field-content">{finding.section}</span></div>', unsafe_allow_html=True)
+                    
+                    # Problem
+                    if finding.problem:
+                        st.markdown(f'<div class="low-priority-field">❌ <strong>Problem:</strong> <span class="field-content">{finding.problem}</span></div>', unsafe_allow_html=True)
+                    
+                    # Citation
+                    if finding.citation:
+                        st.markdown(f'<div class="low-priority-field">📄 <strong>Citation:</strong> <span class="field-content">{finding.citation}</span></div>', unsafe_allow_html=True)
+                    
+                    # Suggested Replacement
+                    if finding.suggested_replacement:
+                        st.markdown(f'<div class="low-priority-field">✏️ <strong>Suggested Replacement:</strong> <span class="field-content">{finding.suggested_replacement}</span></div>', unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Additional Comments section (outside the box)
-                st.markdown("<div style='color: #cccccc; margin-bottom: 10px;'><strong>Additional Comments/Instructions:</strong></div>", unsafe_allow_html=True)
+                st.markdown("**Additional Comments/Instructions:**")
                 comment = st.text_area(
                     "Comments",
                     value=st.session_state.finding_comments.get(finding.id, ""),
