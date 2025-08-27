@@ -2931,7 +2931,7 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in high_findings:
-            # Create individual container for each issue with enhanced styling
+            # Create individual container for each issue
             with st.container():
                 st.markdown(f"""
                 <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #ff4444; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
@@ -2943,7 +2943,7 @@ def display_edit_mode_interface():
                 # Section
                 if finding.section:
                     st.markdown(f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -2951,7 +2951,7 @@ def display_edit_mode_interface():
                 # Problem
                 if finding.problem:
                     st.markdown(f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -2959,7 +2959,7 @@ def display_edit_mode_interface():
                 # Citation
                 if finding.citation:
                     st.markdown(f"""
-                    <div style='color: #ff6b6b; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ff6b6b; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -2967,7 +2967,7 @@ def display_edit_mode_interface():
                 # Suggested Replacement
                 if finding.suggested_replacement:
                     st.markdown(f"""
-                    <div style='color: #ff6b6b; margin-bottom: 15px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ff6b6b; margin-bottom: 15px;'>
                         <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3006,7 +3006,7 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in medium_findings:
-            # Create individual container for each issue with enhanced styling
+            # Create individual container for each issue
             with st.container():
                 st.markdown(f"""
                 <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #ffbb33; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
@@ -3018,7 +3018,7 @@ def display_edit_mode_interface():
                 # Section
                 if finding.section:
                     st.markdown(f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3026,7 +3026,7 @@ def display_edit_mode_interface():
                 # Problem
                 if finding.problem:
                     st.markdown(f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3034,7 +3034,7 @@ def display_edit_mode_interface():
                 # Citation
                 if finding.citation:
                     st.markdown(f"""
-                    <div style='color: #ffcc5c; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ffcc5c; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3042,7 +3042,7 @@ def display_edit_mode_interface():
                 # Suggested Replacement
                 if finding.suggested_replacement:
                     st.markdown(f"""
-                    <div style='color: #ffcc5c; margin-bottom: 15px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #ffcc5c; margin-bottom: 15px;'>
                         <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3081,7 +3081,7 @@ def display_edit_mode_interface():
         st.markdown("</div>", unsafe_allow_html=True)
         
         for finding in low_findings:
-            # Create individual container for each issue with enhanced styling
+            # Create individual container for each issue
             with st.container():
                 st.markdown(f"""
                 <div style='background-color: #2a2a2a; padding: 25px; border-radius: 12px; margin: 20px 0; border: 2px solid #4caf50; box-shadow: 0 4px 8px rgba(0,0,0,0.3);'>
@@ -3093,7 +3093,7 @@ def display_edit_mode_interface():
                 # Section
                 if finding.section:
                     st.markdown(f"""
-                    <div style='color: #81c784; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #81c784; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📍</span> <strong>Section:</strong> <span style='color: #cccccc;'>{finding.section}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3101,7 +3101,7 @@ def display_edit_mode_interface():
                 # Problem
                 if finding.problem:
                     st.markdown(f"""
-                    <div style='color: #81c784; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #81c784; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>❌</span> <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.problem}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3109,7 +3109,7 @@ def display_edit_mode_interface():
                 # Citation
                 if finding.citation:
                     st.markdown(f"""
-                    <div style='color: #81c784; margin-bottom: 12px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #81c784; margin-bottom: 12px;'>
                         <span style='font-size: 14px;'>📄</span> <strong>Citation:</strong> <span style='color: #cccccc;'>{finding.citation}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -3117,7 +3117,7 @@ def display_edit_mode_interface():
                 # Suggested Replacement
                 if finding.suggested_replacement:
                     st.markdown(f"""
-                    <div style='color: #81c784; margin-bottom: 15px; padding: 8px; background-color: #333; border-radius: 6px;'>
+                    <div style='color: #81c784; margin-bottom: 15px;'>
                         <span style='font-size: 14px;'>✏️</span> <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.suggested_replacement}</span>
                     </div>
                     """, unsafe_allow_html=True)
