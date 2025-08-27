@@ -228,54 +228,53 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             raise RuntimeError("Pandoc is not available in the deployment. Please add `pkgs.pandoc` to replit.nix.") from e
 
         time.sleep(_HEARTBEAT_SEC)
-        _set_status(progress=20, message='Converting DOCX → Text for AI analysis...')
+        _set_status(progress=20, message='Converting DOCX → Markdown (Pandoc)...')
 
-        # 2) Extract text directly from DOCX for analysis (more accurate than Markdown)
+        # 2) DOCX → Markdown conversion - EXACT SAME AS "Review NDA First"
         try:
-            from docx import Document as DocxDocument
-            docx_doc = DocxDocument(docx_path)
+            # Use pandoc to convert DOCX to markdown
+            import subprocess
+            converted_path = docx_path.replace('.docx', '.md')
             
-            # Extract all text from paragraphs and tables
-            docx_text_parts = []
-            for paragraph in docx_doc.paragraphs:
-                if paragraph.text.strip():
-                    docx_text_parts.append(paragraph.text)
+            # Run pandoc conversion
+            result = subprocess.run([
+                'pandoc', docx_path, 
+                '-o', converted_path,
+                '--to=markdown',
+                '--wrap=none'
+            ], capture_output=True, text=True, check=True)
             
-            for table in docx_doc.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        for para in cell.paragraphs:
-                            if para.text.strip():
-                                docx_text_parts.append(para.text)
+            md_path = converted_path
+            print(f"✅ Pandoc conversion successful: {md_path}")
             
-            docx_extracted_text = '\n\n'.join(docx_text_parts)
-            
-            # Also create markdown version for compatibility
-            md_path = docx_path.replace('.docx', '.md')
-            with open(md_path, 'w', encoding='utf-8') as f:
-                f.write(docx_extracted_text)
-                
-        except ImportError:
-            # Fallback to Pandoc if python-docx not available
-            _set_status(progress=25, message='Using Pandoc for conversion...')
-            md_path = docx_path.replace('.docx', '.md')
-            subprocess.run(["pandoc", docx_path, "-o", md_path, "--to=markdown", "--wrap=none"], check=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Pandoc conversion failed: {e.stderr}")
+        except Exception as e:
+            raise Exception(f"Document conversion error: {str(e)}")
 
         time.sleep(_HEARTBEAT_SEC)
         _set_status(progress=40, message='Running AI compliance analysis...')
 
-        # 3) AI analysis using your chain
-        from playbook_manager import get_current_playbook  # project-specific
-        from NDA_Review_chain import StradaComplianceChain  # project-specific
+        # 3) AI analysis - EXACT SAME AS "Review NDA First" 
+        from playbook_manager import get_current_playbook
+        from NDA_Review_chain import StradaComplianceChain
 
         playbook = get_current_playbook()
         review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook)
-        compliance_report, _debug = review_chain.analyze_nda(md_path)
+        
+        # This returns (compliance_report_dict, raw_response_text) - same as Review NDA First
+        compliance_report, raw_response = review_chain.analyze_nda(md_path)
+        print(f"✅ Analysis completed successfully!")
 
         time.sleep(_HEARTBEAT_SEC)
-        _set_status(progress=58, message='Preparing findings for cleaning...')
+        _set_status(progress=58, message='Preparing findings for document generation...')
 
-        # 4) Flatten findings and clean them via LLM
+        # 4) Process findings EXACTLY like "Review NDA First" workflow 
+        # Store results temporarily to simulate the Review NDA First session state
+        st.session_state.temp_single_nda_results = compliance_report
+        st.session_state.temp_single_nda_raw_response = raw_response
+        
+        # Import the tracked changes processing functions
         from Tracked_changes_tools_clean import (
             RawFinding,
             clean_findings_with_llm,
@@ -284,38 +283,45 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             replace_cleaned_findings_in_docx
         )
 
-        raw: List[RawFinding] = []
+        # Flatten all findings into RawFinding objects - EXACT same process
+        all_findings = []
+        high_priority = compliance_report.get('High Priority', [])
+        medium_priority = compliance_report.get('Medium Priority', [])  
+        low_priority = compliance_report.get('Low Priority', [])
+        all_findings = high_priority + medium_priority + low_priority
+        
+        # Create RawFinding objects for ALL findings (auto-select all for direct generation)
+        raw_findings = []
         additional_info_by_id = {}
-        fid = 1
-        for priority in ["High Priority", "Medium Priority", "Low Priority"]:
-            for it in compliance_report.get(priority, []) or []:
-                raw.append(
-                    RawFinding(
-                        id=fid,
-                        priority=priority,
-                        section=it.get('section', ''),
-                        issue=it.get('issue', ''),
-                        problem=it.get('problem', ''),
-                        citation=it.get('citation', ''),
-                        suggested_replacement=it.get('suggested_replacement', ''),
-                    )
-                )
-                additional_info_by_id[fid] = "Auto-selected for direct tracked changes generation"
-                fid += 1
+        
+        for idx, finding in enumerate(all_findings):
+            finding_id = f"auto_selected_{idx}"
+            raw_finding = RawFinding(
+                id=finding_id,
+                citation=finding.get('citation', ''),
+                suggested_replacement=finding.get('suggested_replacement', '')
+            )
+            raw_findings.append(raw_finding)
+            additional_info_by_id[finding_id] = "Auto-selected for direct tracked changes generation"
+        
+        print(f"Created {len(raw_findings)} raw findings for processing")
 
-        # Read NDA text for the cleaning step
+        # Read NDA text for cleaning step
         with open(md_path, 'r', encoding='utf-8') as f:
             nda_text = f.read()
 
         time.sleep(_HEARTBEAT_SEC)
-        _set_status(progress=72, message='Cleaning findings with AI...')
+        _set_status(progress=70, message='Cleaning findings with LLM...')
 
+        # Clean findings with LLM - EXACT same process
         try:
-            cleaned = clean_findings_with_llm(nda_text, raw, additional_info_by_id, model)
+            cleaned = clean_findings_with_llm(nda_text, raw_findings, additional_info_by_id, model)
+            print(f"Successfully cleaned {len(cleaned)} findings")
         except Exception as e:
-            # Create basic cleaned findings as fallback
+            print(f"LLM cleaning failed: {e}")
+            # Fallback: create basic cleaned findings
             cleaned = []
-            for raw_finding in raw:
+            for raw_finding in raw_findings:
                 cleaned_finding = CleanedFinding(
                     id=raw_finding.id,
                     citation_clean=raw_finding.citation,
@@ -365,19 +371,19 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             with open(clean_path, 'rb') as f:
                 clean_bytes = f.read()
 
-            # Prepare findings for display with full information
+            # Prepare findings for display using original compliance report data
             findings_for_display = []
-            for raw_finding in raw:
+            for finding in all_findings:
                 findings_for_display.append({
-                    'issue': raw_finding.issue,
-                    'citation': raw_finding.citation,
-                    'section': raw_finding.section,
-                    'problem': raw_finding.problem,
-                    'suggested_replacement': raw_finding.suggested_replacement,
-                    'suggested_replacement_clean': raw_finding.suggested_replacement  # Will be updated by LLM if available
+                    'issue': finding.get('issue', 'Compliance Issue'),
+                    'citation': finding.get('citation', 'Not specified'),
+                    'section': finding.get('section', 'Not specified'),
+                    'problem': finding.get('problem', 'Not specified'),
+                    'suggested_replacement': finding.get('suggested_replacement', 'Not specified'),
+                    'suggested_replacement_clean': finding.get('suggested_replacement', 'Not specified')  # Will be updated if cleaned
                 })
             
-            # Update with cleaned versions if available
+            # Update with cleaned versions if available and matching
             for i, cleaned_finding in enumerate(cleaned):
                 if i < len(findings_for_display) and hasattr(cleaned_finding, 'suggested_replacement_clean'):
                     findings_for_display[i]['suggested_replacement_clean'] = cleaned_finding.suggested_replacement_clean
@@ -408,16 +414,16 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             with open(clean_path, 'rb') as f:
                 clean_bytes = f.read()
 
-            # Prepare findings for display with full information (fallback case)
+            # Prepare findings for display using original compliance report data (fallback case)
             findings_for_display = []
-            for raw_finding in raw:
+            for finding in all_findings:
                 findings_for_display.append({
-                    'issue': raw_finding.issue,
-                    'citation': raw_finding.citation,
-                    'section': raw_finding.section,
-                    'problem': raw_finding.problem,
-                    'suggested_replacement': raw_finding.suggested_replacement,
-                    'suggested_replacement_clean': raw_finding.suggested_replacement
+                    'issue': finding.get('issue', 'Compliance Issue'),
+                    'citation': finding.get('citation', 'Not specified'),
+                    'section': finding.get('section', 'Not specified'),
+                    'problem': finding.get('problem', 'Not specified'),
+                    'suggested_replacement': finding.get('suggested_replacement', 'Not specified'),
+                    'suggested_replacement_clean': finding.get('suggested_replacement', 'Not specified')
                 })
 
             results = {
