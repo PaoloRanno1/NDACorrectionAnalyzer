@@ -1025,121 +1025,229 @@ def display_single_nda_review(model, temperature):
             st.error("Direct tracked changes generation requires a Word document (.docx file).")
             st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
         else:
-            # Start async processing
-            if st.session_state.direct_processing_status == 'idle':
-                from async_direct_changes import start_direct_changes_background
+            # Use a simpler approach - just run with progress indicators
+            import tempfile
+            import os
+            import subprocess
+            import traceback
+            import shutil
+            from datetime import datetime
+            from playbook_manager import get_current_playbook
+            from NDA_Review_chain import StradaComplianceChain
+            
+            # Create progress tracking
+            progress_container = st.empty()
+            status_container = st.empty()
+            
+            with progress_container.container():
+                progress_bar = st.progress(0)
                 
-                # First analyze the document to get findings
-                st.info("🔄 Analyzing document to identify compliance issues...")
+            try:
+                # Step 1: Initial setup
+                with status_container:
+                    st.info("🔄 Step 1/5: Preparing document...")
+                progress_bar.progress(10)
                 
-                try:
-                    import tempfile
-                    import os
-                    import subprocess
-                    from playbook_manager import get_current_playbook
-                    from NDA_Review_chain import StradaComplianceChain
-                    
-                    # Process the document first to get findings
-                    file_content = uploaded_file.getvalue()
-                    
-                    with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
-                        temp_file.write(file_content)
-                        temp_file_path = temp_file.name
-                    
-                    # Convert to markdown for analysis
-                    converted_path = temp_file_path.replace('.docx', '.md')
-                    result = subprocess.run([
-                        'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
-                    ], capture_output=True, text=True, check=True)
-                    
-                    # Run analysis to get findings
-                    playbook_content = get_current_playbook()
-                    review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                    compliance_report, raw_response = review_chain.analyze_nda(converted_path)
-                    
-                    # Clean up analysis files
+                file_content = uploaded_file.getvalue()
+                
+                with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_path = temp_file.name
+                
+                # Step 2: Convert document
+                with status_container:
+                    st.info("🔄 Step 2/5: Converting document format...")
+                progress_bar.progress(20)
+                
+                converted_path = temp_file_path.replace('.docx', '.md')
+                result = subprocess.run([
+                    'pandoc', temp_file_path, '-o', converted_path, '--to=markdown'
+                ], capture_output=True, text=True, check=True)
+                
+                # Step 3: Run analysis
+                with status_container:
+                    st.info("🔄 Step 3/5: Running AI compliance analysis...")
+                progress_bar.progress(40)
+                
+                playbook_content = get_current_playbook()
+                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
+                compliance_report, raw_response = review_chain.analyze_nda(converted_path)
+                
+                if not compliance_report:
+                    st.error("Failed to get analysis results.")
                     os.unlink(temp_file_path)
                     os.unlink(converted_path)
-                    
-                    if compliance_report:
-                        # Auto-select all findings
-                        high_priority = compliance_report.get('High Priority', [])
-                        medium_priority = compliance_report.get('Medium Priority', [])
-                        low_priority = compliance_report.get('Low Priority', [])
-                        
-                        selected_findings = {
-                            'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
-                            'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
-                            'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
-                        }
-                        
-                        user_comments = {}
-                        for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
-                            for idx in selected_findings[priority].keys():
-                                user_comments[f"{priority}_{idx}"] = "Auto-selected for direct tracked changes generation"
-                        
-                        total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
-                        
-                        if total_issues == 0:
-                            st.success("No compliance issues found! Your NDA appears to be fully compliant.")
-                        else:
-                            # Start background processing
-                            analysis_id = start_direct_changes_background(
-                                uploaded_file.getvalue(),
-                                uploaded_file.name,
-                                selected_findings,
-                                user_comments
-                            )
-                            st.rerun()
-                    else:
-                        st.error("Failed to analyze the document.")
-                        
+                    return
+                
+                # Auto-select all findings
+                high_priority = compliance_report.get('High Priority', [])
+                medium_priority = compliance_report.get('Medium Priority', [])
+                low_priority = compliance_report.get('Low Priority', [])
+                
+                total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
+                
+                if total_issues == 0:
+                    progress_container.empty()
+                    status_container.empty()
+                    st.success("No compliance issues found! Your NDA appears to be fully compliant.")
+                    os.unlink(temp_file_path)
+                    os.unlink(converted_path)
+                    return
+                
+                # Step 4: Process findings
+                with status_container:
+                    st.info("🔄 Step 4/5: Processing compliance findings...")
+                progress_bar.progress(60)
+                
+                # Prepare findings for processing
+                from Tracked_changes_tools_clean import (
+                    apply_cleaned_findings_to_docx, 
+                    clean_findings_with_llm, 
+                    CleanedFinding,
+                    replace_cleaned_findings_in_docx,
+                    RawFinding
+                )
+                
+                selected_findings = {
+                    'High Priority': {str(i): finding for i, finding in enumerate(high_priority)},
+                    'Medium Priority': {str(i): finding for i, finding in enumerate(medium_priority)},
+                    'Low Priority': {str(i): finding for i, finding in enumerate(low_priority)}
+                }
+                
+                raw_findings = []
+                additional_info_by_id = {}
+                finding_id = 1
+                
+                for priority in ['High Priority', 'Medium Priority', 'Low Priority']:
+                    for idx, finding in selected_findings[priority].items():
+                        raw_finding = RawFinding(
+                            id=finding_id,
+                            priority=priority,
+                            section=finding.get('section', ''),
+                            issue=finding.get('issue', ''),
+                            problem=finding.get('problem', ''),
+                            citation=finding.get('citation', ''),
+                            suggested_replacement=finding.get('suggested_replacement', '')
+                        )
+                        raw_findings.append(raw_finding)
+                        additional_info_by_id[finding_id] = "Auto-selected for direct tracked changes generation"
+                        finding_id += 1
+                
+                # Clean findings with LLM
+                with open(converted_path, 'r', encoding='utf-8') as f:
+                    nda_text = f.read()
+                
+                try:
+                    cleaned_findings = clean_findings_with_llm(
+                        nda_text,
+                        raw_findings,
+                        additional_info_by_id,
+                        model
+                    )
                 except Exception as e:
-                    st.error(f"Failed to process document: {str(e)}")
-    
-    # Show processing status for direct changes
-    if st.session_state.direct_processing_status == 'processing':
-        st.info(f"🔄 {st.session_state.direct_processing_message}")
-        progress_bar = st.progress(st.session_state.direct_processing_progress / 100)
-        
-        # Auto-refresh every 2 seconds
-        import time
-        time.sleep(0.5)
-        st.rerun()
-    
-    elif st.session_state.direct_processing_status == 'completed':
-        st.success("✅ Documents generated successfully!")
-        
-        results = st.session_state.direct_processing_results
-        if results:
-            from datetime import datetime
-            original_name = results['original_filename'].replace('.docx', '')
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.download_button(
-                    label="📄 Download Tracked Changes Document",
-                    data=results['tracked_changes_content'],
-                    file_name=f"{original_name}_tracked_changes.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_async_tracked"
+                    st.warning(f"Could not clean findings with LLM: {str(e)}")
+                    cleaned_findings = []
+                    for raw_finding in raw_findings:
+                        cleaned_finding = CleanedFinding(
+                            id=raw_finding.id,
+                            citation_clean=raw_finding.citation,
+                            suggested_replacement_clean=raw_finding.suggested_replacement
+                        )
+                        cleaned_findings.append(cleaned_finding)
+                
+                # Step 5: Generate documents
+                with status_container:
+                    st.info("🔄 Step 5/5: Generating tracked changes documents...")
+                progress_bar.progress(80)
+                
+                # Generate tracked changes document
+                tracked_temp_path = tempfile.mktemp(suffix='_tracked.docx')
+                shutil.copy2(temp_file_path, tracked_temp_path)
+                
+                changes_applied = apply_cleaned_findings_to_docx(
+                    input_docx=tracked_temp_path,
+                    cleaned_findings=cleaned_findings,
+                    output_docx=tracked_temp_path,
+                    author="AI Compliance Reviewer"
                 )
-            
-            with col2:
-                st.download_button(
-                    label="📄 Download Clean Edited Document", 
-                    data=results['clean_edited_content'],
-                    file_name=f"{original_name}_clean_edited.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_async_clean"
+                
+                # Generate clean edited document  
+                clean_temp_path = tempfile.mktemp(suffix='_clean.docx')
+                shutil.copy2(temp_file_path, clean_temp_path)
+                
+                clean_changes_applied = replace_cleaned_findings_in_docx(
+                    input_docx=clean_temp_path,
+                    cleaned_findings=cleaned_findings,
+                    output_docx=clean_temp_path
                 )
-    
-    elif st.session_state.direct_processing_status == 'error':
-        st.error(f"❌ Error: {st.session_state.direct_processing_error}")
-        if st.button("🔄 Try Again", key="reset_direct_error"):
-            st.session_state.direct_processing_status = 'idle'
-            st.rerun()
+                
+                # Read the generated files for download
+                with open(tracked_temp_path, 'rb') as f:
+                    tracked_docx = f.read()
+                
+                with open(clean_temp_path, 'rb') as f:
+                    clean_docx = f.read()
+                
+                # Cleanup temp files
+                os.unlink(tracked_temp_path)
+                os.unlink(clean_temp_path)
+                os.unlink(converted_path)
+                os.unlink(temp_file_path)
+                
+                # Complete
+                progress_bar.progress(100)
+                with status_container:
+                    st.success("✅ Document generation completed successfully!")
+                
+                # Clear progress indicators
+                progress_container.empty()
+                status_container.empty()
+                
+                if tracked_docx and clean_docx:
+                    # Display results immediately
+                    st.markdown("---")
+                    st.subheader("🎉 Direct Generation Complete!")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("High Priority", len(high_priority))
+                    with col2:
+                        st.metric("Medium Priority", len(medium_priority))
+                    with col3:
+                        st.metric("Low Priority", len(low_priority))
+                    
+                    st.markdown("---")
+                    st.subheader("📥 Download Generated Documents")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="📄 Download Tracked Changes Document",
+                            data=tracked_docx,
+                            file_name=f"NDA_TrackedChanges_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key="download_direct_tracked_sync"
+                        )
+                    
+                    with col2:
+                        st.download_button(
+                            label="📄 Download Clean Edited Document",
+                            data=clean_docx,
+                            file_name=f"NDA_CleanEdited_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            key="download_direct_clean_sync"
+                        )
+                else:
+                    st.error("Failed to generate tracked changes documents.")
+                
+            except Exception as e:
+                if 'progress_container' in locals():
+                    progress_container.empty()
+                if 'status_container' in locals():
+                    status_container.empty()
+                st.error(f"Failed to generate tracked changes: {str(e)}")
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
     
     # Display persistent direct generation results if available
     if hasattr(st.session_state, 'direct_generation_results') and st.session_state.direct_generation_results:
