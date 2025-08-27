@@ -135,6 +135,20 @@ def _set_status(status: str = None, progress: int = None, message: str = None, *
                         with open(clean_file, 'wb') as f:
                             f.write(results['clean_edited_content'])
                         status_data['clean_file'] = clean_file
+                    
+                    # Save findings data
+                    if 'findings' in results:
+                        findings_file = os.path.join(results_dir, 'findings.json')
+                        with open(findings_file, 'w') as f:
+                            # Convert findings to serializable format
+                            findings_data = []
+                            for finding in results['findings']:
+                                if hasattr(finding, '__dict__'):
+                                    findings_data.append(finding.__dict__)
+                                else:
+                                    findings_data.append(finding)
+                            json.dump(findings_data, f, indent=2)
+                        status_data['findings_file'] = findings_file
                         
                 else:
                     status_data['has_results'] = False
@@ -167,6 +181,11 @@ def _load_status_from_file(job_id: str) -> Dict[str, Any]:
                 if 'clean_file' in status_data and os.path.exists(status_data['clean_file']):
                     with open(status_data['clean_file'], 'rb') as f:
                         results['clean_edited_content'] = f.read()
+                
+                # Load findings data
+                if 'findings_file' in status_data and os.path.exists(status_data['findings_file']):
+                    with open(status_data['findings_file'], 'r') as f:
+                        results['findings'] = json.load(f)
                 
                 status_data['results'] = results
                 
@@ -315,6 +334,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                 'tracked_changes_content': tracked_bytes,
                 'clean_edited_content': clean_bytes,
                 'original_filename': filename,
+                'findings': cleaned,  # Add the compliance findings
             }
             
             time.sleep(_HEARTBEAT_SEC)
@@ -340,6 +360,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                 'tracked_changes_content': tracked_bytes,
                 'clean_edited_content': clean_bytes,
                 'original_filename': filename,
+                'findings': cleaned,  # Add the compliance findings
             }
             
             _set_status(status='completed', progress=100, message=f'Completed with fallback (doc gen error: {str(doc_error)})', results=results)
@@ -448,6 +469,38 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
                     key=f"clean_{dp.get('job_id', 'default')}",
                     help="Clean document with all edits applied"
                 )
+            
+            # Display compliance findings
+            if 'findings' in res and res['findings']:
+                st.markdown("---")
+                st.subheader("🔍 Compliance Issues Identified and Resolved")
+                
+                findings = res['findings']
+                if len(findings) > 0:
+                    st.info(f"Found and resolved {len(findings)} compliance issues:")
+                    
+                    for i, finding in enumerate(findings, 1):
+                        with st.expander(f"Issue #{i}: {finding.get('issue', 'Compliance Issue')}", expanded=False):
+                            col1, col2 = st.columns([1, 1])
+                            
+                            with col1:
+                                st.markdown("**🚨 Problem Found:**")
+                                st.markdown(finding.get('problem', 'No problem description available'))
+                                
+                                if finding.get('citation'):
+                                    st.markdown("**📋 Policy Reference:**")
+                                    st.markdown(f"*{finding['citation']}*")
+                            
+                            with col2:
+                                st.markdown("**✅ Replacement Applied:**")
+                                replacement = finding.get('suggested_replacement_clean', finding.get('suggested_replacement', 'No replacement specified'))
+                                st.markdown(replacement)
+                                
+                                if finding.get('section'):
+                                    st.markdown("**📄 Document Section:**")
+                                    st.markdown(f"*{finding['section']}*")
+                else:
+                    st.success("✅ No compliance issues found - document appears to be fully compliant!")
         else:
             st.warning("Processing completed but results are not available. Please try again.")
         
