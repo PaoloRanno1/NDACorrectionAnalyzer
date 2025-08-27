@@ -1363,8 +1363,92 @@ def display_single_nda_review(model, temperature):
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
     
-    # Session state display section removed - results now shown immediately during processing
-    # This prevents duplicate download buttons and Streamlit element ID conflicts
+    # Display persistent results after download button clicks
+    # This ensures results remain visible even after page refreshes from download interactions
+    if (hasattr(st.session_state, 'direct_sync_results') and st.session_state.direct_sync_results and
+        hasattr(st.session_state, 'direct_results_ready') and st.session_state.direct_results_ready):
+        
+        results = st.session_state.direct_sync_results
+        print(f"[DIRECT] Displaying persistent results for {results['filename']} with {results['total_issues']} issues")
+        
+        st.markdown("---")
+        st.subheader("📊 Direct Generation Summary")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("High Priority", len(results['high_priority']))
+        with col2:
+            st.metric("Medium Priority", len(results['medium_priority']))
+        with col3:
+            st.metric("Low Priority", len(results['low_priority']))
+        
+        st.markdown("---")
+        st.subheader("📄 Download Generated Documents")
+        
+        from datetime import datetime
+        import os
+        base_name = os.path.splitext(results['filename'])[0]
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="📄 Download Tracked Changes",
+                data=results['tracked_docx'],
+                file_name=f"{base_name}_Tracked_{timestamp}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+                key=f"persistent_tracked_{timestamp}"
+            )
+        with col2:
+            st.download_button(
+                label="📄 Download Clean Version",
+                data=results['clean_docx'],
+                file_name=f"{base_name}_Clean_{timestamp}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+                key=f"persistent_clean_{timestamp}"
+            )
+        
+        # Show processed issues
+        with st.expander(f"📋 {results['total_issues']} Issues Processed (Click to expand)"):
+            for priority_data, priority_name, color in [
+                (results['high_priority'], "🔴 High Priority", "#ff6b6b"),
+                (results['medium_priority'], "🟡 Medium Priority", "#ffcc5c"),
+                (results['low_priority'], "🟢 Low Priority", "#81c784")
+            ]:
+                if priority_data:
+                    st.markdown(f"**{priority_name} ({len(priority_data)} issues)**")
+                    for i, finding in enumerate(priority_data):
+                        issue_text = getattr(finding, 'issue', '') if hasattr(finding, 'issue') else finding.get('issue', '')
+                        section_text = getattr(finding, 'section', '') if hasattr(finding, 'section') else finding.get('section', '')
+                        problem_text = getattr(finding, 'problem', '') if hasattr(finding, 'problem') else finding.get('problem', '')
+                        replacement_text = getattr(finding, 'suggested_replacement', '') if hasattr(finding, 'suggested_replacement') else finding.get('suggested_replacement', '')
+                        
+                        st.markdown(f"""
+                        <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
+                            <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
+                                {i+1}. {issue_text}
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                📍 <strong>Section:</strong> <span style='color: #cccccc;'>{section_text}</span>
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{problem_text}</span>
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{replacement_text}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+        
+        # Clear results button
+        if st.button("🔄 Start New Direct Generation", type="secondary", key="clear_direct_results"):
+            if hasattr(st.session_state, 'direct_sync_results'):
+                del st.session_state.direct_sync_results
+            if hasattr(st.session_state, 'direct_results_ready'):
+                del st.session_state.direct_results_ready
+            st.rerun()
     
     # Display results if available - directly go to edit mode
     if hasattr(st.session_state, 'single_nda_results') and st.session_state.single_nda_results:
