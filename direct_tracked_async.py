@@ -357,14 +357,8 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
             dp['progress'] = file_status.get('progress', dp['progress'])
             dp['message'] = file_status.get('message', dp['message'])
             
-            # Clean up old status files
-            if file_status.get('status') in ['completed', 'error']:
-                try:
-                    status_file = _get_status_file_path(dp['job_id'])
-                    if os.path.exists(status_file):
-                        os.unlink(status_file)
-                except:
-                    pass
+            # Update the session state properly
+            st.session_state.direct_processing = dp
 
     # Debug: Show current status
     st.caption(f"Current Status: {dp['status']} | Progress: {dp['progress']}% | Message: {dp['message']}")
@@ -379,35 +373,39 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
         time.sleep(1.5)
         st.rerun()
 
-    elif dp['status'] == 'completed' and dp.get('results'):
+    elif dp['status'] == 'completed':
         st.success('✅ Documents generated successfully!')
-        res = dp['results']
         
-        # Show completion metrics
-        st.info("Your tracked changes documents are ready for download!")
-        
-        col1, col2 = st.columns(2)
-        base = os.path.splitext(res.get('original_filename') or download_prefix)[0]
-        
-        with col1:
-            st.download_button(
-                label='📄 Download Tracked Changes (.docx)',
-                data=res['tracked_changes_content'],
-                file_name=f"{base}_Tracked.docx",
-                mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                key=f"tracked_{dp.get('job_id', 'default')}",
-                help="Document with Word's tracked changes showing all edits"
-            )
-        
-        with col2:
-            st.download_button(
-                label='📄 Download Clean Edited (.docx)',
-                data=res['clean_edited_content'],
-                file_name=f"{base}_Clean.docx",
-                mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                key=f"clean_{dp.get('job_id', 'default')}",
-                help="Clean document with all edits applied"
-            )
+        if dp.get('results'):
+            res = dp['results']
+            
+            # Show completion metrics
+            st.info("Your tracked changes documents are ready for download!")
+            
+            col1, col2 = st.columns(2)
+            base = os.path.splitext(res.get('original_filename') or download_prefix)[0]
+            
+            with col1:
+                st.download_button(
+                    label='📄 Download Tracked Changes (.docx)',
+                    data=res['tracked_changes_content'],
+                    file_name=f"{base}_Tracked.docx",
+                    mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    key=f"tracked_{dp.get('job_id', 'default')}",
+                    help="Document with Word's tracked changes showing all edits"
+                )
+            
+            with col2:
+                st.download_button(
+                    label='📄 Download Clean Edited (.docx)',
+                    data=res['clean_edited_content'],
+                    file_name=f"{base}_Clean.docx",
+                    mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    key=f"clean_{dp.get('job_id', 'default')}",
+                    help="Clean document with all edits applied"
+                )
+        else:
+            st.warning("Processing completed but results are not available. Please try again.")
         
         # Add reset button
         if st.button("🔄 Process Another Document", key="reset_after_completion"):
@@ -428,8 +426,17 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
         st.info("Ready to process documents. Upload a DOCX file and click 'Direct tracked changes generation'.")
     
     else:
-        # Unknown state - show debug info
-        st.warning(f"Unknown processing state: {dp['status']}")
-        if st.button("🔄 Reset", key="reset_unknown_state"):
-            _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
-            st.rerun()
+        # Unknown state - show debug info and auto-fix
+        if dp['status'] == 'completed' and dp['progress'] == 100:
+            # This means it completed but we don't have results - treat as completed
+            st.success('✅ Processing completed!')
+            st.info("Documents were generated successfully. Please click the button below to process another document.")
+            if st.button("🔄 Process Another Document", key="auto_reset_completed"):
+                _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
+                st.rerun()
+        else:
+            # Truly unknown state
+            st.warning(f"Unknown processing state: {dp['status']}")
+            if st.button("🔄 Reset", key="reset_unknown_state"):
+                _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
+                st.rerun()
