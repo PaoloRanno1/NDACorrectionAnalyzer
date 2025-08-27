@@ -249,7 +249,7 @@ def render_direct_tracked_status_ui() -> None:
         st.caption(f"Step: {latest_detail}")
         
         # Auto-refresh the UI to show live progress
-        time.sleep(2)
+        time.sleep(1)
         st.rerun()
 
     elif dp['status'] == 'completed' and dp['results']:
