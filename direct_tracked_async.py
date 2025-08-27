@@ -70,8 +70,10 @@ def _set_status(status: str = None, progress: int = None, message: str = None, *
         # Force update the session state
         st.session_state.direct_processing = dp
     except Exception as e:
-        # If session state access fails from thread, ignore silently
+        # If session state access fails from thread, ignore silently but continue
+        import traceback
         print(f"Status update failed (this is normal in threads): {e}")
+        print(traceback.format_exc())
         pass
 
 
@@ -120,8 +122,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         # 4) Flatten all findings and automatically accept them all
         from Tracked_changes_tools_clean import (
             RawFinding,
-            clean_findings_with_llm,
-            generate_tracked_changes_document,
+            clean_findings_with_llm
         )
 
         # Create RawFinding objects for all issues (auto-accept all)
@@ -196,8 +197,33 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         _set_status(progress=85, message='Generating tracked changes documents...')
 
         # 7) Generate tracked changes and clean DOCX files
-        from Tracked_changes_tools_clean import generate_tracked_changes_document
-        tracked_path, clean_path = generate_tracked_changes_document(docx_path, cleaned_findings)
+        from Tracked_changes_tools_clean import (
+            apply_cleaned_findings_to_docx,
+            replace_cleaned_findings_in_docx
+        )
+        import tempfile
+        import shutil
+        
+        # Generate tracked changes document
+        tracked_path = tempfile.mktemp(suffix='_tracked.docx')
+        shutil.copy2(docx_path, tracked_path)
+        
+        apply_cleaned_findings_to_docx(
+            input_docx=tracked_path,
+            cleaned_findings=cleaned_findings,
+            output_docx=tracked_path,
+            author="AI Compliance Reviewer"
+        )
+        
+        # Generate clean edited document  
+        clean_path = tempfile.mktemp(suffix='_clean.docx')
+        shutil.copy2(docx_path, clean_path)
+        
+        replace_cleaned_findings_in_docx(
+            input_docx=clean_path,
+            cleaned_findings=cleaned_findings,
+            output_docx=clean_path
+        )
 
         # 8) Read generated files
         with open(tracked_path, 'rb') as f:
@@ -212,7 +238,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                        'clean_edited_content': clean_bytes,
                        'original_filename': filename,
                        'compliance_report': compliance_report,
-                       'processed_findings': [f.__dict__ for f in cleaned_findings]
+                       'processed_findings': [{\n                           'id': f.id,\n                           'priority': getattr(f, 'priority', 'Unknown Priority'),\n                           'section': getattr(f, 'section', ''),\n                           'issue': getattr(f, 'issue', ''),\n                           'problem': getattr(f, 'problem', ''),\n                           'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),\n                           'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))\n                       } for f in cleaned_findings]
                    })
 
     except Exception as e:
