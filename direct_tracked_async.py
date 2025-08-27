@@ -330,11 +330,28 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             with open(clean_path, 'rb') as f:
                 clean_bytes = f.read()
 
+            # Prepare findings for display with full information
+            findings_for_display = []
+            for raw_finding in raw:
+                findings_for_display.append({
+                    'issue': raw_finding.issue,
+                    'citation': raw_finding.citation,
+                    'section': raw_finding.section,
+                    'problem': raw_finding.problem,
+                    'suggested_replacement': raw_finding.suggested_replacement,
+                    'suggested_replacement_clean': raw_finding.suggested_replacement  # Will be updated by LLM if available
+                })
+            
+            # Update with cleaned versions if available
+            for i, cleaned_finding in enumerate(cleaned):
+                if i < len(findings_for_display) and hasattr(cleaned_finding, 'suggested_replacement_clean'):
+                    findings_for_display[i]['suggested_replacement_clean'] = cleaned_finding.suggested_replacement_clean
+
             results = {
                 'tracked_changes_content': tracked_bytes,
                 'clean_edited_content': clean_bytes,
                 'original_filename': filename,
-                'findings': cleaned,  # Add the compliance findings
+                'findings': findings_for_display,  # Add the compliance findings with full info
             }
             
             time.sleep(_HEARTBEAT_SEC)
@@ -356,11 +373,23 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             with open(clean_path, 'rb') as f:
                 clean_bytes = f.read()
 
+            # Prepare findings for display with full information (fallback case)
+            findings_for_display = []
+            for raw_finding in raw:
+                findings_for_display.append({
+                    'issue': raw_finding.issue,
+                    'citation': raw_finding.citation,
+                    'section': raw_finding.section,
+                    'problem': raw_finding.problem,
+                    'suggested_replacement': raw_finding.suggested_replacement,
+                    'suggested_replacement_clean': raw_finding.suggested_replacement
+                })
+
             results = {
                 'tracked_changes_content': tracked_bytes,
                 'clean_edited_content': clean_bytes,
                 'original_filename': filename,
-                'findings': cleaned,  # Add the compliance findings
+                'findings': findings_for_display,  # Add the compliance findings with full info
             }
             
             _set_status(status='completed', progress=100, message=f'Completed with fallback (doc gen error: {str(doc_error)})', results=results)
