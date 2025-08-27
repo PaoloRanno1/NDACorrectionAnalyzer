@@ -999,6 +999,7 @@ def display_single_nda_review(model, temperature):
                 st.rerun()
                 
         except Exception as e:
+            import traceback
             st.error(f"❌ Failed to analyze NDA: {str(e)}")
             st.error("Please check your file and try again.")
             with st.expander("Error Details"):
@@ -1557,6 +1558,7 @@ def display_all_files_nda_review(model, temperature):
                 st.rerun()
                 
         except Exception as e:
+            import traceback
             st.error(f"❌ Failed to analyze NDA: {str(e)}")
             st.error("Please check your file and try again.")
             with st.expander("Error Details"):

@@ -270,33 +270,40 @@ class StradaComplianceChain:
             print(f"Document loaded successfully. Length: {len(nda_text)} characters")
             print("Running compliance analysis...")
 
-            # Add timeout handling for API calls
-            import signal
+            # Use basic timeout with threading instead of signal (which doesn't work in Streamlit)
+            import threading
             import time
             
-            def timeout_handler(signum, frame):
-                raise TimeoutError("API call timed out after 60 seconds")
+            # Create a simple timeout mechanism
+            response = None
+            error = None
             
-            try:
-                # Set 60 second timeout
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(60)
-                
-                response = self.chain.invoke({"nda_text": nda_text})
-                
-                # Clear the alarm
-                signal.alarm(0)
-                
-            except TimeoutError:
-                signal.alarm(0)  # Clear alarm
+            def api_call():
+                nonlocal response, error
+                try:
+                    response = self.chain.invoke({"nda_text": nda_text})
+                except Exception as e:
+                    error = e
+            
+            # Start the API call in a thread
+            thread = threading.Thread(target=api_call)
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=60)  # 60 second timeout
+            
+            if thread.is_alive():
+                # Timeout occurred
                 raise Exception("Google Gemini API call timed out (60s). The API may be overloaded. Please try again later.")
-            except Exception as e:
-                signal.alarm(0)  # Clear alarm
-                error_msg = str(e)
+            elif error:
+                # API call failed
+                error_msg = str(error)
                 if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg:
                     raise Exception(f"Google Gemini API is temporarily overloaded: {error_msg}")
                 else:
                     raise Exception(f"API call failed: {error_msg}")
+            elif response is None:
+                # No response received
+                raise Exception("API call failed: No response received")
 
             print("Parsing compliance report...")
             try:
