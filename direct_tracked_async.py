@@ -270,38 +270,56 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
     init_direct_processing_state()
     dp = st.session_state.direct_processing
 
+    # Debug: Show current status
+    st.caption(f"Current Status: {dp['status']} | Progress: {dp['progress']}% | Message: {dp['message']}")
+
     if dp['status'] == 'processing':
         st.progress(dp['progress'] / 100.0)
-        st.info(dp['message'])
-        st.caption(f"Job: {dp.get('job_id','-')}")
-        # Encourage Streamlit to keep the websocket active by re-rendering periodically.
-        time.sleep(0.5)
+        st.info(f"🔄 {dp['message']}")
+        st.caption(f"Job ID: {dp.get('job_id','-')}")
+        
+        # Auto-refresh more aggressively for better feedback
+        import time
+        time.sleep(0.1)
         st.rerun()
 
-    elif dp['status'] == 'completed' and dp['results']:
-        st.success('✅ Direct tracked changes ready')
+    elif dp['status'] == 'completed' and dp.get('results'):
+        st.success('✅ Documents generated successfully!')
         res = dp['results']
+        
+        # Show completion metrics
+        st.info("Your tracked changes documents are ready for download!")
+        
         col1, col2 = st.columns(2)
         base = os.path.splitext(res.get('original_filename') or download_prefix)[0]
+        
         with col1:
             st.download_button(
                 label='📄 Download Tracked Changes (.docx)',
                 data=res['tracked_changes_content'],
                 file_name=f"{base}_Tracked.docx",
                 mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                key=f"tracked_{dp.get('job_id', 'default')}"
+                key=f"tracked_{dp.get('job_id', 'default')}",
+                help="Document with Word's tracked changes showing all edits"
             )
+        
         with col2:
             st.download_button(
                 label='📄 Download Clean Edited (.docx)',
                 data=res['clean_edited_content'],
                 file_name=f"{base}_Clean.docx",
                 mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                key=f"clean_{dp.get('job_id', 'default')}"
+                key=f"clean_{dp.get('job_id', 'default')}",
+                help="Clean document with all edits applied"
             )
+        
+        # Add reset button
+        if st.button("🔄 Process Another Document", key="reset_after_completion"):
+            _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
+            st.rerun()
 
     elif dp['status'] == 'error':
-        st.error(dp.get('message') or 'Direct generation failed.')
+        st.error(f"❌ Error: {dp.get('message', 'Direct generation failed.')}")
         if dp.get('error'):
             with st.expander('Show error details'):
                 st.code(dp['error'])
@@ -309,6 +327,13 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
             _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
             st.rerun()
 
+    elif dp['status'] == 'idle':
+        # Show idle state
+        st.info("Ready to process documents. Upload a DOCX file and click 'Direct tracked changes generation'.")
+    
     else:
-        # idle/no-op — nothing to show until user starts a job
-        pass
+        # Unknown state - show debug info
+        st.warning(f"Unknown processing state: {dp['status']}")
+        if st.button("🔄 Reset", key="reset_unknown_state"):
+            _set_status(status='idle', progress=0, message='Idle', results=None, error=None, job_id=None)
+            st.rerun()
