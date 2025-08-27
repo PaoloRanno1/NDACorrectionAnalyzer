@@ -29,9 +29,21 @@ import time
 import tempfile
 import threading
 import subprocess
+import json
 from typing import Dict, Any, List
+from pathlib import Path
 
 import streamlit as st
+
+# Disk persistence for async results
+_BASE_DIR = Path("direct_jobs")
+_BASE_DIR.mkdir(exist_ok=True)
+
+def _job_dir(job_id: str) -> Path:
+    """Get the directory for storing job results on disk."""
+    d = _BASE_DIR / job_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 # Heartbeat frequency for UI updates
 _HEARTBEAT_SEC = 0.75
@@ -172,14 +184,20 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                     finding_id += 1
 
         if not raw_findings:
+            # Store results to disk instead of session state
+            jobdir = _job_dir(job_id)
+            (jobdir / "tracked.docx").write_bytes(file_bytes)  # Return original file
+            (jobdir / "clean.docx").write_bytes(file_bytes)     # Return original file
+            (jobdir / "meta.json").write_text(json.dumps({
+                "original_filename": filename,
+                "ts": time.time(),
+                "compliance_report": compliance_report,
+                "processed_findings": []
+            }, indent=2))
+            
             _set_status(status='completed', progress=100, message='No compliance issues found. No changes needed.', 
-                       results={
-                           'tracked_changes_content': file_bytes,  # Return original file
-                           'clean_edited_content': file_bytes,     # Return original file
-                           'original_filename': filename,
-                           'compliance_report': compliance_report,
-                           'processed_findings': []
-                       })
+                       results=None,  # DO NOT pass bytes here
+                       results_path=str(jobdir))  # <- pointer
             return
 
         # 5) Read NDA text for cleaning
@@ -225,31 +243,37 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             output_docx=clean_path
         )
 
-        # 8) Read generated files
+        # 8) Read generated files and store to disk
         with open(tracked_path, 'rb') as f:
             tracked_bytes = f.read()
         with open(clean_path, 'rb') as f:
             clean_bytes = f.read()
 
+        # Store results to disk instead of session state
+        jobdir = _job_dir(job_id)
+        (jobdir / "tracked.docx").write_bytes(tracked_bytes)
+        (jobdir / "clean.docx").write_bytes(clean_bytes)
+        (jobdir / "meta.json").write_text(json.dumps({
+            "original_filename": filename,
+            "ts": time.time(),
+            "compliance_report": compliance_report,
+            "processed_findings": [
+                {
+                    'id': f.id,
+                    'priority': getattr(f, 'priority', 'Unknown Priority'),
+                    'section': getattr(f, 'section', ''),
+                    'issue': getattr(f, 'issue', ''),
+                    'problem': getattr(f, 'problem', ''),
+                    'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),
+                    'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))
+                } for f in cleaned_findings
+            ]
+        }, indent=2))
+
         time.sleep(_HEARTBEAT_SEC)
         _set_status(status='completed', progress=100, message='Direct generation completed!', 
-                   results={
-                       'tracked_changes_content': tracked_bytes,
-                       'clean_edited_content': clean_bytes,
-                       'original_filename': filename,
-                       'compliance_report': compliance_report,
-                       'processed_findings': [
-                           {
-                               'id': f.id,
-                               'priority': getattr(f, 'priority', 'Unknown Priority'),
-                               'section': getattr(f, 'section', ''),
-                               'issue': getattr(f, 'issue', ''),
-                               'problem': getattr(f, 'problem', ''),
-                               'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),
-                               'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))
-                           } for f in cleaned_findings
-                       ]
-                   })
+                   results=None,  # DO NOT pass bytes here
+                   results_path=str(jobdir))  # <- pointer
 
     except Exception as e:
         error_msg = f"Direct generation failed: {str(e)}"
@@ -349,44 +373,57 @@ def render_direct_tracked_status_ui() -> None:
                 st.success("Process cancelled. You can start a new one.")
                 st.rerun()
 
-    elif dp['status'] == 'completed' and dp['results']:
+    elif dp['status'] == 'completed' and (dp.get('results') or dp.get('results_path')):
         st.success('✅ Direct tracked changes generation completed!')
-        
-        results = dp['results']
-        
+        import os
+
+        # Load from disk if needed
+        if not dp.get('results') and dp.get('results_path'):
+            jobdir = Path(dp['results_path'])
+            tracked_bytes = (jobdir / "tracked.docx").read_bytes()
+            clean_bytes = (jobdir / "clean.docx").read_bytes()
+            meta = json.loads((jobdir / "meta.json").read_text()) if (jobdir / "meta.json").exists() else {}
+            original_filename = meta.get("original_filename", "NDA.docx")
+            processed_findings = meta.get("processed_findings", [])
+        else:
+            # Back-compat (if results dict exists)
+            res = dp['results']
+            tracked_bytes = res['tracked_changes_content']
+            clean_bytes = res['clean_edited_content']
+            original_filename = res.get('original_filename', 'NDA.docx')
+            processed_findings = res.get('processed_findings', [])
+
         # Show processing summary
-        if results.get('processed_findings'):
-            num_findings = len(results['processed_findings'])
+        if processed_findings:
+            num_findings = len(processed_findings)
             st.info(f"📋 Processed {num_findings} compliance issues automatically")
         
         # Show download buttons
+        base_name = os.path.splitext(original_filename)[0]
         col1, col2 = st.columns(2)
-        base_name = os.path.splitext(results.get('original_filename', 'NDA'))[0]
-        
         with col1:
             st.download_button(
-                label='📄 Download Tracked Changes',
-                data=results['tracked_changes_content'],
+                '📄 Download Tracked Changes',
+                data=tracked_bytes,
                 file_name=f"{base_name}_Tracked_Changes.docx",
                 mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 use_container_width=True
             )
-        
         with col2:
             st.download_button(
-                label='📄 Download Clean Version',
-                data=results['clean_edited_content'],
+                '📄 Download Clean Version',
+                data=clean_bytes,
                 file_name=f"{base_name}_Clean_Edited.docx",
                 mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 use_container_width=True
             )
         
         # Show issues processed section
-        if results.get('processed_findings'):
+        if processed_findings:
             st.markdown("---")
             st.subheader("📋 Issues Processed")
             
-            findings = results['processed_findings']
+            findings = processed_findings
             high_priority = [f for f in findings if f.get('priority') == 'High Priority']
             medium_priority = [f for f in findings if f.get('priority') == 'Medium Priority'] 
             low_priority = [f for f in findings if f.get('priority') == 'Low Priority']
