@@ -1252,6 +1252,81 @@ def display_single_nda_review(model, temperature):
                     
                     # Instead of st.rerun(), just mark that results are ready
                     st.session_state.direct_results_ready = True
+                    print("[DIRECT] Results ready flag set - should display results now")
+                    
+                    # Force immediate display by showing success message
+                    progress_bar.progress(1.0)
+                    status_text.success("✅ Direct generation completed! Scroll down to see results and download documents.")
+                    
+                    # Show results immediately instead of relying on session state display
+                    st.markdown("---")
+                    st.subheader("📊 Direct Generation Summary")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("High Priority", len(high_priority))
+                    with col2:
+                        st.metric("Medium Priority", len(medium_priority))
+                    with col3:
+                        st.metric("Low Priority", len(low_priority))
+                    
+                    st.markdown("---")
+                    st.subheader("📄 Download Generated Documents")
+                    
+                    from datetime import datetime
+                    import os
+                    base_name = os.path.splitext(uploaded_file.name)[0]
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="📄 Download Tracked Changes",
+                            data=tracked_docx,
+                            file_name=f"{base_name}_Tracked_{timestamp}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                    with col2:
+                        st.download_button(
+                            label="📄 Download Clean Version",
+                            data=clean_docx,
+                            file_name=f"{base_name}_Clean_{timestamp}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                    
+                    # Show processed issues
+                    with st.expander(f"📋 {total_issues} Issues Processed (Click to expand)"):
+                        for priority_data, priority_name, color in [
+                            (high_priority, "🔴 High Priority", "#ff6b6b"),
+                            (medium_priority, "🟡 Medium Priority", "#ffcc5c"),
+                            (low_priority, "🟢 Low Priority", "#81c784")
+                        ]:
+                            if priority_data:
+                                st.markdown(f"**{priority_name} ({len(priority_data)} issues)**")
+                                for i, finding in enumerate(priority_data):
+                                    issue_text = getattr(finding, 'issue', '') if hasattr(finding, 'issue') else finding.get('issue', '')
+                                    section_text = getattr(finding, 'section', '') if hasattr(finding, 'section') else finding.get('section', '')
+                                    problem_text = getattr(finding, 'problem', '') if hasattr(finding, 'problem') else finding.get('problem', '')
+                                    replacement_text = getattr(finding, 'suggested_replacement', '') if hasattr(finding, 'suggested_replacement') else finding.get('suggested_replacement', '')
+                                    
+                                    st.markdown(f"""
+                                    <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
+                                        <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
+                                            {i+1}. {issue_text}
+                                        </div>
+                                        <div style='color: {color}; margin-bottom: 8px;'>
+                                            📍 <strong>Section:</strong> <span style='color: #cccccc;'>{section_text}</span>
+                                        </div>
+                                        <div style='color: {color}; margin-bottom: 8px;'>
+                                            ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{problem_text}</span>
+                                        </div>
+                                        <div style='color: {color}; margin-bottom: 8px;'>
+                                            ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{replacement_text}</span>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                     
             except Exception as e:
                 print(f"[DIRECT] ERROR: {str(e)}")
@@ -1277,6 +1352,7 @@ def display_single_nda_review(model, temperature):
     if (hasattr(st.session_state, 'direct_sync_results') and st.session_state.direct_sync_results and
         hasattr(st.session_state, 'direct_results_ready') and st.session_state.direct_results_ready):
         results = st.session_state.direct_sync_results
+        print(f"[DIRECT] Displaying results for {results['filename']} with {results['total_issues']} issues")
         
         st.markdown("---")
         st.subheader("📊 Direct Generation Summary")
