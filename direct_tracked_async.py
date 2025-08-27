@@ -60,6 +60,7 @@ import tempfile
 import threading
 import subprocess
 import shutil
+import json
 from typing import Dict, Any, List
 
 import streamlit as st
@@ -82,16 +83,57 @@ def init_direct_processing_state() -> None:
         }
 
 
+def _get_status_file_path(job_id: str) -> str:
+    """Get the path for the status file for a given job."""
+    return os.path.join(tempfile.gettempdir(), f"direct_processing_{job_id}.json")
+
 def _set_status(status: str = None, progress: int = None, message: str = None, **extra) -> None:
-    dp = st.session_state.direct_processing
-    if status is not None:
-        dp['status'] = status
-    if progress is not None:
-        dp['progress'] = max(0, min(100, int(progress)))
-    if message is not None:
-        dp['message'] = message
-    for k, v in extra.items():
-        dp[k] = v
+    """Set status with file-based tracking for background threads."""
+    try:
+        # Update session state if available
+        if 'direct_processing' in st.session_state:
+            dp = st.session_state.direct_processing
+            if status is not None:
+                dp['status'] = status
+            if progress is not None:
+                dp['progress'] = max(0, min(100, int(progress)))
+            if message is not None:
+                dp['message'] = message
+            for k, v in extra.items():
+                dp[k] = v
+            
+            # Also write to file for background thread persistence
+            job_id = dp.get('job_id')
+            if job_id:
+                status_file = _get_status_file_path(job_id)
+                status_data = {
+                    'status': dp['status'],
+                    'progress': dp['progress'],
+                    'message': dp['message'],
+                    'job_id': job_id,
+                    'timestamp': time.time()
+                }
+                # Don't include binary results in file
+                if 'results' in dp and dp['results']:
+                    status_data['has_results'] = True
+                else:
+                    status_data['has_results'] = False
+                    
+                with open(status_file, 'w') as f:
+                    json.dump(status_data, f)
+    except Exception as e:
+        print(f"Status update error: {e}")
+
+def _load_status_from_file(job_id: str) -> Dict[str, Any]:
+    """Load status from file for a given job."""
+    try:
+        status_file = _get_status_file_path(job_id)
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading status: {e}")
+    return {}
 
 
 # ---------- Heavy Pipeline Worker (runs in a thread) ----------
@@ -269,6 +311,24 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
     """
     init_direct_processing_state()
     dp = st.session_state.direct_processing
+
+    # Check file-based status if we have a job_id
+    if dp.get('job_id'):
+        file_status = _load_status_from_file(dp['job_id'])
+        if file_status:
+            # Update session state with file status
+            dp['status'] = file_status.get('status', dp['status'])
+            dp['progress'] = file_status.get('progress', dp['progress'])
+            dp['message'] = file_status.get('message', dp['message'])
+            
+            # Clean up old status files
+            if file_status.get('status') in ['completed', 'error']:
+                try:
+                    status_file = _get_status_file_path(dp['job_id'])
+                    if os.path.exists(status_file):
+                        os.unlink(status_file)
+                except:
+                    pass
 
     # Debug: Show current status
     st.caption(f"Current Status: {dp['status']} | Progress: {dp['progress']}% | Message: {dp['message']}")
