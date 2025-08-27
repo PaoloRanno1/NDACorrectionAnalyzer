@@ -278,9 +278,9 @@ def render_direct_tracked_status_ui(download_prefix: str = "NDA") -> None:
         st.info(f"🔄 {dp['message']}")
         st.caption(f"Job ID: {dp.get('job_id','-')}")
         
-        # Auto-refresh more aggressively for better feedback
+        # Auto-refresh at reasonable intervals to avoid CPU churn
         import time
-        time.sleep(0.1)
+        time.sleep(1.5)
         st.rerun()
 
     elif dp['status'] == 'completed' and dp.get('results'):

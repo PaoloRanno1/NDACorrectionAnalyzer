@@ -84,19 +84,6 @@ def initialize_session_state():
             'config': None
         }
     
-    # Direct tracked changes processing states
-    if 'direct_processing_status' not in st.session_state:
-        st.session_state.direct_processing_status = 'idle'
-    if 'direct_processing_progress' not in st.session_state:
-        st.session_state.direct_processing_progress = 0
-    if 'direct_processing_message' not in st.session_state:
-        st.session_state.direct_processing_message = ''
-    if 'direct_processing_results' not in st.session_state:
-        st.session_state.direct_processing_results = None
-    if 'direct_processing_error' not in st.session_state:
-        st.session_state.direct_processing_error = None
-    if 'direct_processing_id' not in st.session_state:
-        st.session_state.direct_processing_id = None
 
 def run_background_analysis(analysis_id, clean_file_content, corrected_file_content, model, temperature, analysis_mode):
     """Run NDA analysis in background thread"""
