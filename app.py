@@ -1141,11 +1141,12 @@ def display_single_nda_review(model, temperature):
                             finding_id += 1
                     print(f"[DIRECT] Created {len(raw_findings)} RawFinding objects")
                     
-                    # Read NDA text and clean findings
-                    print("[DIRECT] Reading NDA text for cleaning process...")
-                    with open(converted_path, 'r', encoding='utf-8') as f:
-                        nda_text = f.read()
-                    print(f"[DIRECT] NDA text length: {len(nda_text)} characters")
+                    # Read NDA text directly from DOCX for cleaning process
+                    print("[DIRECT] Reading NDA text from original DOCX for cleaning process...")
+                    from docx import Document
+                    doc = Document(temp_file_path)
+                    nda_text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+                    print(f"[DIRECT] NDA text extracted from DOCX, length: {len(nda_text)} characters")
                     
                     print("[DIRECT] Starting LLM cleaning process...")
                     auto_comments = {finding.id: "" for finding in raw_findings}
