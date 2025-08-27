@@ -1250,7 +1250,8 @@ def display_single_nda_review(model, temperature):
                     }
                     print("[DIRECT] Results stored in session state")
                     
-                    st.rerun()
+                    # Instead of st.rerun(), just mark that results are ready
+                    st.session_state.direct_results_ready = True
                     
             except Exception as e:
                 print(f"[DIRECT] ERROR: {str(e)}")
@@ -1273,7 +1274,8 @@ def display_single_nda_review(model, temperature):
                     st.code(traceback.format_exc())
     
     # Display sync direct generation results
-    if hasattr(st.session_state, 'direct_sync_results') and st.session_state.direct_sync_results:
+    if (hasattr(st.session_state, 'direct_sync_results') and st.session_state.direct_sync_results and
+        hasattr(st.session_state, 'direct_results_ready') and st.session_state.direct_results_ready):
         results = st.session_state.direct_sync_results
         
         st.markdown("---")
@@ -1347,7 +1349,10 @@ def display_single_nda_review(model, temperature):
         
         # Clear results button
         if st.button("🔄 Start New Direct Generation", type="secondary"):
-            del st.session_state.direct_sync_results
+            if hasattr(st.session_state, 'direct_sync_results'):
+                del st.session_state.direct_sync_results
+            if hasattr(st.session_state, 'direct_results_ready'):
+                del st.session_state.direct_results_ready
             st.rerun()
     
     # Display results if available - directly go to edit mode
