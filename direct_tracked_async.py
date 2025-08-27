@@ -241,6 +241,7 @@ def render_direct_tracked_status_ui() -> None:
         }
         
         current_progress = dp['progress']
+        latest_detail = "Initializing..."  # Default value
         for threshold, detail in progress_details.items():
             if current_progress >= threshold:
                 latest_detail = detail
@@ -248,7 +249,7 @@ def render_direct_tracked_status_ui() -> None:
         st.caption(f"Step: {latest_detail}")
         
         # Auto-refresh the UI to show live progress
-        time.sleep(1)
+        time.sleep(2)
         st.rerun()
 
     elif dp['status'] == 'completed' and dp['results']:
