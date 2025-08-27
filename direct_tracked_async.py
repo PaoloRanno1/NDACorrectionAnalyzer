@@ -271,6 +271,13 @@ def render_direct_tracked_status_ui() -> None:
         
         st.caption(f"Step: {latest_detail}")
         
+        # Show more detailed status
+        with st.expander("📋 Progress Details", expanded=False):
+            st.write(f"**Job ID:** {dp.get('job_id', 'N/A')}")
+            st.write(f"**Progress:** {current_progress}%")
+            st.write(f"**Status:** {dp.get('status', 'unknown')}")
+            st.write(f"**Message:** {dp.get('message', 'No message')}")
+        
         # Show refresh button instead of auto-refresh to avoid infinite loops
         if st.button("🔄 Refresh Status", key="refresh_direct_status"):
             st.rerun()
