@@ -116,23 +116,46 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         raw_findings: List[RawFinding] = []
         finding_id = 1
         
-        for priority in ["high_priority", "medium_priority", "low_priority"]:
-            priority_label = priority.replace("_", " ").title()
-            findings_list = compliance_report.get(priority, [])
+        # Handle both formats: underscore (high_priority) and space (High Priority)
+        priority_mappings = [
+            ("high_priority", "High Priority"),
+            ("medium_priority", "Medium Priority"), 
+            ("low_priority", "Low Priority")
+        ]
+        
+        for priority_key, priority_label in priority_mappings:
+            # Try both formats
+            findings_list = compliance_report.get(priority_key, []) or compliance_report.get(priority_label, [])
             
             if findings_list:
                 for finding in findings_list:
-                    raw_findings.append(
-                        RawFinding(
-                            id=finding_id,
-                            priority=priority_label,
-                            section=finding.get('section', ''),
-                            issue=finding.get('issue', ''),
-                            problem=finding.get('problem', ''),
-                            citation=finding.get('citation', ''),
-                            suggested_replacement=finding.get('suggested_replacement', ''),
+                    # Handle both dict and object formats
+                    if hasattr(finding, '__dict__'):
+                        # Pydantic model object
+                        raw_findings.append(
+                            RawFinding(
+                                id=finding_id,
+                                priority=priority_label,
+                                section=getattr(finding, 'section', ''),
+                                issue=getattr(finding, 'issue', ''),
+                                problem=getattr(finding, 'problem', ''),
+                                citation=getattr(finding, 'citation', ''),
+                                suggested_replacement=getattr(finding, 'suggested_replacement', ''),
+                            )
                         )
-                    )
+                    else:
+                        # Dictionary format
+                        raw_findings.append(
+                            RawFinding(
+                                id=finding_id,
+                                priority=priority_label,
+                                section=finding.get('section', ''),
+                                issue=finding.get('issue', ''),
+                                problem=finding.get('problem', ''),
+                                citation=finding.get('citation', ''),
+                                suggested_replacement=finding.get('suggested_replacement', ''),
+                            )
+                        )
                     finding_id += 1
 
         if not raw_findings:
@@ -248,9 +271,9 @@ def render_direct_tracked_status_ui() -> None:
         
         st.caption(f"Step: {latest_detail}")
         
-        # Auto-refresh the UI to show live progress
-        time.sleep(1)
-        st.rerun()
+        # Show refresh button instead of auto-refresh to avoid infinite loops
+        if st.button("🔄 Refresh Status", key="refresh_direct_status"):
+            st.rerun()
 
     elif dp['status'] == 'completed' and dp['results']:
         st.success('✅ Direct tracked changes generation completed!')
