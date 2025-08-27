@@ -238,15 +238,17 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                        'clean_edited_content': clean_bytes,
                        'original_filename': filename,
                        'compliance_report': compliance_report,
-                       'processed_findings': [{
-                           'id': f.id,
-                           'priority': getattr(f, 'priority', 'Unknown Priority'),
-                           'section': getattr(f, 'section', ''),
-                           'issue': getattr(f, 'issue', ''),
-                           'problem': getattr(f, 'problem', ''),
-                           'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),
-                           'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))
-                       } for f in cleaned_findings]
+                       'processed_findings': [
+                           {
+                               'id': f.id,
+                               'priority': getattr(f, 'priority', 'Unknown Priority'),
+                               'section': getattr(f, 'section', ''),
+                               'issue': getattr(f, 'issue', ''),
+                               'problem': getattr(f, 'problem', ''),
+                               'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),
+                               'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))
+                           } for f in cleaned_findings
+                       ]
                    })
 
     except Exception as e:

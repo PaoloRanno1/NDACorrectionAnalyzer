@@ -1149,8 +1149,33 @@ def display_single_nda_review(model, temperature):
                     
                     print("[DIRECT] Starting LLM cleaning process...")
                     auto_comments = {finding.id: "" for finding in raw_findings}
-                    cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
-                    print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
+                    
+                    # Try LLM cleaning with error handling
+                    try:
+                        cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+                        print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
+                    except ValueError as e:
+                        if "citation_clean is not an exact substring" in str(e):
+                            print(f"[DIRECT] LLM cleaning failed with text matching error: {str(e)}")
+                            print("[DIRECT] Falling back to original findings without LLM cleaning...")
+                            # Use original findings without LLM processing
+                            from Tracked_changes_tools_clean import CleanedFinding
+                            cleaned_findings = []
+                            for rf in raw_findings:
+                                cf = CleanedFinding(
+                                    id=rf.id,
+                                    priority=rf.priority,
+                                    section=rf.section,
+                                    issue=rf.issue,
+                                    problem=rf.problem,
+                                    citation_clean=rf.citation,  # Use original citation
+                                    suggested_replacement_clean=rf.suggested_replacement,  # Use original replacement
+                                    user_comment=auto_comments.get(rf.id, "")
+                                )
+                                cleaned_findings.append(cf)
+                            print(f"[DIRECT] Created {len(cleaned_findings)} fallback findings without LLM cleaning")
+                        else:
+                            raise  # Re-raise if it's a different error
                     
                     progress_bar.progress(0.9)
                     status_text.info("📝 Generating final documents...")
@@ -1221,6 +1246,18 @@ def display_single_nda_review(model, temperature):
                 print(f"[DIRECT] ERROR: {str(e)}")
                 import traceback
                 print(f"[DIRECT] Full traceback: {traceback.format_exc()}")
+                
+                # Clean up any temp files that might exist
+                try:
+                    if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+                        os.unlink(temp_file_path)
+                        print(f"[DIRECT] Cleaned up temp file: {temp_file_path}")
+                    if 'converted_path' in locals() and os.path.exists(converted_path):
+                        os.unlink(converted_path)
+                        print(f"[DIRECT] Cleaned up converted file: {converted_path}")
+                except Exception as cleanup_error:
+                    print(f"[DIRECT] Cleanup error (ignore): {cleanup_error}")
+                
                 st.error(f"❌ Direct generation failed: {str(e)}")
                 with st.expander("Error Details"):
                     st.code(traceback.format_exc())
