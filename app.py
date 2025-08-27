@@ -1154,10 +1154,20 @@ def display_single_nda_review(model, temperature):
                     try:
                         cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
                         print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
-                    except ValueError as e:
-                        if "citation_clean is not an exact substring" in str(e):
-                            print(f"[DIRECT] LLM cleaning failed with text matching error: {str(e)}")
-                            print("[DIRECT] Falling back to original findings without LLM cleaning...")
+                    except (ValueError, RuntimeError) as e:
+                        error_msg = str(e)
+                        if ("citation_clean is not an exact substring" in error_msg or 
+                            "503 UNAVAILABLE" in error_msg or 
+                            "The model is overloaded" in error_msg or
+                            "LLM call failed" in error_msg):
+                            
+                            if "503 UNAVAILABLE" in error_msg or "overloaded" in error_msg:
+                                print(f"[DIRECT] LLM cleaning failed due to API overload: {error_msg}")
+                                print("[DIRECT] Google Gemini API is temporarily overloaded - falling back to original findings...")
+                            else:
+                                print(f"[DIRECT] LLM cleaning failed with text matching error: {error_msg}")
+                                print("[DIRECT] Falling back to original findings without LLM cleaning...")
+                                
                             # Use original findings without LLM processing
                             from Tracked_changes_tools_clean import CleanedFinding
                             cleaned_findings = []
