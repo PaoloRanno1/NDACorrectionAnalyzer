@@ -228,11 +228,38 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             raise RuntimeError("Pandoc is not available in the deployment. Please add `pkgs.pandoc` to replit.nix.") from e
 
         time.sleep(_HEARTBEAT_SEC)
-        _set_status(progress=20, message='Converting DOCX → Markdown (Pandoc)...')
+        _set_status(progress=20, message='Converting DOCX → Text for AI analysis...')
 
-        # 2) DOCX → Markdown
-        md_path = docx_path.replace('.docx', '.md')
-        subprocess.run(["pandoc", docx_path, "-o", md_path, "--to=markdown", "--wrap=none"], check=True)
+        # 2) Extract text directly from DOCX for analysis (more accurate than Markdown)
+        try:
+            from docx import Document as DocxDocument
+            docx_doc = DocxDocument(docx_path)
+            
+            # Extract all text from paragraphs and tables
+            docx_text_parts = []
+            for paragraph in docx_doc.paragraphs:
+                if paragraph.text.strip():
+                    docx_text_parts.append(paragraph.text)
+            
+            for table in docx_doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        for para in cell.paragraphs:
+                            if para.text.strip():
+                                docx_text_parts.append(para.text)
+            
+            docx_extracted_text = '\n\n'.join(docx_text_parts)
+            
+            # Also create markdown version for compatibility
+            md_path = docx_path.replace('.docx', '.md')
+            with open(md_path, 'w', encoding='utf-8') as f:
+                f.write(docx_extracted_text)
+                
+        except ImportError:
+            # Fallback to Pandoc if python-docx not available
+            _set_status(progress=25, message='Using Pandoc for conversion...')
+            md_path = docx_path.replace('.docx', '.md')
+            subprocess.run(["pandoc", docx_path, "-o", md_path, "--to=markdown", "--wrap=none"], check=True)
 
         time.sleep(_HEARTBEAT_SEC)
         _set_status(progress=40, message='Running AI compliance analysis...')
@@ -306,12 +333,19 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             shutil.copy2(docx_path, tracked_path)
             
             _set_status(progress=90, message='Creating tracked changes document...')
+            print(f"Attempting to apply {len(cleaned)} cleaned findings to document")
+            for i, finding in enumerate(cleaned):
+                print(f"Finding {i}: citation='{getattr(finding, 'citation_clean', 'N/A')}', replacement='{getattr(finding, 'suggested_replacement_clean', 'N/A')}'")
+            
             changes_applied = apply_cleaned_findings_to_docx(
                 input_docx=tracked_path,
                 cleaned_findings=cleaned,
                 output_docx=tracked_path,
-                author="AI Compliance Reviewer"
+                author="AI Compliance Reviewer",
+                ignore_case=True,  # Try case-insensitive matching
+                skip_if_same=False  # Don't skip identical citations/replacements for debugging
             )
+            print(f"Applied {changes_applied} changes to tracked document")
             
             # Generate clean edited document  
             clean_path = tempfile.mktemp(suffix='_clean.docx')
@@ -323,6 +357,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                 cleaned_findings=cleaned,
                 output_docx=clean_path
             )
+            print(f"Applied {clean_changes_applied} changes to clean document")
 
             _set_status(progress=98, message='Reading generated files...')
             with open(tracked_path, 'rb') as f:
