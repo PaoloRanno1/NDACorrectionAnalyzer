@@ -1262,49 +1262,9 @@ def display_single_nda_review(model, temperature):
                     st.session_state.direct_results_ready = True
                     print("[DIRECT] Results ready flag set - should display results now")
                     
-                    # Force immediate display by showing success message
+                    # Completion message only
                     progress_bar.progress(1.0)
                     status_text.success("✅ Direct generation completed! Scroll down to see results and download documents.")
-                    
-                    # Show results immediately instead of relying on session state display
-                    st.markdown("---")
-                    st.subheader("📊 Direct Generation Summary")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("High Priority", len(high_priority))
-                    with col2:
-                        st.metric("Medium Priority", len(medium_priority))
-                    with col3:
-                        st.metric("Low Priority", len(low_priority))
-                    
-                    st.markdown("---")
-                    st.subheader("📄 Download Generated Documents")
-                    
-                    from datetime import datetime
-                    import os
-                    base_name = os.path.splitext(uploaded_file.name)[0]
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.download_button(
-                            label="📄 Download Tracked Changes",
-                            data=tracked_docx,
-                            file_name=f"{base_name}_Tracked_{timestamp}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True,
-                            key=f"direct_tracked_{timestamp}"
-                        )
-                    with col2:
-                        st.download_button(
-                            label="📄 Download Clean Version",
-                            data=clean_docx,
-                            file_name=f"{base_name}_Clean_{timestamp}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True,
-                            key=f"direct_clean_{timestamp}"
-                        )
                     
                     # Show processed issues
                     with st.expander(f"📋 {total_issues} Issues Processed (Click to expand)"):
