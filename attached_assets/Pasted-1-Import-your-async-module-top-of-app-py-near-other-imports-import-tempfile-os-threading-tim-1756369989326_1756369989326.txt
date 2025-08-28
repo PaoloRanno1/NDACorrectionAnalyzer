@@ -1,0 +1,163 @@
+1) Import your async module (top of app.py)
+# near other imports
+import tempfile, os, threading, time, uuid
+import direct_tracked_async as dta  # <-- add this
+
+2) Add a tiny adapter to start & track the async job
+
+Put this once in app.py (anywhere above display_single_nda_review is fine):
+
+def start_background_direct_tracked_job(file_bytes: bytes, filename: str, model: str, temperature: float):
+    """Launch direct-tracked-changes generation using direct_tracked_async in a background thread."""
+    analysis_id = str(uuid.uuid4())
+    st.session_state.direct_tracked_job = {
+        "id": analysis_id,
+        "running": True,
+        "status": "Starting…",
+        "progress": 0,
+        "error": None,
+        "results": None,
+        "filename": filename,
+        "start_time": time.time(),
+    }
+
+    def _worker():
+        try:
+            # Persist upload to a temp .docx the async module can read
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=False) as tmp:
+                tmp.write(file_bytes)
+                input_docx_path = tmp.name
+
+            # Call your async workflow (expects it to return a dict with results)
+            # If your function name differs, adjust here.
+            # Recommended return keys: tracked_docx_bytes, clean_docx_bytes, high, medium, low
+            st.session_state.direct_tracked_job["status"] = "Converting and analyzing…"
+            st.session_state.direct_tracked_job["progress"] = 20
+
+            result = dta.run_direct_tracked_async(
+                input_docx_path=input_docx_path,
+                model=model,
+                temperature=temperature,
+                # Optional knobs if your module supports them:
+                timeout_seconds=180,         # let long NDAs complete
+                max_retries=2,               # handle 503/overload
+                backoff_seconds=2.0,         # exponential backoff base
+                bypass_llm_cleaning=False    # set True to skip cleaning if needed
+            )
+
+            # Expecting bytes in result:
+            st.session_state.direct_tracked_job["status"] = "Finalizing documents…"
+            st.session_state.direct_tracked_job["progress"] = 90
+
+            st.session_state.direct_tracked_job["results"] = {
+                "tracked_docx": result["tracked_docx_bytes"],
+                "clean_docx":   result["clean_docx_bytes"],
+                "high":         result.get("high", []),
+                "medium":       result.get("medium", []),
+                "low":          result.get("low", []),
+            }
+            st.session_state.direct_tracked_job["status"] = "Complete"
+            st.session_state.direct_tracked_job["progress"] = 100
+            st.session_state.direct_tracked_job["running"] = False
+        except Exception as e:
+            st.session_state.direct_tracked_job["error"] = str(e)
+            st.session_state.direct_tracked_job["status"] = f"Error: {e}"
+            st.session_state.direct_tracked_job["running"] = False
+            st.session_state.direct_tracked_job["progress"] = 0
+        finally:
+            try:
+                if os.path.exists(input_docx_path):
+                    os.unlink(input_docx_path)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    return analysis_id
+
+
+If your direct_tracked_async exposes a different function name/signature, just adjust the call to dta.run_direct_tracked_async(...) accordingly. The rest stays the same.
+
+3) Wire the button to the async job (+ progress UI)
+
+In display_single_nda_review, replace the existing big synchronous “Direct Tracked Changes Generation” block with this:
+
+# --- Direct Tracked Changes (async via direct_tracked_async) ---
+if run_direct_tracked_changes and uploaded_file:
+    # Guard: only DOCX
+    file_extension = uploaded_file.name.split('.')[-1].lower()
+    if file_extension != 'docx':
+        st.error("Direct tracked changes generation requires a Word document (.docx).")
+    else:
+        st.info("Starting background job… You can stay on this page; progress will update.")
+        start_background_direct_tracked_job(
+            file_bytes=uploaded_file.getvalue(),
+            filename=uploaded_file.name,
+            model=model,
+            temperature=temperature
+        )
+        st.rerun()
+
+# Progress / results panel (persists after clicks)
+job = st.session_state.get("direct_tracked_job")
+if job:
+    st.markdown("---")
+    st.subheader("🛠 Direct Tracked Changes — Job Status")
+
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info(job["status"])
+    with col2:
+        st.progress(job["progress"] / 100.0)
+
+    if job["error"]:
+        st.error(f"❌ {job['error']}")
+
+    if job["results"]:
+        # Show summary + downloads
+        results = job["results"]
+        base_name = os.path.splitext(job["filename"])[0]
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        c1, c2, c3 = st.columns(3)
+        with c1: st.metric("High Priority", len(results["high"]))
+        with c2: st.metric("Medium Priority", len(results["medium"]))
+        with c3: st.metric("Low Priority", len(results["low"]))
+
+        d1, d2 = st.columns(2)
+        with d1:
+            st.download_button(
+                "📄 Download Tracked Changes",
+                data=results["tracked_docx"],
+                file_name=f"{base_name}_Tracked_{ts}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
+        with d2:
+            st.download_button(
+                "📄 Download Clean Version",
+                data=results["clean_docx"],
+                file_name=f"{base_name}_Clean_{ts}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
+
+        with st.expander(f"📋 Issues Processed ({len(results['high']) + len(results['medium']) + len(results['low'])})"):
+            for bucket, title in [(results["high"], "🔴 High"), (results["medium"], "🟡 Medium"), (results["low"], "🟢 Low")]:
+                if bucket:
+                    st.markdown(f"**{title} ({len(bucket)})**")
+                    for i, f in enumerate(bucket, 1):
+                        issue   = f.get("issue", "")
+                        section = f.get("section", "")
+                        problem = f.get("problem", "")
+                        repl    = f.get("suggested_replacement", "")
+                        st.markdown(f"- **{i}. {issue}**  \n  • Section: {section}  \n  • Problem: {problem}  \n  • Replacement: {repl}")
+
+        if st.button("🔄 Start New Direct Generation", type="secondary"):
+            del st.session_state["direct_tracked_job"]
+            st.rerun()
+    else:
+        # If still running, auto-refresh the page every few seconds
+        if job["running"]:
+            time.sleep(2)
+            st.rerun()
