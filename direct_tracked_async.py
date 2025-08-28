@@ -63,11 +63,45 @@ def init_direct_processing_state() -> None:
 
 
 def _set_status(status: str = None, progress: int = None, message: str = None, **extra) -> None:
-    """Update the processing status in session state and print for logging."""
+    """Update the processing status using disk-based storage for thread safety."""
     print(f"📊 [Direct Tracked] Status Update: {message or 'N/A'} (Progress: {progress or 'N/A'}%)")
     
+    # Get job_id from extra parameters or current state
+    job_id = extra.get('job_id')
+    if not job_id:
+        try:
+            job_id = st.session_state.direct_processing.get('job_id')
+        except:
+            job_id = None
+    
+    # Store status to disk for thread-safe access
+    if job_id:
+        jobdir = _job_dir(job_id)
+        status_data = {}
+        
+        # Read existing status if available
+        status_file = jobdir / "status.json"
+        if status_file.exists():
+            try:
+                status_data = json.loads(status_file.read_text())
+            except:
+                status_data = {}
+        
+        # Update with new values
+        if status is not None:
+            status_data['status'] = status
+        if progress is not None:
+            status_data['progress'] = max(0, min(100, int(progress)))
+        if message is not None:
+            status_data['message'] = message
+        for k, v in extra.items():
+            status_data[k] = v
+        
+        # Write updated status to disk
+        status_file.write_text(json.dumps(status_data, indent=2))
+    
+    # Also try to update session state (may fail in threads, that's OK)
     try:
-        # Initialize if needed
         if 'direct_processing' not in st.session_state:
             init_direct_processing_state()
         
@@ -80,14 +114,9 @@ def _set_status(status: str = None, progress: int = None, message: str = None, *
             dp['message'] = message
         for k, v in extra.items():
             dp[k] = v
-        
-        # Force update the session state
         st.session_state.direct_processing = dp
-    except Exception as e:
-        # If session state access fails from thread, ignore silently but continue
-        import traceback
-        print(f"Status update failed (this is normal in threads): {e}")
-        print(traceback.format_exc())
+    except:
+        # Expected to fail in background threads - disk storage is the reliable method
         pass
 
 
@@ -366,12 +395,23 @@ def render_direct_tracked_status_ui() -> None:
     init_direct_processing_state()
     dp = st.session_state.direct_processing
 
-    # Check if job is actually completed by checking disk results
-    if dp['status'] == 'processing' and dp.get('job_id'):
+    # Check for disk-based status updates (thread-safe)
+    if dp.get('job_id'):
         job_id = dp['job_id']
         jobdir = _job_dir(job_id)
+        status_file = jobdir / "status.json"
         
-        # If results exist on disk, update status to completed
+        # Load latest status from disk
+        if status_file.exists():
+            try:
+                disk_status = json.loads(status_file.read_text())
+                # Update session state with disk status
+                dp.update(disk_status)
+                st.session_state.direct_processing = dp
+            except Exception as e:
+                print(f"Failed to read status from disk: {e}")
+        
+        # Check if job is actually completed by checking disk results
         if (jobdir / "tracked.docx").exists() and (jobdir / "clean.docx").exists():
             print(f"🔍 [Direct Tracked] Found completed results on disk for job {job_id}")
             _set_status(status='completed', progress=100, message='Direct generation completed!', results_path=str(jobdir))
