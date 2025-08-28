@@ -381,29 +381,14 @@ def render_direct_tracked_status_ui() -> None:
         st.progress(dp['progress'] / 100.0)
         st.info(f"🔄 {dp['message']}")
         
-        # Show current progress details
-        progress_details = {
-            5: "Setting up environment...",
-            15: "Converting document format...",
-            30: "Analyzing compliance with AI...",
-            50: "Processing all compliance findings...",
-            70: "Applying AI-powered text improvements...", 
-            85: "Generating final documents...",
-            100: "Complete!"
-        }
-        
-        current_progress = dp['progress']
-        latest_detail = "Initializing..."  # Default value
-        for threshold, detail in progress_details.items():
-            if current_progress >= threshold:
-                latest_detail = detail
-        
-        st.caption(f"Step: {latest_detail}")
+        # Show current progress details - use actual message from session state
+        current_message = dp.get('message', 'Initializing...')
+        st.caption(f"Step: {current_message}")
         
         # Show more detailed status
         with st.expander("📋 Progress Details", expanded=False):
             st.write(f"**Job ID:** {dp.get('job_id', 'N/A')}")
-            st.write(f"**Progress:** {current_progress}%")
+            st.write(f"**Progress:** {dp['progress']}%")
             st.write(f"**Status:** {dp.get('status', 'unknown')}")
             st.write(f"**Message:** {dp.get('message', 'No message')}")
             
@@ -430,9 +415,13 @@ def render_direct_tracked_status_ui() -> None:
                 st.success("Process cancelled. You can start a new one.")
                 st.rerun()
         
-        # Auto-refresh every 20 seconds while processing
+        # Auto-refresh indicator
+        st.caption("🔄 Auto-refreshing every 10 seconds...")
+        
+        # Use Streamlit's rerun mechanism
+        import asyncio
         import time
-        time.sleep(20)
+        time.sleep(0.5)  # Small delay for UI stability
         st.rerun()
 
     elif dp['status'] == 'completed' and (dp.get('results') or dp.get('results_path')):
