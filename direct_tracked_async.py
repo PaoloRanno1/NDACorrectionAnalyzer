@@ -353,13 +353,13 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             "processed_findings": [
                 {
                     'id': f.id,
-                    'priority': getattr(f, 'priority', 'Unknown Priority'),
-                    'section': getattr(f, 'section', ''),
-                    'issue': getattr(f, 'issue', ''),
-                    'problem': getattr(f, 'problem', ''),
-                    'citation': getattr(f, 'citation_clean', getattr(f, 'citation', '')),
-                    'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(f, 'suggested_replacement', ''))
-                } for f in cleaned_findings
+                    'priority': getattr(raw_findings[i], 'priority', 'Unknown Priority'),
+                    'section': getattr(raw_findings[i], 'section', ''),
+                    'issue': getattr(raw_findings[i], 'issue', ''),
+                    'problem': getattr(raw_findings[i], 'problem', ''),
+                    'citation': getattr(f, 'citation_clean', getattr(raw_findings[i], 'citation', '')),
+                    'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(raw_findings[i], 'suggested_replacement', ''))
+                } for i, f in enumerate(cleaned_findings)
             ]
         }, indent=2))
 
