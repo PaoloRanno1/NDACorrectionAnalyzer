@@ -954,9 +954,13 @@ def display_single_nda_review(model, temperature):
     
     # Run review directly without background processing
     if run_single_analysis and uploaded_file:
+        # Store original DOCX file if it's a DOCX for later use in edit mode
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        if file_extension == 'docx':
+            st.session_state.original_docx_file = uploaded_file
+        
         try:
             with st.spinner("🔄 Analyzing NDA... This may take a few minutes."):
-                file_extension = uploaded_file.name.split('.')[-1].lower()
                 file_content = uploaded_file.getvalue()
                 
                 # Write content to temporary file
@@ -3005,7 +3009,7 @@ def display_edit_mode_interface():
         # Check if we have the original DOCX file
         original_file = st.session_state.get('original_docx_file')
         
-        if not original_file or not original_file.name.endswith('.docx'):
+        if not original_file:
             st.warning("⚠️ Document editing requires a DOCX file. Please upload the original NDA as a DOCX file to use this feature.")
             
             # Allow user to upload DOCX version
@@ -3021,6 +3025,8 @@ def display_edit_mode_interface():
                 st.session_state.original_docx_file = docx_file
                 st.success("✅ DOCX file uploaded! You can now generate edited documents.")
                 original_file = docx_file
+        else:
+            st.success(f"✅ Using original DOCX file: {original_file.name}")
         
         if original_file and original_file.name.endswith('.docx'):
             col1, col2 = st.columns(2)
