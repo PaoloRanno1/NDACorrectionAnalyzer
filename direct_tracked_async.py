@@ -120,13 +120,33 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         time.sleep(_HEARTBEAT_SEC)
         _set_status(progress=30, message='Running AI compliance analysis...')
 
-        # 3) Run AI analysis using NDA Review chain
+        # 3) Run AI analysis using NDA Review chain with retry logic
         from playbook_manager import get_current_playbook
         from NDA_Review_chain import StradaComplianceChain
 
+        def _retry_analyze(chain, path, retries=2, backoff=2.0):
+            """Retry wrapper for analyze_nda to handle timeouts and service errors."""
+            last_error = None
+            for i in range(retries + 1):
+                try:
+                    return chain.analyze_nda(path)
+                except Exception as e:
+                    msg = str(e).lower()
+                    if any(keyword in msg for keyword in ["503", "unavailable", "overloaded", "timed out", "timeout"]) and i < retries:
+                        wait_time = backoff * (i + 1)
+                        _set_status(message=f'AI service busy, retrying in {wait_time}s... (attempt {i+2}/{retries+1})')
+                        time.sleep(wait_time)
+                        last_error = e
+                        continue
+                    else:
+                        # Not a retryable error or out of retries
+                        raise e
+            # Should not reach here, but just in case
+            raise last_error
+
         playbook = get_current_playbook()
         review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook)
-        compliance_report, debug_info = review_chain.analyze_nda(md_path)
+        compliance_report, debug_info = _retry_analyze(review_chain, md_path)
 
         time.sleep(_HEARTBEAT_SEC)
         _set_status(progress=50, message='Processing compliance findings...')
