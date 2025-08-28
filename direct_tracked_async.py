@@ -200,60 +200,13 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         print(f"📋 [Direct Tracked] Processing compliance findings...")
         _set_status(progress=50, message='Processing compliance findings...')
 
-        # 4) Flatten all findings and automatically accept them all
+        # 4) Extract findings using proper workflow
         print(f"🔍 [Direct Tracked] Extracting findings from compliance report...")
-        from Tracked_changes_tools_clean import (
-            RawFinding,
-            clean_findings_with_llm
-        )
-
-        # Create RawFinding objects for all issues (auto-accept all)
-        raw_findings: List[RawFinding] = []
-        finding_id = 1
+        import Tracked_changes_tools_clean as Tr_clean
         
-        # Handle both formats: underscore (high_priority) and space (High Priority)
-        priority_mappings = [
-            ("high_priority", "High Priority"),
-            ("medium_priority", "Medium Priority"), 
-            ("low_priority", "Low Priority")
-        ]
-        
-        for priority_key, priority_label in priority_mappings:
-            # Try both formats
-            findings_list = compliance_report.get(priority_key, []) or compliance_report.get(priority_label, [])
-            
-            if findings_list:
-                for finding in findings_list:
-                    # Handle both dict and object formats
-                    if hasattr(finding, '__dict__'):
-                        # Pydantic model object
-                        raw_findings.append(
-                            RawFinding(
-                                id=finding_id,
-                                priority=priority_label,
-                                section=getattr(finding, 'section', ''),
-                                issue=getattr(finding, 'issue', ''),
-                                problem=getattr(finding, 'problem', ''),
-                                citation=getattr(finding, 'citation', ''),
-                                suggested_replacement=getattr(finding, 'suggested_replacement', ''),
-                            )
-                        )
-                    else:
-                        # Dictionary format
-                        raw_findings.append(
-                            RawFinding(
-                                id=finding_id,
-                                priority=priority_label,
-                                section=finding.get('section', ''),
-                                issue=finding.get('issue', ''),
-                                problem=finding.get('problem', ''),
-                                citation=finding.get('citation', ''),
-                                suggested_replacement=finding.get('suggested_replacement', ''),
-                            )
-                        )
-                    finding_id += 1
+        flat_findings = Tr_clean.flatten_findings(compliance_report)
 
-        if not raw_findings:
+        if not flat_findings:
             print(f"ℹ️ [Direct Tracked] No compliance issues found - returning original file")
             # Store results to disk instead of session state
             jobdir = _job_dir(job_id)
@@ -271,47 +224,48 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                        results_path=str(jobdir))  # <- pointer
             return
 
-        # 5) Read NDA text for cleaning
-        with open(md_path, 'r', encoding='utf-8') as f:
-            nda_text = f.read()
+        print(f"📊 [Direct Tracked] Found {len(flat_findings)} total compliance issues")
+        
+        # 5) For direct tracked changes: select ALL findings automatically
+        all_ids = [f.id for f in flat_findings]
+        edit_spec = {"accept": all_ids}
+        selected_findings = Tr_clean.apply_edit_spec(flat_findings, edit_spec)
+        
+        print(f"✅ [Direct Tracked] Auto-selected all {len(selected_findings)} findings for processing")
 
-        print(f"📊 [Direct Tracked] Found {len(raw_findings)} total compliance issues")
+        # 6) Extract NDA text directly from original DOCX (not markdown)
+        print(f"📄 [Direct Tracked] Extracting text from original DOCX...")
+        nda_text = Tr_clean.extract_text(docx_path)
+
         time.sleep(_HEARTBEAT_SEC)
         print(f"🧹 [Direct Tracked] Cleaning and processing findings with AI...")
         _set_status(progress=70, message='Cleaning and processing findings with AI...')
 
-        # 6) Clean findings with LLM using robust approach
-        auto_comments = {finding.id: "" for finding in raw_findings}  # Empty comments for all
+        # 7) Clean findings with LLM using proper workflow
+        guidance = {}  # No additional guidance for direct mode
         
-        # Try AI cleaning with multiple strategies
-        cleaned_findings = []
-        ai_enhanced_count = 0
-        
-        for finding in raw_findings:
-            try:
-                # Try AI cleaning for individual finding with gemini-2.5-flash for better reliability
-                individual_cleaned = clean_findings_with_llm(
-                    nda_text, [finding], {finding.id: auto_comments.get(finding.id, "")}, 
-                    "gemini-2.5-flash"
-                )
-                cleaned_findings.extend(individual_cleaned)
-                ai_enhanced_count += 1
-                print(f"✅ [Direct Tracked] AI enhanced finding {finding.id}")
-                
-            except Exception as e:
-                print(f"⚠️ [Direct Tracked] AI cleaning failed for finding {finding.id}: {str(e)}")
-                print(f"🔄 [Direct Tracked] Using original finding {finding.id} without enhancement...")
-                
-                # Fallback for this specific finding: use original without AI enhancement
-                from Tracked_changes_tools_clean import CleanedFinding
-                cleaned_finding = CleanedFinding(
+        try:
+            cleaned_findings = Tr_clean.clean_findings_with_llm(
+                nda_text=nda_text,
+                findings=selected_findings,
+                additional_info_by_id=guidance,
+                model=model
+            )
+            print(f"✅ [Direct Tracked] AI cleaning successful for all {len(cleaned_findings)} findings")
+        except Exception as e:
+            print(f"⚠️ [Direct Tracked] AI cleaning failed: {str(e)}")
+            print(f"🔄 [Direct Tracked] Continuing with original findings (no AI enhancement)...")
+            
+            # Fallback: convert selected findings to cleaned format without AI enhancement
+            cleaned_findings = []
+            for finding in selected_findings:
+                cleaned_finding = Tr_clean.CleanedFinding(
                     id=finding.id,
                     citation_clean=finding.citation,
                     suggested_replacement_clean=finding.suggested_replacement
                 )
                 cleaned_findings.append(cleaned_finding)
-        
-        print(f"✅ [Direct Tracked] Processing complete: {ai_enhanced_count}/{len(raw_findings)} findings AI-enhanced, {len(raw_findings) - ai_enhanced_count} using originals")
+            print(f"✅ [Direct Tracked] Fallback conversion complete for {len(cleaned_findings)} findings")
 
         time.sleep(_HEARTBEAT_SEC)
         print(f"📝 [Direct Tracked] Generating tracked changes documents...")
@@ -364,12 +318,12 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             "processed_findings": [
                 {
                     'id': f.id,
-                    'priority': getattr(raw_findings[i], 'priority', 'Unknown Priority'),
-                    'section': getattr(raw_findings[i], 'section', ''),
-                    'issue': getattr(raw_findings[i], 'issue', ''),
-                    'problem': getattr(raw_findings[i], 'problem', ''),
-                    'citation': getattr(f, 'citation_clean', getattr(raw_findings[i], 'citation', '')),
-                    'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(raw_findings[i], 'suggested_replacement', ''))
+                    'priority': getattr(selected_findings[i], 'priority', 'Unknown Priority'),
+                    'section': getattr(selected_findings[i], 'section', ''),
+                    'issue': getattr(selected_findings[i], 'issue', ''),
+                    'problem': getattr(selected_findings[i], 'problem', ''),
+                    'citation': getattr(f, 'citation_clean', getattr(selected_findings[i], 'citation', '')),
+                    'suggested_replacement': getattr(f, 'suggested_replacement_clean', getattr(selected_findings[i], 'suggested_replacement', ''))
                 } for i, f in enumerate(cleaned_findings)
             ]
         }, indent=2))
