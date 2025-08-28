@@ -282,7 +282,25 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
 
         # 6) Clean findings with LLM (auto-accept all with empty comments)
         auto_comments = {finding.id: "" for finding in raw_findings}  # Empty comments for all
-        cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+        
+        try:
+            cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+            print(f"✅ [Direct Tracked] AI cleaning successful for all {len(cleaned_findings)} findings")
+        except Exception as e:
+            print(f"⚠️ [Direct Tracked] AI cleaning failed: {str(e)}")
+            print(f"🔄 [Direct Tracked] Continuing with original findings (no AI enhancement)...")
+            
+            # Fallback: convert raw findings to cleaned format without AI enhancement
+            from Tracked_changes_tools_clean import CleanedFinding
+            cleaned_findings = []
+            for finding in raw_findings:
+                cleaned_finding = CleanedFinding(
+                    id=finding.id,
+                    citation_clean=finding.citation,
+                    suggested_replacement_clean=finding.suggested_replacement
+                )
+                cleaned_findings.append(cleaned_finding)
+            print(f"✅ [Direct Tracked] Fallback conversion complete for {len(cleaned_findings)} findings")
 
         time.sleep(_HEARTBEAT_SEC)
         print(f"📝 [Direct Tracked] Generating tracked changes documents...")
