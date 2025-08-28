@@ -280,27 +280,38 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         print(f"🧹 [Direct Tracked] Cleaning and processing findings with AI...")
         _set_status(progress=70, message='Cleaning and processing findings with AI...')
 
-        # 6) Clean findings with LLM (auto-accept all with empty comments)
+        # 6) Clean findings with LLM using robust approach
         auto_comments = {finding.id: "" for finding in raw_findings}  # Empty comments for all
         
-        try:
-            cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
-            print(f"✅ [Direct Tracked] AI cleaning successful for all {len(cleaned_findings)} findings")
-        except Exception as e:
-            print(f"⚠️ [Direct Tracked] AI cleaning failed: {str(e)}")
-            print(f"🔄 [Direct Tracked] Continuing with original findings (no AI enhancement)...")
-            
-            # Fallback: convert raw findings to cleaned format without AI enhancement
-            from Tracked_changes_tools_clean import CleanedFinding
-            cleaned_findings = []
-            for finding in raw_findings:
+        # Try AI cleaning with multiple strategies
+        cleaned_findings = []
+        ai_enhanced_count = 0
+        
+        for finding in raw_findings:
+            try:
+                # Try AI cleaning for individual finding with gemini-2.5-flash for better reliability
+                individual_cleaned = clean_findings_with_llm(
+                    nda_text, [finding], {finding.id: auto_comments.get(finding.id, "")}, 
+                    "gemini-2.5-flash"
+                )
+                cleaned_findings.extend(individual_cleaned)
+                ai_enhanced_count += 1
+                print(f"✅ [Direct Tracked] AI enhanced finding {finding.id}")
+                
+            except Exception as e:
+                print(f"⚠️ [Direct Tracked] AI cleaning failed for finding {finding.id}: {str(e)}")
+                print(f"🔄 [Direct Tracked] Using original finding {finding.id} without enhancement...")
+                
+                # Fallback for this specific finding: use original without AI enhancement
+                from Tracked_changes_tools_clean import CleanedFinding
                 cleaned_finding = CleanedFinding(
                     id=finding.id,
                     citation_clean=finding.citation,
                     suggested_replacement_clean=finding.suggested_replacement
                 )
                 cleaned_findings.append(cleaned_finding)
-            print(f"✅ [Direct Tracked] Fallback conversion complete for {len(cleaned_findings)} findings")
+        
+        print(f"✅ [Direct Tracked] Processing complete: {ai_enhanced_count}/{len(raw_findings)} findings AI-enhanced, {len(raw_findings) - ai_enhanced_count} using originals")
 
         time.sleep(_HEARTBEAT_SEC)
         print(f"📝 [Direct Tracked] Generating tracked changes documents...")

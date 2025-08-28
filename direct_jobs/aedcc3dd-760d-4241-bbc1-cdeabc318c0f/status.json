@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "progress": 100,
+  "message": "Direct generation completed!",
+  "job_id": "aedcc3dd-760d-4241-bbc1-cdeabc318c0f",
+  "results": null,
+  "error": null,
+  "results_path": "direct_jobs/aedcc3dd-760d-4241-bbc1-cdeabc318c0f"
+}
