@@ -19,6 +19,11 @@ try:
 except ImportError:
     # Handle import error gracefully
     TestingChain = None
+
+try:
+    import direct_tracked_async as dta
+except ImportError:
+    dta = None
 from policies_playbook import display_policies_playbook
 from utils import (
     validate_file, 
@@ -316,6 +321,77 @@ def start_background_single_nda_analysis(file_content, file_extension, model, te
     thread.daemon = True
     thread.start()
     
+    return analysis_id
+
+def start_background_direct_tracked_job(file_bytes: bytes, filename: str, model: str, temperature: float):
+    """Launch direct-tracked-changes generation using direct_tracked_async in a background thread."""
+    if dta is None:
+        st.error("Direct tracked async module not available")
+        return None
+        
+    analysis_id = str(uuid.uuid4())
+    st.session_state.direct_tracked_job = {
+        "id": analysis_id,
+        "running": True,
+        "status": "Starting…",
+        "progress": 0,
+        "error": None,
+        "results": None,
+        "filename": filename,
+        "start_time": time.time(),
+    }
+
+    def _worker():
+        input_docx_path = None
+        try:
+            # Persist upload to a temp .docx the async module can read
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=False) as tmp:
+                tmp.write(file_bytes)
+                input_docx_path = tmp.name
+
+            # Call your async workflow
+            st.session_state.direct_tracked_job["status"] = "Converting and analyzing…"
+            st.session_state.direct_tracked_job["progress"] = 20
+
+            result = dta.direct_tracked_async(
+                uploaded_file_path=input_docx_path,
+                model=model,
+                temperature=temperature
+            )
+
+            # Update progress
+            st.session_state.direct_tracked_job["status"] = "Finalizing documents…"
+            st.session_state.direct_tracked_job["progress"] = 90
+
+            # Store results if successful
+            if result and result.get("success"):
+                st.session_state.direct_tracked_job["results"] = {
+                    "tracked_docx": result.get("tracked_docx_bytes"),
+                    "clean_docx": result.get("clean_docx_bytes"),
+                    "high": result.get("high_priority", []),
+                    "medium": result.get("medium_priority", []),
+                    "low": result.get("low_priority", []),
+                }
+                st.session_state.direct_tracked_job["status"] = "Complete"
+                st.session_state.direct_tracked_job["progress"] = 100
+            else:
+                raise Exception(result.get("error", "Unknown error in async processing"))
+            
+            st.session_state.direct_tracked_job["running"] = False
+        except Exception as e:
+            st.session_state.direct_tracked_job["error"] = str(e)
+            st.session_state.direct_tracked_job["status"] = f"Error: {e}"
+            st.session_state.direct_tracked_job["running"] = False
+            st.session_state.direct_tracked_job["progress"] = 0
+        finally:
+            try:
+                if input_docx_path and os.path.exists(input_docx_path):
+                    os.unlink(input_docx_path)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
     return analysis_id
 
 def display_login_screen():
@@ -1005,33 +1081,105 @@ def display_single_nda_review(model, temperature):
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
     
-    # Handle direct tracked changes generation (asynchronous version)
+    # --- Direct Tracked Changes (async via direct_tracked_async) ---
     if run_direct_tracked_changes and uploaded_file:
+        # Guard: only DOCX
         file_extension = uploaded_file.name.split('.')[-1].lower()
         if file_extension != 'docx':
-            st.error("Direct tracked changes generation requires a Word document (.docx file).")
-            st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
+            st.error("Direct tracked changes generation requires a Word document (.docx).")
         else:
-            # Use the async version with disk persistence for better deployment reliability
-            from direct_tracked_async import direct_tracked_async
-            
-            # Start the async process
-            direct_tracked_async(
-                uploaded_file=uploaded_file,
+            st.info("Starting background job… You can stay on this page; progress will update.")
+            start_background_direct_tracked_job(
+                file_bytes=uploaded_file.getvalue(),
+                filename=uploaded_file.name,
                 model=model,
                 temperature=temperature
             )
-            st.info("🔄 Direct tracked changes generation started in background. Results will appear when ready.")
-            st.info("💡 This process runs in the background to avoid deployment resource limits.")
-    
-    # Display async results section - check for results from direct_tracked_async
-    from direct_tracked_async import check_async_results, display_async_results
-    if check_async_results():
-        display_async_results()
-    
-    # Check for async processing status and show progress if needed
-    if hasattr(st.session_state, 'async_processing') and st.session_state.async_processing:
-        st.info("⏳ Processing in background... Results will appear when ready.")
+            st.rerun()
+
+    # Progress / results panel (persists after clicks)
+    job = st.session_state.get("direct_tracked_job")
+    if job:
+        st.markdown("---")
+        st.subheader("🛠 Direct Tracked Changes — Job Status")
+
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.info(job["status"])
+        with col2:
+            st.progress(job["progress"] / 100.0)
+
+        if job["error"]:
+            st.error(f"❌ {job['error']}")
+
+        if job["results"]:
+            # Show summary + downloads
+            results = job["results"]
+            base_name = os.path.splitext(job["filename"])[0]
+            ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+            c1, c2, c3 = st.columns(3)
+            with c1: st.metric("High Priority", len(results["high"]))
+            with c2: st.metric("Medium Priority", len(results["medium"]))
+            with c3: st.metric("Low Priority", len(results["low"]))
+
+            d1, d2 = st.columns(2)
+            with d1:
+                st.download_button(
+                    "📄 Download Tracked Changes",
+                    data=results["tracked_docx"],
+                    file_name=f"{base_name}_Tracked_{ts}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+            with d2:
+                st.download_button(
+                    "📄 Download Clean Version",
+                    data=results["clean_docx"],
+                    file_name=f"{base_name}_Clean_{ts}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+
+            with st.expander(f"📋 Issues Processed ({len(results['high']) + len(results['medium']) + len(results['low'])})"):
+                for bucket, title, color in [
+                    (results["high"], "🔴 High Priority", "#ff6b6b"), 
+                    (results["medium"], "🟡 Medium Priority", "#ffcc5c"), 
+                    (results["low"], "🟢 Low Priority", "#81c784")
+                ]:
+                    if bucket:
+                        st.markdown(f"**{title} ({len(bucket)})**")
+                        for i, f in enumerate(bucket, 1):
+                            issue = f.get("issue", "")
+                            section = f.get("section", "")
+                            problem = f.get("problem", "")
+                            repl = f.get("suggested_replacement", "")
+                            
+                            st.markdown(f"""
+                            <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
+                                <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
+                                    {i}. {issue}
+                                </div>
+                                <div style='color: {color}; margin-bottom: 8px;'>
+                                    📍 <strong>Section:</strong> <span style='color: #cccccc;'>{section}</span>
+                                </div>
+                                <div style='color: {color}; margin-bottom: 8px;'>
+                                    ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{problem}</span>
+                                </div>
+                                <div style='color: {color}; margin-bottom: 8px;'>
+                                    ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{repl}</span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+            if st.button("🔄 Start New Direct Generation", type="secondary"):
+                del st.session_state["direct_tracked_job"]
+                st.rerun()
+        else:
+            # If still running, auto-refresh the page every few seconds
+            if job["running"]:
+                time.sleep(2)
+                st.rerun()
 
 def display_nda_review_results():
     """Display results from NDA analysis"""
