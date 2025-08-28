@@ -1059,13 +1059,89 @@ def display_single_nda_review(model, temperature):
         st.markdown("---")
         st.subheader("🛠 Direct Tracked Changes — Job Status")
         dta.render_direct_tracked_status_ui()
+    
+    # Display single NDA analysis results if available
+    display_nda_review_results()
 
 def display_nda_review_results():
     """Display results from NDA analysis"""
-    if 'single_nda_results' not in st.session_state:
+    if 'single_nda_results' not in st.session_state or not st.session_state.single_nda_results:
         return
     
-    if st.session_state.get('show_edit_mode', False) and hasattr(st.session_state, 'single_nda_results'):
+    # Display the analysis results
+    st.markdown("---")
+    st.subheader("📊 NDA Compliance Analysis Results")
+    
+    compliance_report = st.session_state.single_nda_results
+    
+    # Count issues by priority
+    high_count = len(compliance_report.get('high_priority', []) or compliance_report.get('High Priority', []))
+    medium_count = len(compliance_report.get('medium_priority', []) or compliance_report.get('Medium Priority', []))
+    low_count = len(compliance_report.get('low_priority', []) or compliance_report.get('Low Priority', []))
+    total_issues = high_count + medium_count + low_count
+    
+    # Summary metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("🔴 High Priority", high_count)
+    with col2:
+        st.metric("🟡 Medium Priority", medium_count)
+    with col3:
+        st.metric("🟢 Low Priority", low_count)
+    with col4:
+        st.metric("📋 Total Issues", total_issues)
+    
+    if total_issues > 0:
+        # Display findings by priority
+        for priority_key, priority_label, color in [
+            ("high_priority", "🔴 High Priority Issues", "#ff6b6b"),
+            ("medium_priority", "🟡 Medium Priority Issues", "#ffcc5c"),
+            ("low_priority", "🟢 Low Priority Issues", "#81c784")
+        ]:
+            # Try both formats (underscore and space)
+            findings = compliance_report.get(priority_key, []) or compliance_report.get(priority_label.split(' ', 1)[1], [])
+            if findings:
+                st.markdown(f"### {priority_label} ({len(findings)})")
+                
+                for i, finding in enumerate(findings, 1):
+                    # Handle both dict and object formats
+                    if hasattr(finding, '__dict__'):
+                        issue = getattr(finding, 'issue', 'Unknown Issue')
+                        section = getattr(finding, 'section', 'N/A')
+                        problem = getattr(finding, 'problem', 'N/A')
+                        citation = getattr(finding, 'citation', 'N/A')
+                        suggested_replacement = getattr(finding, 'suggested_replacement', 'N/A')
+                    else:
+                        issue = finding.get('issue', 'Unknown Issue')
+                        section = finding.get('section', 'N/A')
+                        problem = finding.get('problem', 'N/A')
+                        citation = finding.get('citation', 'N/A')
+                        suggested_replacement = finding.get('suggested_replacement', 'N/A')
+                    
+                    st.markdown(f"""
+                    <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
+                        <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
+                            {i}. {issue}
+                        </div>
+                        <div style='color: {color}; margin-bottom: 8px;'>
+                            📍 <strong>Section:</strong> <span style='color: #cccccc;'>{section}</span>
+                        </div>
+                        <div style='color: {color}; margin-bottom: 8px;'>
+                            ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{problem}</span>
+                        </div>
+                        <div style='color: {color}; margin-bottom: 8px;'>
+                            📖 <strong>Citation:</strong> <span style='color: #cccccc;'>{citation}</span>
+                        </div>
+                        <div style='color: {color}; margin-bottom: 8px;'>
+                            ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{suggested_replacement}</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+    else:
+        st.success("🎉 No compliance issues found! This NDA appears to be compliant with company policies.")
+    
+    # Show edit mode interface if activated
+    if st.session_state.get('show_edit_mode', False):
         st.markdown("---")
         display_edit_mode_interface()
 
