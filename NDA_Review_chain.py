@@ -289,7 +289,7 @@ class StradaComplianceChain:
             thread = threading.Thread(target=api_call)
             thread.daemon = True
             thread.start()
-            thread.join(timeout=60)  # 60 second timeout
+            thread.join(timeout=140)  # 60 second timeout
             
             if thread.is_alive():
                 # Timeout occurred

@@ -1005,102 +1005,29 @@ def display_single_nda_review(model, temperature):
             with st.expander("Error Details"):
                 st.code(traceback.format_exc())
     
-    # Handle direct tracked changes generation (synchronous version)
+    # Handle direct tracked changes generation (asynchronous version)
     if run_direct_tracked_changes and uploaded_file:
         file_extension = uploaded_file.name.split('.')[-1].lower()
         if file_extension != 'docx':
             st.error("Direct tracked changes generation requires a Word document (.docx file).")
             st.info("Please upload a DOCX file or use the 'Review NDA First' option for other file types.")
         else:
-            # Run direct generation synchronously with progress indicators
-            try:
-                import tempfile
-                import os
-                import subprocess
-                from datetime import datetime
-                
-                # Create progress placeholder
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                
-                status_text.info("🔄 Starting direct generation...")
-                progress_bar.progress(0.1)
-                print("[DIRECT] Starting direct tracked changes generation")
-                
-                file_content = uploaded_file.getvalue()
-                print(f"[DIRECT] File uploaded: {uploaded_file.name}, size: {len(file_content)} bytes")
-                
-                # Write content to temporary file
-                with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as temp_file:
-                    temp_file.write(file_content)
-                    temp_file_path = temp_file.name
-                print(f"[DIRECT] Temporary file created: {temp_file_path}")
-                
-                status_text.info("📄 Converting document format...")
-                progress_bar.progress(0.2)
-                print("[DIRECT] Converting DOCX to Markdown using pandoc...")
-                
-                # Convert DOCX to markdown for analysis
-                converted_path = temp_file_path.replace('.docx', '.md')
-                result = subprocess.run([
-                    'pandoc', temp_file_path, '-o', converted_path, '--to=markdown', '--wrap=none'
-                ], check=True, capture_output=True, text=True)
-                print(f"[DIRECT] Document converted successfully: {converted_path}")
-                
-                # Check converted file size
-                if os.path.exists(converted_path):
-                    with open(converted_path, 'r', encoding='utf-8') as f:
-                        md_content = f.read()
-                    print(f"[DIRECT] Converted markdown length: {len(md_content)} characters")
-                else:
-                    print("[DIRECT] ERROR: Converted markdown file not found!")
-                
-                status_text.info("🤖 Running AI compliance analysis...")
-                progress_bar.progress(0.4)
-                print(f"[DIRECT] Starting AI analysis with model: {model}, temperature: {temperature}")
-                
-                # Run analysis
-                from playbook_manager import get_current_playbook
-                from NDA_Review_chain import StradaComplianceChain
-                
-                playbook_content = get_current_playbook()
-                print(f"[DIRECT] Playbook loaded, length: {len(playbook_content)} characters")
-                
-                review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook_content)
-                print("[DIRECT] Review chain initialized, running analysis...")
-                
-                # ADD retry mechanism for Gemini API failures
-                import time
-                def _retry_analyze(chain, path, retries=2, backoff=2.0):
-                    last_err = None
-                    for i in range(retries + 1):
-                        try:
-                            return chain.analyze_nda(path)
-                        except Exception as e:
-                            msg = str(e)
-                            if any(k in msg for k in ("503", "UNAVAILABLE", "overloaded", "timed out", "timeout")) and i < retries:
-                                time.sleep(backoff * (i + 1))
-                                continue
-                            last_err = e
-                            break
-                    # Fallback: no findings
-                    return ({'High Priority': [], 'Medium Priority': [], 'Low Priority': []}, None)
-
-                compliance_report, raw_response = _retry_analyze(review_chain, converted_path)
-                print("[DIRECT] AI analysis completed successfully!")
-                print(f"[DIRECT] Compliance report keys: {list(compliance_report.keys()) if compliance_report else 'None'}")
-                
-                status_text.info("📋 Processing findings...")
-                progress_bar.progress(0.6)
-                print("[DIRECT] Processing compliance findings...")
-                
-                # Auto-select all findings
-                high_priority = compliance_report.get('high_priority', []) or compliance_report.get('High Priority', [])
-                medium_priority = compliance_report.get('medium_priority', []) or compliance_report.get('Medium Priority', [])
-                low_priority = compliance_report.get('low_priority', []) or compliance_report.get('Low Priority', [])
-                
-                total_issues = len(high_priority) + len(medium_priority) + len(low_priority)
-                print(f"[DIRECT] Found {len(high_priority)} high, {len(medium_priority)} medium, {len(low_priority)} low priority issues")
+            # Use the async version with disk persistence for better deployment reliability
+            from direct_tracked_async import direct_tracked_async
+            
+            # Start the async process
+            direct_tracked_async(
+                uploaded_file=uploaded_file,
+                model=model,
+                temperature=temperature
+            )
+            st.info("🔄 Direct tracked changes generation started in background. Results will appear when ready.")
+            st.info("💡 This process runs in the background to avoid deployment resource limits.")
+    
+    # Display async results section - check for results from direct_tracked_async
+    from direct_tracked_async import check_async_results, display_async_results
+    if check_async_results():
+        display_async_results()
                 print(f"[DIRECT] Total issues to process: {total_issues}")
                 
                 if total_issues == 0:
