@@ -429,6 +429,11 @@ def render_direct_tracked_status_ui() -> None:
                 }
                 st.success("Process cancelled. You can start a new one.")
                 st.rerun()
+        
+        # Auto-refresh every 3 seconds while processing
+        import time
+        time.sleep(3)
+        st.rerun()
 
     elif dp['status'] == 'completed' and (dp.get('results') or dp.get('results_path')):
         st.success('✅ Direct tracked changes generation completed!')

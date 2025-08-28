@@ -1,0 +1,141 @@
+{
+  "original_filename": "Stern_cleaned - Copy.docx",
+  "ts": 1756372152.3465903,
+  "compliance_report": {
+    "High Priority": [
+      {
+        "issue": "Missing 'Policy 1: Handling of Unacceptable Clauses' (Liability) Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The NDA does not include a limitation of liability clause that excludes indirect, consequential, special, or punitive damages.",
+        "suggested_replacement": "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      },
+      {
+        "issue": "Missing 'Policy 1: Handling of Unacceptable Clauses' (IP) Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The NDA does not include a clause clarifying that no intellectual property rights are transferred or licensed.",
+        "suggested_replacement": "No provision in this Agreement shall be construed as granting any license or rights, by implication, estoppel or otherwise, to any intellectual property of either party."
+      },
+      {
+        "issue": "Violation of 'Policy 2: Permitted Recipients' Clause",
+        "citation": "You agree to disclose the Information only to those of your Representatives who need to know such Information and are directly concerned with the assessment of the Company or the negotiations with respect to the Proposed Transaction.",
+        "section": "2)",
+        "problem": "The clause restricts disclosure of the Information to a narrow group of your Representatives, excluding other necessary parties like affiliates, shareholders, potential syndicate members, and other providers of finance.",
+        "suggested_replacement": "Information may be disclosed by you to your affiliates and your and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, \"Representatives\"), who need to know such Information for the Proposed Transaction, provided that you shall be responsible for any breach of this Agreement by your Representatives."
+      },
+      {
+        "issue": "Violation of 'Policy 3: Return & Destruction of Information' Clause",
+        "citation": "You agree that you will upon the Company's written request, immediately return or, at your discretion, destroy, all copies of the Information in your possession.",
+        "section": "3)",
+        "problem": "The clause does not explicitly permit retention of Information stored on automated backup systems or contained in internal work product (\"Secondary Information\").",
+        "suggested_replacement": "Upon the Company's written request, you shall return or destroy all Information. However, this obligation shall not apply to: (i) Information that you or your Representatives must retain under any applicable law, rule or regulation, including the rules of a professional body and good corporate governance practice; (ii) Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on behalf of you which incorporate Information ('Secondary Information'). Any Information or Secondary Information that is not returned or destroyed shall remain subject to the confidentiality terms of this Agreement."
+      }
+    ],
+    "Medium Priority": [],
+    "Low Priority": [
+      {
+        "issue": "Missing 'Policy 10: Governing Law & Jurisdiction' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The NDA does not specify the governing law and jurisdiction.",
+        "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      },
+      {
+        "issue": "Missing 'Policy 11: Confidentiality Term' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The NDA does not specify a confidentiality term.",
+        "suggested_replacement": "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Proposed Transaction; and (ii) the date that is two or three (2 or 3) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
+      },
+      {
+        "issue": "Violation of 'Policy 12: Liability for Representatives' Clause",
+        "citation": "You acknowledge and agree that you shall... be responsible for any breach of confidentiality under this Agreement by your Representatives (as if they had signed this Agreement).",
+        "section": "2)",
+        "problem": "The clause imposes strict liability on you for breaches by your Representatives, whereas an efforts-based standard is preferred.",
+        "suggested_replacement": "You will use your best efforts to procure that each of your Representatives who receives any Information is aware of and adheres to the terms of this Agreement. You shall be responsible for any breach of the confidentiality obligations of this Agreement by your Representatives."
+      },
+      {
+        "issue": "Missing 'Policy 13: Definition of Confidential Information' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The definition of \"Information\" does not include standard market exceptions.",
+        "suggested_replacement": "Information does not include information that: (a) is or becomes generally available to the public through no breach by you of the confidentiality undertakings hereunder; (b) was in your lawful possession before receipt from the Company, without any obligation of confidentiality owed to the Company; (c) was received in good faith by you from a third party that is not subject to an obligation of confidentiality owed to the Company; or (d) was disclosed by you pursuant to the written permission of a duly authorized representative of the Company."
+      }
+    ]
+  },
+  "processed_findings": [
+    {
+      "id": 1,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+    },
+    {
+      "id": 2,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "No provision in this Agreement shall be construed as granting any license or rights, by implication, estoppel or otherwise, to any intellectual property of either party."
+    },
+    {
+      "id": 3,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You agree to disclose the Information only to those of your Representatives who need to know such Information and are directly concerned with the assessment of the Company or the negotiations with respect to the Proposed Transaction.",
+      "suggested_replacement": "You agree to disclose the Information to your affiliates and your and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, \u201cRepresentatives\u201d) who need to know such Information for the Proposed Transaction, provided that you shall be responsible for any breach of this Agreement by your Representatives."
+    },
+    {
+      "id": 4,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You agree that you will upon the Company's written request, at any time, immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives (including but not limited to all documents, memoranda, notes and other writings -regardless of the medium used- and any other recordings or duplications thereof (including all copies, extracts or other reproductions) prepared by or on behalf of you that reproduce or incorporate portions of information contained in the Information).",
+      "suggested_replacement": "You agree that you will upon the Company's written request, at any time, immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives (including but not limited to all documents, memoranda, notes and other writings -regardless of the medium used- and any other recordings or duplications thereof (including all copies, extracts or other reproductions) prepared by or on behalf of you that reproduce or incorporate portions of information contained in the Information); provided that this obligation shall not apply to: (i) Information that you or your Representatives are required by applicable law, rule or regulation (including the rules of a professional body and good corporate governance practice) to retain; (ii) Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on behalf of you which incorporate Information ('Secondary Information'). Any Information or Secondary Information so retained shall remain subject to the confidentiality terms of this Agreement."
+    },
+    {
+      "id": 5,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+    },
+    {
+      "id": 6,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "The Information will be kept strictly confidential",
+      "suggested_replacement": "The obligations of confidentiality set forth in this Agreement shall continue in full force and effect until the earlier of: (i) successful completion of the Proposed Transaction; and (ii) the date that is two (2) years from the date of this Agreement. These obligations shall survive the termination or expiration of any other provision of this Agreement."
+    },
+    {
+      "id": 7,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You acknowledge and agree that you shall, without prejudice to any right of the Sellers or the Company, be responsible for any breach of confidentiality under this Agreement by your Representatives (as if they had signed this Agreement).",
+      "suggested_replacement": "You acknowledge and agree that you shall, without prejudice to any right of the Sellers or the Company, use your best efforts to procure that each of your Representatives who receives any Information is aware of and adheres to the terms of this Agreement, and you shall be responsible for any breach of the confidentiality obligations of this Agreement by your Representatives."
+    },
+    {
+      "id": 8,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "The Information will be kept strictly confidential and shall not, without the prior written consent of the Company, be disclosed by you, or by your Representatives, in any matter whatsoever, in whole or in part, except as required by law, and shall not be used other than in connection with your evaluation of the Proposed Transaction or the consummation of the Proposed Transaction in a manner that the Company has approved. The Information shall not be used by you or your Representatives for any other purposes, in particular competitive purposes, than evaluating or consummating the Proposed Transaction.",
+      "suggested_replacement": "For the purposes of this Agreement, \"Information\" means any information, data, documents, materials, or other content, in any form or medium, provided or made available to you or your Representatives by or on behalf of the Company or the Sellers in connection with your evaluation of the Proposed Transaction. However, \"Information\" does not include information that: (a) is or becomes generally available to the public through no breach by you of the confidentiality undertakings hereunder; (b) was in your lawful possession before receipt from the Company, without any obligation of confidentiality owed to the Company; (c) was received in good faith by you from a third party that is not subject to an obligation of confidentiality owed to the Company; or (d) was disclosed by you pursuant to the written permission of a duly authorized representative of the Company. The Information will be kept strictly confidential and shall not, without the prior written consent of the Company, be disclosed by you, or by your Representatives, in any matter whatsoever, in whole or in part, except as required by law, and shall not be used other than in connection with your evaluation of the Proposed Transaction or the consummation of the Proposed Transaction in a manner that the Company has approved. The Information shall not be used by you or your Representatives for any other purposes, in particular competitive purposes, than evaluating or consummating the Proposed Transaction."
+    }
+  ]
+}
