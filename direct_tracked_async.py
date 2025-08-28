@@ -264,7 +264,6 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             apply_cleaned_findings_to_docx,
             replace_cleaned_findings_in_docx
         )
-        import tempfile
         import shutil
         
         # Generate tracked changes document
