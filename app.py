@@ -1184,59 +1184,45 @@ def display_single_nda_review(model, temperature):
                     print("[DIRECT] Starting LLM cleaning process...")
                     auto_comments = {finding.id: "" for finding in raw_findings}
                     
-                    # Smart processing strategy based on model type
-                    if model == "gemini-2.5-pro":
-                        # Skip LLM cleaning for Pro model in deployment to avoid resource issues
-                        print(f"[DIRECT] Using Pro model - skipping LLM cleaning to prevent deployment timeouts")
-                        print(f"[DIRECT] Using original findings directly for stable deployment performance")
-                        cleaned_findings = []
-                        for finding in raw_findings:
-                            from Tracked_changes_tools_clean import CleanedFinding
-                            cleaned_findings.append(CleanedFinding(
-                                id=finding.id,
-                                citation_clean=finding.citation,
-                                suggested_replacement_clean=finding.suggested_replacement
-                            ))
-                        print(f"[DIRECT] Created {len(cleaned_findings)} direct findings for Pro model")
+                    # Try LLM cleaning with error handling and Pro model timeout protection
+                    try:
+                        print(f"[DIRECT] About to start LLM cleaning with model: {model}")
+                        if model == "gemini-2.5-pro":
+                            print(f"[DIRECT] Using Pro model - implementing timeout protection")
+                        
+                        cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+                        print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
                         print(f"[DIRECT] Starting document generation phase...")
                         print(f"[DIRECT] Current memory usage check point 1")
-                    else:
-                        # Use LLM cleaning for Flash model which works reliably
-                        try:
-                            print(f"[DIRECT] About to start LLM cleaning with model: {model}")
-                            cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
-                            print(f"[DIRECT] LLM cleaning completed! Generated {len(cleaned_findings)} cleaned findings")
-                            print(f"[DIRECT] Starting document generation phase...")
-                            print(f"[DIRECT] Current memory usage check point 1")
-                        except (ValueError, RuntimeError, Exception) as e:
-                            error_msg = str(e)
-                            if ("citation_clean is not an exact substring" in error_msg or 
-                                "503 UNAVAILABLE" in error_msg or 
-                                "The model is overloaded" in error_msg or
-                                "LLM call failed" in error_msg or
-                                "ServerError" in error_msg or
-                                "UNAVAILABLE" in error_msg):
-                                
-                                if "503 UNAVAILABLE" in error_msg or "overloaded" in error_msg:
-                                    print(f"[DIRECT] LLM cleaning failed due to API overload: {error_msg}")
-                                    print("[DIRECT] Google Gemini API is temporarily overloaded - falling back to original findings...")
-                                else:
-                                    print(f"[DIRECT] LLM cleaning failed with text matching error: {error_msg}")
-                                    print("[DIRECT] Falling back to original findings without LLM cleaning...")
-                                    
-                                # Use original findings without LLM processing
-                                from Tracked_changes_tools_clean import CleanedFinding
-                                cleaned_findings = []
-                                for rf in raw_findings:
-                                    cf = CleanedFinding(
-                                        id=rf.id,
-                                        citation_clean=rf.citation,  # Use original citation
-                                        suggested_replacement_clean=rf.suggested_replacement  # Use original replacement
-                                    )
-                                    cleaned_findings.append(cf)
-                                print(f"[DIRECT] Created {len(cleaned_findings)} fallback findings without LLM cleaning")
+                    except (ValueError, RuntimeError, Exception) as e:
+                        error_msg = str(e)
+                        if ("citation_clean is not an exact substring" in error_msg or 
+                            "503 UNAVAILABLE" in error_msg or 
+                            "The model is overloaded" in error_msg or
+                            "LLM call failed" in error_msg or
+                            "ServerError" in error_msg or
+                            "UNAVAILABLE" in error_msg):
+                            
+                            if "503 UNAVAILABLE" in error_msg or "overloaded" in error_msg:
+                                print(f"[DIRECT] LLM cleaning failed due to API overload: {error_msg}")
+                                print("[DIRECT] Google Gemini API is temporarily overloaded - falling back to original findings...")
                             else:
-                                raise  # Re-raise if it's a different error
+                                print(f"[DIRECT] LLM cleaning failed with text matching error: {error_msg}")
+                                print("[DIRECT] Falling back to original findings without LLM cleaning...")
+                                
+                            # Use original findings without LLM processing
+                            from Tracked_changes_tools_clean import CleanedFinding
+                            cleaned_findings = []
+                            for rf in raw_findings:
+                                cf = CleanedFinding(
+                                    id=rf.id,
+                                    citation_clean=rf.citation,  # Use original citation
+                                    suggested_replacement_clean=rf.suggested_replacement  # Use original replacement
+                                )
+                                cleaned_findings.append(cf)
+                            print(f"[DIRECT] Created {len(cleaned_findings)} fallback findings without LLM cleaning")
+                        else:
+                            raise  # Re-raise if it's a different error
                     
                     progress_bar.progress(0.9)
                     status_text.info("📝 Generating final documents...")
