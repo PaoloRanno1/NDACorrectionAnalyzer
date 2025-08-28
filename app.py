@@ -49,9 +49,21 @@ def initialize_session_state():
     # Check for force refresh parameter
     query_params = st.query_params
     if 'refresh' in query_params:
+        # Preserve direct processing state if it's completed (to prevent losing download results)
+        direct_processing_backup = None
+        if 'direct_processing' in st.session_state:
+            dp = st.session_state.direct_processing
+            if dp.get('status') == 'completed':
+                direct_processing_backup = dp
+        
         # Clear all session state
         for key in list(st.session_state.keys()):
             del st.session_state[key]
+        
+        # Restore direct processing if it was completed
+        if direct_processing_backup:
+            st.session_state.direct_processing = direct_processing_backup
+            
         st.query_params.clear()  # Clear query params
     
     if 'authenticated' not in st.session_state:
