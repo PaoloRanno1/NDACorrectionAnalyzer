@@ -1140,6 +1140,13 @@ def display_nda_review_results():
     else:
         st.success("🎉 No compliance issues found! This NDA appears to be compliant with company policies.")
     
+    # Add button to enter edit mode if there are issues
+    if total_issues > 0:
+        st.markdown("---")
+        if st.button("📝 Edit Selected Issues", type="primary", use_container_width=True):
+            st.session_state.show_edit_mode = True
+            st.rerun()
+    
     # Show edit mode interface if activated
     if st.session_state.get('show_edit_mode', False):
         st.markdown("---")
