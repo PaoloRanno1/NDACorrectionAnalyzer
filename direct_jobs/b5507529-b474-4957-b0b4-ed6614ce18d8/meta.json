@@ -1,0 +1,109 @@
+{
+  "original_filename": "Stern_cleaned - Copy.docx",
+  "ts": 1756371732.2709432,
+  "compliance_report": {
+    "High Priority": [
+      {
+        "issue": "Violation of 'Policy 2' Clause",
+        "citation": "disclose the Information only to those of your Representatives who need to know such Information and are directly concerned with the assessment of the Company or the negotiations with respect to the Proposed Transaction.",
+        "section": "2",
+        "problem": "The definition of permitted recipients is too narrow and does not explicitly include affiliates, shareholders, potential syndicate members, or other financing providers, which is required for Strada's operational needs.",
+        "suggested_replacement": "The Information may be disclosed by you to your affiliates and your and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, \"your Representatives\"), who need to know such information for the purpose of evaluating the Proposed Transaction, provided that you shall be responsible for any breach of this Agreement by your Representatives."
+      },
+      {
+        "issue": "Violation of 'Policy 3' Clause",
+        "citation": "immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives",
+        "section": "3",
+        "problem": "The obligation to destroy information is too absolute. It does not permit the retention of information stored on automated backup systems or contained within internal analyses ('Secondary Information'), which is operationally impractical to delete.",
+        "suggested_replacement": "Upon the Company's written request, you shall return or destroy all the Information. However, this obligation shall not apply to: (i) the Information that you or your Representatives must retain under any applicable law, rule or regulation, including the rules of a professional body and good corporate governance practice; (ii) the Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on behalf of you which incorporate the Information ('Secondary Information'). Any of the Information or Secondary Information that is not returned or destroyed shall remain subject to the confidentiality terms of this Agreement."
+      }
+    ],
+    "Medium Priority": [],
+    "Low Priority": [
+      {
+        "issue": "Violation of 'Policy 12' Clause",
+        "citation": "you shall, without prejudice to any right of the Sellers or the Company, be responsible for any breach of confidentiality under this Agreement by your Representatives",
+        "section": "2",
+        "problem": "The Agreement imposes strict liability on you for breaches by your Representatives. The preferred position is an efforts-based standard to limit liability for external advisors.",
+        "suggested_replacement": "You will use your best efforts to procure that each of your Representatives who receives any of the Information is aware of and adheres to the terms of this Agreement. You shall be responsible for any breach of the confidentiality obligations of this Agreement by your Representatives."
+      },
+      {
+        "issue": "Missing 'Policy 10' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The Agreement does not specify the governing law or jurisdiction, creating legal uncertainty in the event of a dispute.",
+        "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the competent courts in Antwerp, division Antwerp, Belgium."
+      },
+      {
+        "issue": "Missing 'Policy 11' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The Agreement does not specify a duration for the confidentiality obligations, making them potentially indefinite. The term should be limited to a maximum of three years.",
+        "suggested_replacement": "The obligations of confidentiality set out in this letter shall continue in full force and effect until the earlier of: (i) successful completion of the Proposed Transaction; and (ii) the date that is two (2) years from the date of this Agreement. This obligation shall survive the termination or expiration of any other provision of this Agreement."
+      },
+      {
+        "issue": "Missing 'Policy 13' Clause",
+        "citation": "Not Found",
+        "section": "N/A",
+        "problem": "The Agreement does not define 'the Information' or provide standard exceptions for information that is public, already known, or received from a third party. This creates ambiguity.",
+        "suggested_replacement": "The Information does not include information that: (a) is or becomes generally available to the public through no breach by you of the confidentiality undertakings hereunder; (b) was in your lawful possession before receipt from the Company, without any obligation of confidentiality owed to the Company; (c) was received in good faith by you from a third party that is not subject to an obligation of confidentiality owed to the Company; or (d) was disclosed by you pursuant to the written permission of a duly authorized representative of the Company."
+      }
+    ]
+  },
+  "processed_findings": [
+    {
+      "id": 1,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "disclose the Information only to those of your Representatives who need to know such Information and are directly concerned with the assessment of the Company or the negotiations with respect to the Proposed Transaction.",
+      "suggested_replacement": "disclose the Information only to your affiliates and your and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, and other providers of financing (collectively, \"your Representatives\") who need to know such Information for the purpose of evaluating the Proposed Transaction."
+    },
+    {
+      "id": 2,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives",
+      "suggested_replacement": "immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives; provided, however, that such obligation shall not apply to: (i) any Information stored on automated backup or archival systems; and (ii) any reports, notes or other materials prepared by or on behalf of you which incorporate the Information."
+    },
+    {
+      "id": 3,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "you shall, without prejudice to any right of the Sellers or the Company, be responsible for any breach of confidentiality under this Agreement by your Representatives",
+      "suggested_replacement": "you shall use reasonable efforts to ensure your Representatives comply with the terms of this Agreement and you shall be responsible for any breach of this Agreement by any of your Representatives who are also your employees"
+    },
+    {
+      "id": 4,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "This Agreement, and any contractual or non-contractual obligations arising out of or in connection with it, shall be governed by and construed in accordance with the laws of Belgium. Any disputes arising out of or in connection with this Agreement shall be submitted to the exclusive jurisdiction of the courts of Antwerp, division Antwerp."
+    },
+    {
+      "id": 5,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "The obligations of confidentiality under this Agreement shall terminate on the earlier of: (i) the consummation of the Proposed Transaction; or (ii) the date that is two (2) years from the date of this Agreement."
+    },
+    {
+      "id": 6,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "",
+      "suggested_replacement": "The Information shall not include information that: (a) is or becomes generally available to the public other than as a result of a breach of this Agreement by you or your Representatives; (b) was lawfully in your possession free of any obligation of confidentiality prior to its disclosure by the Company; (c) is received from a third party who is not under an obligation of confidentiality to the Company with respect to such information; or (d) is independently developed by you or your Representatives without use of or reference to the Information."
+    }
+  ]
+}

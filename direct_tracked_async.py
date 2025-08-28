@@ -366,6 +366,17 @@ def render_direct_tracked_status_ui() -> None:
     init_direct_processing_state()
     dp = st.session_state.direct_processing
 
+    # Check if job is actually completed by checking disk results
+    if dp['status'] == 'processing' and dp.get('job_id'):
+        job_id = dp['job_id']
+        jobdir = _job_dir(job_id)
+        
+        # If results exist on disk, update status to completed
+        if (jobdir / "tracked.docx").exists() and (jobdir / "clean.docx").exists():
+            print(f"🔍 [Direct Tracked] Found completed results on disk for job {job_id}")
+            _set_status(status='completed', progress=100, message='Direct generation completed!', results_path=str(jobdir))
+            dp = st.session_state.direct_processing  # Refresh the local reference
+
     if dp['status'] == 'processing':
         st.progress(dp['progress'] / 100.0)
         st.info(f"🔄 {dp['message']}")
