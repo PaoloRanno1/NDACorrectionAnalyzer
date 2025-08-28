@@ -233,32 +233,9 @@ def _call_gemini_json_prompt(prompt: str, model: str = "gemini-2.5-flash") -> Di
     """
     Calls the Gemini model with a plain text prompt, expecting a raw JSON object in the response.
     Handles basic extraction if extra whitespace is present.
-    Includes Pro model optimization for deployment stability.
     """
     client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-    
-    # Pro model optimization for deployment stability
-    config = None
-    if model == "gemini-2.5-pro":
-        # Use stricter config for Pro model to prevent timeouts
-        from google.genai import types
-        config = types.GenerateContentConfig(
-            max_output_tokens=2000,  # Limit output to prevent timeouts
-            temperature=0.0,         # Deterministic output
-            response_mime_type="application/json"  # Force JSON format
-        )
-        print(f"[LLM] Using Pro model with optimized config")
-    
-    resp = client.models.generate_content(
-        model=model, 
-        contents=prompt,
-        config=config
-    )
-    
-    # Handle None response from Pro model
-    if resp.text is None:
-        raise RuntimeError(f"Model {model} returned None response - likely rate limited or overloaded")
-    
+    resp = client.models.generate_content(model=model, contents=prompt)
     text = resp.text.strip()
 
     # Extract the outermost JSON object, forgiving leading/trailing noise.
@@ -290,33 +267,10 @@ def clean_findings_with_llm(
             additional_info=guidance,
         )
 
-        # Enhanced error handling for Pro model deployment stability
-        max_retries = 2 if model == "gemini-2.5-pro" else 1
-        last_error = None
-        
-        for attempt in range(max_retries):
-            try:
-                print(f"[LLM] Processing finding {f.id} (attempt {attempt + 1}/{max_retries})")
-                obj = _call_gemini_json_prompt(prompt, model=model)
-                break  # Success, exit retry loop
-            except Exception as e:
-                last_error = e
-                print(f"[LLM] Attempt {attempt + 1} failed for finding {f.id}: {str(e)}")
-                if attempt < max_retries - 1:
-                    print(f"[LLM] Retrying...")
-                    continue
-                else:
-                    # All retries failed
-                    if model == "gemini-2.5-pro":
-                        print(f"[LLM] Pro model failed, falling back to simplified processing for finding {f.id}")
-                        # Create a simplified fallback result 
-                        obj = {
-                            "id": f.id,
-                            "citation_clean": f.citation[:200] if len(f.citation) > 200 else f.citation,
-                            "suggested_replacement_clean": f.suggested_replacement
-                        }
-                    else:
-                        raise RuntimeError(f"LLM call failed for finding id={f.id}: {last_error}")
+        try:
+            obj = _call_gemini_json_prompt(prompt, model=model)
+        except Exception as e:
+            raise RuntimeError(f"LLM call failed for finding id={f.id}: {e}")
 
         # Basic schema validation
         for key in ("id", "citation_clean", "suggested_replacement_clean"):
