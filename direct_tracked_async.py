@@ -527,41 +527,63 @@ def render_direct_tracked_status_ui() -> None:
                 use_container_width=True
             )
         
-        # Show issues processed section
+        # Show detailed compliance analysis results
         if processed_findings:
             st.markdown("---")
-            st.subheader("📋 Issues Processed")
+            st.subheader("📊 Compliance Issues Processed")
             
+            # Calculate metrics
             findings = processed_findings
             high_priority = [f for f in findings if f.get('priority') == 'High Priority']
             medium_priority = [f for f in findings if f.get('priority') == 'Medium Priority'] 
             low_priority = [f for f in findings if f.get('priority') == 'Low Priority']
             
-            for priority, findings_list, color in [
-                ("🔴 High Priority", high_priority, "#ff6b6b"),
-                ("🟡 Medium Priority", medium_priority, "#ffcc5c"),
-                ("🟢 Low Priority", low_priority, "#81c784")
+            # Summary metrics display
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("🔴 High Priority", len(high_priority))
+            with col2:
+                st.metric("🟡 Medium Priority", len(medium_priority))
+            with col3:
+                st.metric("🟢 Low Priority", len(low_priority))
+            with col4:
+                st.metric("📋 Total Processed", len(processed_findings))
+            
+            # Display findings by priority with enhanced styling
+            for priority_label, findings_list, color in [
+                ("🔴 High Priority Issues", high_priority, "#ff6b6b"),
+                ("🟡 Medium Priority Issues", medium_priority, "#ffcc5c"),
+                ("🟢 Low Priority Issues", low_priority, "#81c784")
             ]:
                 if findings_list:
-                    st.markdown(f"**{priority} ({len(findings_list)} issues)**")
-                    for finding in findings_list:
-                        with st.container():
-                            st.markdown(f"""
-                            <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
-                                <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
-                                    {finding.get('issue', 'Unknown Issue')}
-                                </div>
-                                <div style='color: {color}; margin-bottom: 8px;'>
-                                    📍 <strong>Section:</strong> <span style='color: #cccccc;'>{finding.get('section', 'N/A')}</span>
-                                </div>
-                                <div style='color: {color}; margin-bottom: 8px;'>
-                                    ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{finding.get('problem', 'N/A')}</span>
-                                </div>
-                                <div style='color: {color}; margin-bottom: 8px;'>
-                                    ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{finding.get('suggested_replacement', 'N/A')}</span>
-                                </div>
+                    st.markdown(f"### {priority_label} ({len(findings_list)})")
+                    
+                    for i, finding in enumerate(findings_list, 1):
+                        issue = finding.get('issue', 'Unknown Issue')
+                        section = finding.get('section', 'N/A')
+                        problem = finding.get('problem', 'N/A')
+                        citation = finding.get('citation', 'N/A')
+                        suggested_replacement = finding.get('suggested_replacement', 'N/A')
+                        
+                        st.markdown(f"""
+                        <div style='background-color: #2a2a2a; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid {color};'>
+                            <div style='color: white; font-weight: bold; margin-bottom: 10px;'>
+                                {i}. {issue}
                             </div>
-                            """, unsafe_allow_html=True)
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                📍 <strong>Section:</strong> <span style='color: #cccccc;'>{section}</span>
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                ❌ <strong>Problem:</strong> <span style='color: #cccccc;'>{problem}</span>
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                📖 <strong>Citation:</strong> <span style='color: #cccccc;'>{citation}</span>
+                            </div>
+                            <div style='color: {color}; margin-bottom: 8px;'>
+                                ✏️ <strong>Suggested Replacement:</strong> <span style='color: #cccccc;'>{suggested_replacement}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
         
         # Clear results button
         if st.button("🔄 Start New Direct Generation", type="secondary"):
