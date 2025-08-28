@@ -280,9 +280,20 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         print(f"🧹 [Direct Tracked] Cleaning and processing findings with AI...")
         _set_status(progress=70, message='Cleaning and processing findings with AI...')
 
-        # 6) Clean findings with LLM (auto-accept all with empty comments)
-        auto_comments = {finding.id: "" for finding in raw_findings}  # Empty comments for all
-        cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
+        # 6) Skip AI cleaning for Direct mode - use findings as-is for faster processing
+        # Convert RawFindings to cleaned format without LLM processing
+        print(f"🔄 [Direct Tracked] Converting findings to direct format (skipping AI cleaning for reliability)...")
+        from Tracked_changes_tools_clean import CleanedFinding
+        
+        cleaned_findings = []
+        for finding in raw_findings:
+            # Create cleaned finding with original citation and suggested replacement
+            cleaned_finding = CleanedFinding(
+                id=finding.id,
+                citation_clean=finding.citation,  # Use original citation 
+                suggested_replacement_clean=finding.suggested_replacement  # Use original suggestion
+            )
+            cleaned_findings.append(cleaned_finding)
 
         time.sleep(_HEARTBEAT_SEC)
         print(f"📝 [Direct Tracked] Generating tracked changes documents...")

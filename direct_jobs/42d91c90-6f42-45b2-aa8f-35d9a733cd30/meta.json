@@ -1,0 +1,158 @@
+{
+  "original_filename": "NDA Project Stern clean.docx",
+  "ts": 1756374575.967154,
+  "compliance_report": {
+    "High Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 3' Clause",
+        "citation": "...immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information... An exception is made under this section 8 for that part of the Information which you or your Representatives are required by law or regulation to retain.",
+        "section": "8",
+        "problem": "The clause mandates the return or destruction of Information without the required exceptions for materials stored on automated backup systems or contained in internal work product (Secondary Information).",
+        "suggested_replacement": "Upon the Company's written request, you shall return or destroy all Information. However, this obligation shall not apply to: (i) Information that you or your Representatives must retain under any applicable law, rule or regulation, including the rules of a professional body and good corporate governance practice; (ii) Information and elaborations thereof as have been saved to electronic carriers under automatic archiving or data security procedures; and (iii) reports, notes or other materials prepared by or on behalf of you which incorporate Information ('Secondary Information'). Any Information or Secondary Information that is not returned or destroyed shall remain subject to the confidentiality terms of this Agreement."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 2' Clause",
+        "citation": "You confirm that you are acting as principal and not as an agent or as part of a syndicate and that you will notify the Company in the event that you commence to work with any other potential investor...",
+        "section": "13",
+        "problem": "The Agreement prohibits acting as part of a syndicate, and the definition of 'Representatives' is too narrow, omitting key groups like affiliates and shareholders, which restricts the necessary sharing of Information for evaluation.",
+        "suggested_replacement": "Information may be disclosed by you to your affiliates and your and their respective directors, officers, employees, consultants, advisers, shareholders, potential syndicate members, agents, representatives, and other providers of financing (collectively, 'Representatives'), who need to know such information for the Proposed Transaction, provided that you shall be responsible for any breach of this Agreement by your Representatives. Section 13 should be deleted."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 4' Clause",
+        "citation": "...you shall not, directly or indirectly... hire, employ, solicit the employment or endeavour to solicit or entice away from... any person who is or becomes an employee, director, trade representative, manager, consultant, independent contractor or sub-contractor of the Company...",
+        "section": "15",
+        "problem": "The non-solicitation clause fails to provide the mandatory exemptions for hiring individuals who respond to general, non-targeted advertisements or make unsolicited applications. It also fails to exclude affiliated portfolio companies from the restriction.",
+        "suggested_replacement": "For a period of two (2) years from the date of this Agreement, you agree not to directly solicit for employment any employee of the Company with whom you had material contact in connection with the Proposed Transaction. This restriction shall not apply to any of your affiliated portfolio companies, nor shall it apply to employees who respond to general public advertisements, make an unsolicited application for employment, are referred by a third-party recruiter who was not instructed to target the Company's employees, or whose employment was terminated by the Company."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 1' Clause",
+        "citation": "In case of a breach of any clause of this Agreement, you shall pay to the Company a lump -- sum compensation (forfaitaire schadevergoeding) of EUR 50.000, to be increased by EUR 1.000 for each day...",
+        "section": "19",
+        "problem": "The Agreement includes a prohibited penalty or liquidated damages clause that specifies a fixed monetary amount per breach.",
+        "suggested_replacement": "Liability for a breach of this Agreement shall be limited to proven, direct damages. In no event shall either party be liable for any indirect, consequential, special, punitive, or incidental damages, or for any loss of profits, revenue, or data."
+      }
+    ],
+    "Medium Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 6' Clause",
+        "citation": "...contact or hold discussions with any director, employee, self-employed service provider, agent, supplier, customer or consultant of the Company, except for those contacts made in the ordinary course of business, unconnected with the Proposed Transaction...",
+        "section": "3",
+        "problem": "The no-contact clause is overly broad, restricting contact with a wide range of stakeholders such as suppliers and customers, beyond the permitted scope of directors, officers, or employees directly involved in the Proposed Transaction.",
+        "suggested_replacement": "Without the prior written consent of the Company, you agree not to contact any directors, officers, or employees of the Company in connection with the Proposed Transaction. This restriction shall not be breached by any contact made for another purpose than the purpose of evaluating and negotiating the Proposed Transaction."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 8' Clause",
+        "citation": "Any assignment of this Agreement by you without the prior written consent of the Company (which consent shall not be unreasonably withheld or delayed) shall be void.",
+        "section": "22",
+        "problem": "The Agreement contains a one-sided restriction that prohibits assignment by our side ('you') without consent. The preferred position is a mutual right to assign to affiliates.",
+        "suggested_replacement": "Each party may assign or transfer its rights and obligations under this Agreement to any of its affiliates without the prior written consent of the other party."
+      }
+    ],
+    "Low Priority": [
+      {
+        "issue": "Violation or Missing 'Policy 12' Clause",
+        "citation": "...you shall, without prejudice to any right of the Sellers or the Company, be responsible for any breach of confidentiality under this Agreement by your Representatives (as if they had signed this Agreement).",
+        "section": "2",
+        "problem": "The Agreement imposes strict liability for breaches by Representatives, whereas an efforts-based standard is preferred to limit risk.",
+        "suggested_replacement": "You will use your best efforts to procure that each of your Representatives who receives any Information is aware of and adheres to the terms of this Agreement. You shall be responsible for any breach of the confidentiality obligations of this Agreement by your Representatives."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 13' Clause",
+        "citation": "The term Information shall not include such portions of Information which you can show: (a) are or become generally available to the public...; (b) are lawfully in your possession...; or (c) is independently developed by you...",
+        "section": "9",
+        "problem": "The exceptions to the definition of 'Information' are incomplete. They omit the standard exception for information disclosed with the written permission of the disclosing party.",
+        "suggested_replacement": "The term Information shall not include such portions of Information which you can show: (a) are or become generally available to the public other than as a result of a disclosure by you or your Representatives; (b) were lawfully in your possession before receipt from the Company or the Sellers; (c) were received in good faith by you from a third party not subject to an obligation of confidentiality; (d) was independently developed by you without violating this Agreement; or (e) was disclosed by you pursuant to the written permission of the Company."
+      },
+      {
+        "issue": "Violation or Missing 'Policy 11' Clause",
+        "citation": "Such confidentiality obligations shall survive termination of this Agreement for a period of three (3) years, without prejudice to any longer term which may apply to trade secrets and intellectual property rights.",
+        "section": "17",
+        "problem": "The confidentiality term is three years, which is the maximum acceptable but exceeds the preferred term of two years.",
+        "suggested_replacement": "Such confidentiality obligations shall survive termination of this Agreement for a period of two (2) years, without prejudice to any longer term which may apply to trade secrets and intellectual property rights."
+      }
+    ]
+  },
+  "processed_findings": [
+    {
+      "id": 1,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You agree that you will upon the Company's written request, at any time, immediately return (or cause to be returned) or, at your discretion, destroy (or cause to be destroyed), all copies of the Information in your possession and in the possession of your Representatives (including but not limited to all documents, memoranda, notes and other writings -regardless of the medium used- and any other recordings or duplications thereof (including all copies, extracts or other reproductions) prepared by or on behalf of you that reproduce or incorporate portions of information contained in the Information). At the Company's request, you will provide written certification of your compliance with this section 8. An exception is made under this section 8 for that part of the Information which you or your Representatives are required by law or regulation to retain. Such part of the Information may be retained by you and/or your Representatives, be it only for such period of time as required by applicable law or regulation, provided that the Information so retained will remain subject to the other terms and conditions of this Agreement.",
+      "suggested_replacement": "You agree that you will upon the Company's written request, at any time, immediately return or, at your discretion, destroy all copies of the Information in your possession and in the possession of your Representatives; provided, however, that this obligation shall not apply to: (a) that part of the Information which you or your Representatives are required by law or regulation to retain; (b) Information contained in automated computer back-up, archival, or disaster recovery systems that are not reasonably accessible; and (c) any analyses, compilations, studies or other documents prepared by or on behalf of you or your Representatives which contain or reflect Information. Any Information so retained will remain subject to the terms and conditions of this Agreement. At the Company's request, you will provide written certification of your compliance with this section 8."
+    },
+    {
+      "id": 2,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You confirm that you are acting as principal and not as an agent or as part of a syndicate and that you will notify the Company in the event that you commence to work with any other potential investor in connection with the Proposed Transaction.",
+      "suggested_replacement": "You may act as part of a syndicate or with other potential investors in connection with the Proposed Transaction, provided that any such party shall be considered a Representative for the purposes of this Agreement and you will notify the Company before commencing to work with any such party."
+    },
+    {
+      "id": 3,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "hire, employ, solicit the employment or endeavour to solicit or entice away from or discourage from being employed or hired by the Company, at any time during the Non-Solicitation Period, (i) any person who is or becomes an employee, director, trade representative, manager, consultant, independent contractor or sub-contractor of the Company or (ii) any former employee, director, trade representative, manager, consultant, independent contractor or sub-contractor of the Company whose employment relationship with the Company has at that moment been terminated less than six (6) months ago",
+      "suggested_replacement": "directly solicit for employment any employee of the Company with whom you had material contact in connection with the Proposed Transaction; provided that this restriction shall not apply to any of your affiliated portfolio companies, nor shall it prohibit the hiring of any person who responds to general public advertisements, makes an unsolicited application for employment, is referred by a third-party recruiter not instructed to target the Company's employees, or whose employment was terminated by the Company"
+    },
+    {
+      "id": 4,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "In case of a breach of any clause of this Agreement, you shall pay to the Company a lump -- sum compensation (*forfaitaire schadevergoeding*) of EUR 50.000, to be increased by EUR 1.000 for each day, or part of a day, that such infringement continues after the first day of infringement without prejudice to the Company's right to claim additional damages, if it can establish that it has incurred losses exceeding this amount.",
+      "suggested_replacement": "In case of a breach of any clause of this Agreement, you shall be liable to the Company only for its proven, direct damages, and in no event shall you be liable for any indirect, consequential, special, or punitive damages, including but not limited to loss of profits, revenue, or data."
+    },
+    {
+      "id": 5,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "You will not and shall procure that none of your Representatives will contact or hold discussions with any director, employee, self-employed service provider, agent, supplier, customer or consultant of the Company, except for those contacts made in the ordinary course of business, unconnected with the Proposed Transaction and not involving any use or disclosure of Information.",
+      "suggested_replacement": "You will not and shall procure that none of your Representatives will contact or hold discussions with any director, officer, or employee of the Company, except for those contacts made in the ordinary course of business, unconnected with the Proposed Transaction and not involving any use or disclosure of Information."
+    },
+    {
+      "id": 6,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "Any assignment of this Agreement by you without the prior written consent of the Company (which consent shall not be unreasonably withheld or delayed) shall be void.",
+      "suggested_replacement": "Any assignment of this Agreement by a party without the prior written consent of the other party (which consent shall not be unreasonably withheld or delayed) shall be void, provided that either party may assign this Agreement to any of its Affiliates without such consent."
+    },
+    {
+      "id": 7,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "you shall, without prejudice to any right of the Sellers or the Company, be responsible for any breach of confidentiality under this Agreement by your Representatives (as if they had signed this Agreement).",
+      "suggested_replacement": "you shall use reasonable efforts to ensure your Representatives comply with this Agreement, and you shall be responsible for any breach of this obligation."
+    },
+    {
+      "id": 8,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "The term Information shall not include such portions of Information which you can show: (a) are or become generally available to the public other than as a result of a disclosure or other default by you or by your Representatives; (b) are lawfully in your possession or become available to you from a source, other than the Company or the Sellers or any of their Representatives, which is not prohibited from disclosing such portions to you by a contractual, legal or fiduciary obligation; or (c) is independently developed by you without violating this Agreement.",
+      "suggested_replacement": "The term Information shall not include such portions of Information which you can show: (a) are or become generally available to the public other than as a result of a disclosure or other default by you or by your Representatives; (b) are lawfully in your possession or become available to you from a source, other than the Company or the Sellers or any of their Representatives, which is not prohibited from disclosing such portions to you by a contractual, legal or fiduciary obligation; (c) is independently developed by you without violating this Agreement; or (d) is disclosed pursuant to the prior written consent of the Company."
+    },
+    {
+      "id": 9,
+      "priority": "Unknown Priority",
+      "section": "",
+      "issue": "",
+      "problem": "",
+      "citation": "Such confidentiality obligations shall survive termination of this Agreement for a period of three (3) years, without prejudice to any longer term which may apply to trade secrets and intellectual property rights.",
+      "suggested_replacement": "Such confidentiality obligations shall survive termination of this Agreement for a period of two (2) years, without prejudice to any longer term which may apply to trade secrets and intellectual property rights."
+    }
+  ]
+}

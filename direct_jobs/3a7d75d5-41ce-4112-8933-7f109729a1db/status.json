@@ -1,0 +1,8 @@
+{
+  "status": "error",
+  "progress": 0,
+  "message": "Direct generation failed: [id=1] citation_clean is not an exact substring of NDA text.\ncitation_clean: In this Agreement, \"Representatives\" shall mean, with respect to any specified person, all of such person's subsidiaries and its and their respective directors, agents, representatives, employees, off...\nTip: Re-run with stronger guidance or shorten the expected span.",
+  "job_id": "3a7d75d5-41ce-4112-8933-7f109729a1db",
+  "results": null,
+  "error": "[id=1] citation_clean is not an exact substring of NDA text.\ncitation_clean: In this Agreement, \"Representatives\" shall mean, with respect to any specified person, all of such person's subsidiaries and its and their respective directors, agents, representatives, employees, off...\nTip: Re-run with stronger guidance or shorten the expected span."
+}
