@@ -63,7 +63,9 @@ def init_direct_processing_state() -> None:
 
 
 def _set_status(status: str = None, progress: int = None, message: str = None, **extra) -> None:
-    """Update the processing status in session state."""
+    """Update the processing status in session state and print for logging."""
+    print(f"📊 [Direct Tracked] Status Update: {message or 'N/A'} (Progress: {progress or 'N/A'}%)")
+    
     try:
         # Initialize if needed
         if 'direct_processing' not in st.session_state:
@@ -98,26 +100,35 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
 
     docx_path = md_path = tracked_path = clean_path = None
     try:
+        print(f"🚀 [Direct Tracked] Starting job {job_id} for file: {filename}")
         _set_status(status='processing', progress=5, message='Preparing upload...', job_id=job_id, results=None, error=None)
 
         # 1) Save upload to temp DOCX file
+        print(f"📁 [Direct Tracked] Saving uploaded file to temporary location...")
         with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as f:
             f.write(file_bytes)
             docx_path = f.name
+        print(f"📁 [Direct Tracked] File saved: {docx_path}")
 
         time.sleep(_HEARTBEAT_SEC)
+        print(f"🔄 [Direct Tracked] Converting DOCX to Markdown...")
         _set_status(progress=15, message='Converting DOCX to Markdown...')
 
         # 2) Convert DOCX to Markdown using pandoc
+        print(f"🔧 [Direct Tracked] Checking pandoc availability...")
         try:
             subprocess.run(["pandoc", "-v"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except Exception as e:
+            print(f"❌ [Direct Tracked] Pandoc not available: {e}")
             raise RuntimeError("Pandoc is not available. Please ensure pandoc is installed.") from e
 
         md_path = docx_path.replace('.docx', '.md')
+        print(f"🔄 [Direct Tracked] Converting {docx_path} to {md_path}")
         subprocess.run(["pandoc", docx_path, "-o", md_path, "--to=markdown", "--wrap=none"], check=True)
+        print(f"✅ [Direct Tracked] Conversion complete")
 
         time.sleep(_HEARTBEAT_SEC)
+        print(f"🤖 [Direct Tracked] Starting AI compliance analysis...")
         _set_status(progress=30, message='Running AI compliance analysis...')
 
         # 3) Run AI analysis using NDA Review chain with retry logic
@@ -129,29 +140,39 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
             last_error = None
             for i in range(retries + 1):
                 try:
+                    print(f"🤖 [Direct Tracked] AI analysis attempt {i+1}/{retries+1}")
                     return chain.analyze_nda(path)
                 except Exception as e:
                     msg = str(e).lower()
+                    print(f"⚠️ [Direct Tracked] AI analysis error: {e}")
                     if any(keyword in msg for keyword in ["503", "unavailable", "overloaded", "timed out", "timeout"]) and i < retries:
                         wait_time = backoff * (i + 1)
+                        print(f"🔄 [Direct Tracked] Retrying in {wait_time}s...")
                         _set_status(message=f'AI service busy, retrying in {wait_time}s... (attempt {i+2}/{retries+1})')
                         time.sleep(wait_time)
                         last_error = e
                         continue
                     else:
                         # Not a retryable error or out of retries
+                        print(f"❌ [Direct Tracked] Giving up after {i+1} attempts")
                         raise e
             # Should not reach here, but just in case
             raise last_error
 
+        print(f"📖 [Direct Tracked] Loading playbook...")
         playbook = get_current_playbook()
+        print(f"🏗️ [Direct Tracked] Creating analysis chain with model: {model}")
         review_chain = StradaComplianceChain(model=model, temperature=temperature, playbook_content=playbook)
+        print(f"🚀 [Direct Tracked] Running analysis on: {md_path}")
         compliance_report, debug_info = _retry_analyze(review_chain, md_path)
+        print(f"✅ [Direct Tracked] AI analysis complete!")
 
         time.sleep(_HEARTBEAT_SEC)
+        print(f"📋 [Direct Tracked] Processing compliance findings...")
         _set_status(progress=50, message='Processing compliance findings...')
 
         # 4) Flatten all findings and automatically accept them all
+        print(f"🔍 [Direct Tracked] Extracting findings from compliance report...")
         from Tracked_changes_tools_clean import (
             RawFinding,
             clean_findings_with_llm
@@ -204,6 +225,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
                     finding_id += 1
 
         if not raw_findings:
+            print(f"ℹ️ [Direct Tracked] No compliance issues found - returning original file")
             # Store results to disk instead of session state
             jobdir = _job_dir(job_id)
             (jobdir / "tracked.docx").write_bytes(file_bytes)  # Return original file
@@ -224,7 +246,9 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         with open(md_path, 'r', encoding='utf-8') as f:
             nda_text = f.read()
 
+        print(f"📊 [Direct Tracked] Found {len(raw_findings)} total compliance issues")
         time.sleep(_HEARTBEAT_SEC)
+        print(f"🧹 [Direct Tracked] Cleaning and processing findings with AI...")
         _set_status(progress=70, message='Cleaning and processing findings with AI...')
 
         # 6) Clean findings with LLM (auto-accept all with empty comments)
@@ -232,6 +256,7 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         cleaned_findings = clean_findings_with_llm(nda_text, raw_findings, auto_comments, model)
 
         time.sleep(_HEARTBEAT_SEC)
+        print(f"📝 [Direct Tracked] Generating tracked changes documents...")
         _set_status(progress=85, message='Generating tracked changes documents...')
 
         # 7) Generate tracked changes and clean DOCX files
@@ -269,9 +294,11 @@ def _run_direct_tracked_pipeline(job_id: str, file_bytes: bytes, filename: str, 
         with open(clean_path, 'rb') as f:
             clean_bytes = f.read()
 
+        print(f"💾 [Direct Tracked] Saving results to disk...")
         # Store results to disk instead of session state
         jobdir = _job_dir(job_id)
         (jobdir / "tracked.docx").write_bytes(tracked_bytes)
+        print(f"✅ [Direct Tracked] Tracked changes document saved")
         (jobdir / "clean.docx").write_bytes(clean_bytes)
         (jobdir / "meta.json").write_text(json.dumps({
             "original_filename": filename,
