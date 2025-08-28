@@ -254,6 +254,11 @@ def _call_gemini_json_prompt(prompt: str, model: str = "gemini-2.5-flash") -> Di
         contents=prompt,
         config=config
     )
+    
+    # Handle None response from Pro model
+    if resp.text is None:
+        raise RuntimeError(f"Model {model} returned None response - likely rate limited or overloaded")
+    
     text = resp.text.strip()
 
     # Extract the outermost JSON object, forgiving leading/trailing noise.
